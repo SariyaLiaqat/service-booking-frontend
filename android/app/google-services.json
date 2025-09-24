@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "581489219756",
+    "project_id": "serviceproviderapp-63814",
+    "storage_bucket": "serviceproviderapp-63814.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:581489219756:android:95a1ce950c3c75c8abe709",
+        "android_client_info": {
+          "package_name": "com.example.servicebookingapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAVCY3X7v4e_IYW8sJjuJAcVaiPpC9YSnk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
