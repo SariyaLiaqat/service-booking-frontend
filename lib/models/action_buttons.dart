@@ -83,43 +83,61 @@ class ActionButtonsWidget extends StatelessWidget {
 
   // ---------------- WIDGET BUILD ----------------
   @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        // Message Button (Teal)
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton.icon(
-            onPressed: () => messageProvider(context),
-            icon: const Icon(Icons.chat_bubble, color: Colors.white),
-            label: const Text('Message', style: TextStyle(color: Colors.white)),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.teal,
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
+Widget build(BuildContext context) {
+  return Row(
+    children: [
+      // Message Button (LinkedIn style solid)
+      Expanded(
+        child: ElevatedButton.icon(
+          onPressed: () => messageProvider(context),
+          icon: const Icon(Icons.chat_bubble, color: Colors.white, size: 18),
+          label: const Text(
+            'Message',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 15,
+              fontWeight: FontWeight.bold,
             ),
           ),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF0A66C2), // LinkedIn Dark Blue
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            elevation: 3,
+          ),
         ),
-        const SizedBox(height: 8),
+      ),
 
-        // Book Now Button (Purple)
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            onPressed: () => bookNow(context),
-            child: const Text('Book Now', style: TextStyle(color: Colors.white)),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.purple,
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
+      const SizedBox(width: 12),
+
+      // Book Now Button (LinkedIn style outline)
+      Expanded(
+        child: OutlinedButton(
+          onPressed: () => bookNow(context),
+          style: OutlinedButton.styleFrom(
+            side: const BorderSide(
+              color: Color(0xFF2A3A69), // LinkedIn Dark Blue Border
+              width: 2,
+            ),
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+          child: const Text(
+            'Book Now',
+            style: TextStyle(
+              color: Color(0xFF2A3A69), // LinkedIn Dark Blue Text
+              fontSize: 15,
+              fontWeight: FontWeight.bold,
             ),
           ),
         ),
-      ],
-    );
-  }
+      ),
+    ],
+  );
+}
+
 }

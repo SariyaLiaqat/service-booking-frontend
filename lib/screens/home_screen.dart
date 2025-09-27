@@ -1,6 +1,10 @@
 
 
-// // home_screen.dart
+// ///////////////////////
+// ///
+// ///
+
+
 // import 'dart:convert';
 // import 'package:flutter/material.dart';
 // import 'package:flutter/services.dart';
@@ -60,7 +64,6 @@
 //       if (data['receiverId'] == widget.userData['id']) {
 //         setState(() {
 //           unreadMessagesCount += 1;
-//           // Optional: update conversations list to show latest message
 //         });
 //       }
 //     });
@@ -77,47 +80,41 @@
 //   }
 
 //   Future<void> fetchConversations() async {
-//   setState(() => isLoadingConversations = true);
-//   try {
-//     final userId = widget.userData['id'];
-//     if (userId == null) return;
+//     setState(() => isLoadingConversations = true);
+//     try {
+//       final userId = widget.userData['id'];
+//       if (userId == null) return;
 
-//     final url = Uri.parse("${Backend.baseUrl}/conversations?user_id=$userId");
-//     final response = await http.get(url);
+//       final url = Uri.parse("${Backend.baseUrl}/conversations?user_id=$userId");
+//       final response = await http.get(url);
 
-//     if (response.statusCode == 200) {
-//       final data = jsonDecode(response.body);
-//       setState(() {
-//         conversations = (data['conversations'] as List<dynamic>?) ?? [];
-
-//         // ✅ Type-safe unread messages count
-//        unreadMessagesCount = conversations.fold<int>(
-//   0,
-//   (sum, c) {
-//     final count = c['unread_count'];
-//     // ensure always int
-//     if (count is int) return sum + count;
-//     if (count is double) return sum + count.toInt();
-//     return sum; // agar null ya bool, ignore
-//   },
-// );
-
-//       });
-//     } else {
+//       if (response.statusCode == 200) {
+//         final data = jsonDecode(response.body);
+//         setState(() {
+//           conversations = (data['conversations'] as List<dynamic>?) ?? [];
+//           unreadMessagesCount = conversations.fold<int>(
+//             0,
+//             (sum, c) {
+//               final count = c['unread_count'];
+//               if (count is int) return sum + count;
+//               if (count is double) return sum + count.toInt();
+//               return sum;
+//             },
+//           );
+//         });
+//       } else {
+//         ScaffoldMessenger.of(context).showSnackBar(
+//           SnackBar(content: Text('Failed to load conversations')),
+//         );
+//       }
+//     } catch (e) {
 //       ScaffoldMessenger.of(context).showSnackBar(
-//         SnackBar(content: Text('Failed to load conversations')),
+//         SnackBar(content: Text('Error fetching conversations: $e')),
 //       );
+//     } finally {
+//       setState(() => isLoadingConversations = false);
 //     }
-//   } catch (e) {
-//     ScaffoldMessenger.of(context).showSnackBar(
-//       SnackBar(content: Text('Error fetching conversations: $e')),
-//     );
-//   } finally {
-//     setState(() => isLoadingConversations = false);
 //   }
-// }
-
-
 
 //   Future<void> fetchUnseenNotifications() async {
 //     try {
@@ -172,67 +169,89 @@
 
 //     return Scaffold(
 //       body: IndexedStack(index: _currentIndex, children: pages),
-//       bottomNavigationBar: BottomNavigationBar(
-//         currentIndex: _currentIndex,
-//         type: BottomNavigationBarType.fixed,
-//         onTap: (index) {
-//           setState(() => _currentIndex = index);
-//           if (index == 2) resetUnreadMessages();
-//           if (index == 3) resetUnseenNotifications();
-//         },
-//         items: [
-//           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Services'),
-//           BottomNavigationBarItem(icon: Icon(Icons.check_circle_outline), label: 'My Tasks'),
-//           BottomNavigationBarItem(
-//             icon: Stack(
-//               children: [
-//                 Icon(Icons.message),
-//                 if (unreadMessagesCount > 0)
-//                   Positioned(
-//                     right: 0,
-//                     top: 0,
-//                     child: Container(
-//                       padding: EdgeInsets.all(3),
-//                       decoration: BoxDecoration(
-//                         color: Colors.red,
-//                         shape: BoxShape.circle,
-//                       ),
-//                       child: Text(
-//                         '$unreadMessagesCount',
-//                         style: TextStyle(color: Colors.white, fontSize: 10),
+//       bottomNavigationBar: Container(
+//         decoration: BoxDecoration(
+//           color: Colors.white,
+//           boxShadow: [
+//             BoxShadow(
+//               color: Colors.grey.withOpacity(0.2),
+//               blurRadius: 10,
+//             ),
+//           ],
+//         ),
+//         child: BottomNavigationBar(
+//           currentIndex: _currentIndex,
+//           type: BottomNavigationBarType.fixed,
+//           selectedItemColor:Color(0xFF0A66C2),
+//           unselectedItemColor: Color(0xFF5C74B1),
+//           onTap: (index) {
+//             setState(() => _currentIndex = index);
+//             if (index == 2) resetUnreadMessages();
+//             if (index == 3) resetUnseenNotifications();
+//           },
+//           items: [
+//             BottomNavigationBarItem(
+//               icon: Icon(Icons.home),
+//               label: 'Services',
+//             ),
+//             BottomNavigationBarItem(
+//               icon: Icon(Icons.check_circle_outline),
+//               label: 'Tasks',
+//             ),
+//             BottomNavigationBarItem(
+//               icon: Stack(
+//                 children: [
+//                   Icon(Icons.message),
+//                   if (unreadMessagesCount > 0)
+//                     Positioned(
+//                       right: 0,
+//                       top: 0,
+//                       child: Container(
+//                         padding: EdgeInsets.all(4),
+//                         decoration: BoxDecoration(
+//                           color: Colors.red,
+//                           shape: BoxShape.circle,
+//                         ),
+//                         child: Text(
+//                           '$unreadMessagesCount',
+//                           style: TextStyle(color: Colors.white, fontSize: 10),
+//                         ),
 //                       ),
 //                     ),
-//                   ),
-//               ],
+//                 ],
+//               ),
+//               label: 'Messages',
 //             ),
-//             label: 'Messages',
-//           ),
-//           BottomNavigationBarItem(
-//             icon: Stack(
-//               children: [
-//                 Icon(Icons.notifications),
-//                 if (unseenNotificationsCount > 0)
-//                   Positioned(
-//                     right: 0,
-//                     top: 0,
-//                     child: Container(
-//                       padding: EdgeInsets.all(3),
-//                       decoration: BoxDecoration(
-//                         color: Colors.red,
-//                         shape: BoxShape.circle,
-//                       ),
-//                       child: Text(
-//                         '$unseenNotificationsCount',
-//                         style: TextStyle(color: Colors.white, fontSize: 10),
+//             BottomNavigationBarItem(
+//               icon: Stack(
+//                 children: [
+//                   Icon(Icons.notifications),
+//                   if (unseenNotificationsCount > 0)
+//                     Positioned(
+//                       right: 0,
+//                       top: 0,
+//                       child: Container(
+//                         padding: EdgeInsets.all(4),
+//                         decoration: BoxDecoration(
+//                           color: Colors.red,
+//                           shape: BoxShape.circle,
+//                         ),
+//                         child: Text(
+//                           '$unseenNotificationsCount',
+//                           style: TextStyle(color: Colors.white, fontSize: 10),
+//                         ),
 //                       ),
 //                     ),
-//                   ),
-//               ],
+//                 ],
+//               ),
+//               label: 'Notifications',
 //             ),
-//             label: 'Notifications',
-//           ),
-//           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'My Profile'),
-//         ],
+//             BottomNavigationBarItem(
+//               icon: Icon(Icons.person),
+//               label: 'Profile',
+//             ),
+//           ],
+//         ),
 //       ),
 //     );
 //   }
@@ -288,37 +307,66 @@
 //   @override
 //   Widget build(BuildContext context) {
 //     return Scaffold(
-//       appBar: AppBar(
-//         leading: Icon(Icons.menu),
-//         title: Text("Chats"),
-//         actions: [
-//           IconButton(icon: Icon(Icons.message), onPressed: () {}),
-//           IconButton(icon: Icon(Icons.notifications), onPressed: () {}),
-//         ],
-//         backgroundColor: Colors.black12,
+//       backgroundColor: Color(0xFFFFFFFF),
+//      appBar: PreferredSize(
+//   preferredSize: const Size.fromHeight(70), // thoda height increase
+//   child: AppBar(
+//     backgroundColor: const Color(0xFF0A66C2), // Premium LinkedIn Blue
+//     elevation: 6, // subtle shadow for depth
+//     shape: const RoundedRectangleBorder(
+//       borderRadius: BorderRadius.vertical(
+//         bottom: Radius.circular(20), // Rounded bottom corners
 //       ),
+//     ),
+//     titleSpacing: 16, // padding from left
+//     title: const Text(
+//       "My Chats",
+//       style: TextStyle(
+//         color: Colors.white,
+//         fontWeight: FontWeight.bold,
+//         fontSize: 20,
+//       ),
+//     ),
+//     centerTitle: false, // title left-aligned
+//   ),
+// ),
+
 //       body: Column(
 //         children: [
-//           Padding(
-//             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-//             child: TextField(
-//               controller: _searchController,
-//               decoration: InputDecoration(
-//                 hintText: 'Search chats...',
-//                 prefixIcon: Icon(Icons.search),
-//                 filled: true,
-//                 fillColor: Colors.grey[200],
-//                 contentPadding: EdgeInsets.symmetric(vertical: 0, horizontal: 16),
-//                 border: OutlineInputBorder(
-//                   borderRadius: BorderRadius.circular(25),
-//                   borderSide: BorderSide.none,
-//                 ),
-//               ),
-//             ),
-//           ),
+//          Padding(
+//   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+//   child: TextField(
+//     controller: _searchController,
+//     style: const TextStyle(
+//       color: Color(0xFF2A3A69), // Premium dark text
+//       fontWeight: FontWeight.w500,
+//     ),
+//     decoration: InputDecoration(
+//       hintText: 'Search chats...',
+//       hintStyle: const TextStyle(color: Color(0xFF5C74B1)),
+//       prefixIcon: const Icon(Icons.search, color: Color(0xFF5C74B1)),
+//       filled: true,
+//       fillColor: const Color(0xFFD9E1F0), // Light blue background
+//       contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
+//       border: OutlineInputBorder(
+//         borderRadius: BorderRadius.circular(25), // Rounded fully
+//         borderSide: BorderSide.none,
+//       ),
+//       focusedBorder: OutlineInputBorder(
+//         borderRadius: BorderRadius.circular(25),
+//         borderSide: const BorderSide(
+//           color: Color(0xFF0A66C2), // LinkedIn blue focus
+//           width: 2,
+//         ),
+//       ),
+//     ),
+//   ),
+// ),
+
 //           Expanded(
 //             child: RefreshIndicator(
 //               onRefresh: widget.onRefresh,
+//               color:  Color(0xFF0A66C2),
 //               child: filteredConversations.isEmpty
 //                   ? ListView(
 //                       children: [
@@ -329,7 +377,7 @@
 //                               widget.conversations.isEmpty
 //                                   ? 'No conversations yet'
 //                                   : 'No results found',
-//                               style: TextStyle(fontSize: 16, color: Colors.grey),
+//                               style: TextStyle(fontSize: 16, color: Color(0xFF5C74B1)),
 //                             ),
 //                           ),
 //                         )
@@ -347,46 +395,58 @@
 //                         final lastMessage = conv['last_message'] ?? '';
 //                         final unreadCount = conv['unread_count'] ?? 0;
 
-//                         return ListTile(
-//                           leading: CircleAvatar(
-//                             backgroundImage: (otherAvatar != null && otherAvatar.toString().isNotEmpty)
-//                                 ? NetworkImage("${Backend.baseUrl}/$otherAvatar")
-//                                 : null,
-//                             child: (otherAvatar == null || otherAvatar.toString().isEmpty)
-//                                 ? Icon(Icons.person)
-//                                 : null,
+//                         return Card(
+//                           margin: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+//                           shape: RoundedRectangleBorder(
+//                             borderRadius: BorderRadius.circular(16),
 //                           ),
-//                           title: Text(otherName),
-//                           subtitle: Text(
-//                             lastMessage,
-//                             maxLines: 1,
-//                             overflow: TextOverflow.ellipsis,
-//                           ),
-//                           trailing: unreadCount > 0
-//                               ? CircleAvatar(
-//                                   radius: 12,
-//                                   backgroundColor: Colors.red,
-//                                   child: Text(
-//                                     '$unreadCount',
-//                                     style: TextStyle(color: Colors.white, fontSize: 12),
-//                                   ),
-//                                 )
-//                               : null,
-//                           onTap: () {
-//                             final otherUserId = conv['other_user_id'] ?? conv['provider_id'] ?? -1;
-//                             if (otherUserId == -1) return;
+//                           elevation: 2,
+//                           child: ListTile(
+//                             leading: CircleAvatar(
+//                               backgroundImage: (otherAvatar != null && otherAvatar.toString().isNotEmpty)
+//                                   ? NetworkImage("${Backend.baseUrl}/$otherAvatar")
+//                                   : null,
+//                               child: (otherAvatar == null || otherAvatar.toString().isEmpty)
+//                                   ? Icon(Icons.person, color: Color(0xFF0A66C2),)
+//                                   : null,
+//                               backgroundColor: Color(0xFFD9E1F0),
+//                             ),
+//                             title: Text(
+//                               otherName,
+//                               style: TextStyle(color: Color(0xFF0A66C2), fontWeight: FontWeight.bold),
+//                             ),
+//                             subtitle: Text(
+//                               lastMessage,
+//                               maxLines: 1,
+//                               overflow: TextOverflow.ellipsis,
+//                               style: TextStyle(color: Color(0xFF5C74B1)),
+//                             ),
+//                             trailing: unreadCount > 0
+//                                 ? CircleAvatar(
+//                                     radius: 12,
+//                                     backgroundColor: Colors.red,
+//                                     child: Text(
+//                                       '$unreadCount',
+//                                       style: TextStyle(color: Colors.white, fontSize: 12),
+//                                     ),
+//                                   )
+//                                 : null,
+//                             onTap: () {
+//                               final otherUserId = conv['other_user_id'] ?? conv['provider_id'] ?? -1;
+//                               if (otherUserId == -1) return;
 
-//                             Navigator.push(
-//                               context,
-//                               MaterialPageRoute(
-//                                 builder: (_) => ChatPage(
-//                                   conversationId: convoId,
-//                                   currentUserId: widget.currentUserId,
-//                                   otherUserId: otherUserId,
+//                               Navigator.push(
+//                                 context,
+//                                 MaterialPageRoute(
+//                                   builder: (_) => ChatPage(
+//                                     conversationId: convoId,
+//                                     currentUserId: widget.currentUserId,
+//                                     otherUserId: otherUserId,
+//                                   ),
 //                                 ),
-//                               ),
-//                             );
-//                           },
+//                               );
+//                             },
+//                           ),
 //                         );
 //                       },
 //                     ),
@@ -397,6 +457,7 @@
 //     );
 //   }
 // }
+
 
 
 
@@ -556,6 +617,7 @@ class _HomeScreenState extends State<HomeScreen> {
         conversations: conversations,
         currentUserId: widget.userData['id'] ?? -1,
         onRefresh: fetchConversations,
+        socket: socket,
       ),
       NotificationsPage(
         userId: widget.userData["id"] ?? -1,
@@ -583,7 +645,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: BottomNavigationBar(
           currentIndex: _currentIndex,
           type: BottomNavigationBarType.fixed,
-          selectedItemColor: Color(0xFF2A3A69),
+          selectedItemColor:Color(0xFF0A66C2),
           unselectedItemColor: Color(0xFF5C74B1),
           onTap: (index) {
             setState(() => _currentIndex = index);
@@ -597,7 +659,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.check_circle_outline),
-              label: 'My Tasks',
+              label: 'Tasks',
             ),
             BottomNavigationBarItem(
               icon: Stack(
@@ -649,7 +711,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.person),
-              label: 'My Profile',
+              label: 'Profile',
             ),
           ],
         ),
@@ -663,11 +725,13 @@ class MessagesTab extends StatefulWidget {
   final List<dynamic> conversations;
   final int currentUserId;
   final Future<void> Function() onRefresh;
+final IO.Socket socket; // <-- add this
 
   MessagesTab({
     required this.conversations,
     required this.currentUserId,
     required this.onRefresh,
+    required this.socket,
   });
 
   @override
@@ -709,40 +773,65 @@ class _MessagesTabState extends State<MessagesTab> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Color(0xFFFFFFFF),
-      appBar: AppBar(
-        
-       // leading: Icon(Icons.menu, color: Colors.white),
-        title: Text(
-          "My Chats",
-          style: TextStyle(color: Color(0xFFFFFFFF), fontWeight: FontWeight.bold),
-        ),
-       backgroundColor: const Color(0xFF5C74B1),
-        elevation: 0,
-        
+     appBar: PreferredSize(
+  preferredSize: const Size.fromHeight(70), // thoda height increase
+  child: AppBar(
+    backgroundColor: const Color(0xFF0A66C2), // Premium LinkedIn Blue
+    elevation: 6, // subtle shadow for depth
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(
+        bottom: Radius.circular(20), // Rounded bottom corners
       ),
+    ),
+    titleSpacing: 16, // padding from left
+    title: const Text(
+      "My Chats",
+      style: TextStyle(
+        color: Colors.white,
+        fontWeight: FontWeight.bold,
+        fontSize: 20,
+      ),
+    ),
+    centerTitle: false, // title left-aligned
+  ),
+),
+
       body: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: 'Search chats...',
-                prefixIcon: Icon(Icons.search, color: Color(0xFF5C74B1)),
-                filled: true,
-                fillColor: Color(0xFFD9E1F0),
-                contentPadding: EdgeInsets.symmetric(vertical: 0, horizontal: 16),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(25),
-                  borderSide: BorderSide.none,
-                ),
-              ),
-            ),
-          ),
+         Padding(
+  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+  child: TextField(
+    controller: _searchController,
+    style: const TextStyle(
+      color: Color(0xFF2A3A69), // Premium dark text
+      fontWeight: FontWeight.w500,
+    ),
+    decoration: InputDecoration(
+      hintText: 'Search chats...',
+      hintStyle: const TextStyle(color: Color(0xFF5C74B1)),
+      prefixIcon: const Icon(Icons.search, color: Color(0xFF5C74B1)),
+      filled: true,
+      fillColor: const Color(0xFFD9E1F0), // Light blue background
+      contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(25), // Rounded fully
+        borderSide: BorderSide.none,
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(25),
+        borderSide: const BorderSide(
+          color: Color(0xFF0A66C2), // LinkedIn blue focus
+          width: 2,
+        ),
+      ),
+    ),
+  ),
+),
+
           Expanded(
             child: RefreshIndicator(
               onRefresh: widget.onRefresh,
-              color: Color(0xFF2A3A69),
+              color:  Color(0xFF0A66C2),
               child: filteredConversations.isEmpty
                   ? ListView(
                       children: [
@@ -783,13 +872,13 @@ class _MessagesTabState extends State<MessagesTab> {
                                   ? NetworkImage("${Backend.baseUrl}/$otherAvatar")
                                   : null,
                               child: (otherAvatar == null || otherAvatar.toString().isEmpty)
-                                  ? Icon(Icons.person, color: Color(0xFF2A3A69))
+                                  ? Icon(Icons.person, color: Color(0xFF0A66C2),)
                                   : null,
                               backgroundColor: Color(0xFFD9E1F0),
                             ),
                             title: Text(
                               otherName,
-                              style: TextStyle(color: Color(0xFF2A3A69), fontWeight: FontWeight.bold),
+                              style: TextStyle(color: Color(0xFF0A66C2), fontWeight: FontWeight.bold),
                             ),
                             subtitle: Text(
                               lastMessage,
@@ -807,21 +896,35 @@ class _MessagesTabState extends State<MessagesTab> {
                                     ),
                                   )
                                 : null,
-                            onTap: () {
-                              final otherUserId = conv['other_user_id'] ?? conv['provider_id'] ?? -1;
-                              if (otherUserId == -1) return;
+                           onTap: () {
+  final otherUserId = conv['other_user_id'] ?? conv['provider_id'] ?? -1;
+  if (otherUserId == -1) return;
 
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => ChatPage(
-                                    conversationId: convoId,
-                                    currentUserId: widget.currentUserId,
-                                    otherUserId: otherUserId,
-                                  ),
-                                ),
-                              );
-                            },
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (_) => ChatPage(
+        conversationId: convoId,
+        currentUserId: widget.currentUserId,
+        otherUserId: otherUserId,
+      ),
+    ),
+  ).then((_) {
+    setState(() {
+      conv['unread_count'] = 0;
+    });
+
+    try {
+      widget.socket.emit('mark_messages_seen', {
+        'conversationId': convoId,
+        'userId': widget.currentUserId,
+      });
+    } catch (e) {
+      debugPrint("Socket error: $e");
+    }
+  });
+},
+
                           ),
                         );
                       },

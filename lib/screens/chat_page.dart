@@ -376,38 +376,48 @@
 //                               fontSize: 12,
 //                               color: Colors.grey[700])),
 //                     ),
-//                   Container(
-//                     padding: const EdgeInsets.all(10),
-//                     margin: EdgeInsets.only(left: isMe ? 50 : 0, right: isMe ? 0 : 50),
-//                     decoration: BoxDecoration(
-//                       color: isNew
-//                           ? Colors.yellow.shade100
-//                           : isMe
-//                               ? Colors.blueAccent
-//                               : Colors.grey[300],
-//                       borderRadius: BorderRadius.circular(12),
-//                     ),
-//                     child: Column(
-//                       crossAxisAlignment:
-//                           isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-//                       children: [
-//                         Text(messageText,
-//                             style: TextStyle(
-//                                 color: isMe ? Colors.white : Colors.black, fontSize: 16),
-//                             softWrap: true),
-//                         if (createdAt != null)
-//                           Padding(
-//                             padding: const EdgeInsets.only(top: 4),
-//                             child: Text(
-//                               "${createdAt.hour.toString().padLeft(2, '0')}:${createdAt.minute.toString().padLeft(2, '0')}",
-//                               style: TextStyle(
-//                                   color: isMe ? Colors.white70 : Colors.black54,
-//                                   fontSize: 10),
-//                             ),
-//                           ),
-//                       ],
-//                     ),
-//                   ),
+//                  Container(
+//   padding: const EdgeInsets.all(10),
+//   margin: EdgeInsets.only(left: isMe ? 50 : 0, right: isMe ? 0 : 50),
+//   decoration: BoxDecoration(
+//     color: isNew
+//         ? Color(0xFF5C74B1).withOpacity(0.2) // soft blue highlight
+//         : isMe
+//             ? Color(0xFF2A3A69) // my msg dark blue
+//             : Colors.white, // others white
+//     borderRadius: BorderRadius.circular(12),
+//   ),
+//   child: Column(
+//     crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+//     children: [
+//       Text(
+//         messageText,
+//         style: TextStyle(
+//           color: isMe ? Colors.white : Color(0xFF2A3A69), // contrast
+//           fontSize: 16,
+//         ),
+//         softWrap: true,
+//       ),
+//       if (createdAt != null)
+//         Padding(
+//           padding: const EdgeInsets.only(top: 4),
+//           child: Text(
+//             "${createdAt.hour.toString().padLeft(2, '0')}:${createdAt.minute.toString().padLeft(2, '0')}",
+//             style: TextStyle(
+//               color: isMe ? Colors.white70 : Color(0xFF5C74B1),
+//               fontSize: 10,
+//             ),
+//           ),
+//         ),
+//     ],
+//   ),
+// ),
+
+
+
+
+
+
 //                 ],
 //               ),
 //             ),
@@ -443,35 +453,50 @@
 //   @override
 //   Widget build(BuildContext context) {
 //     return Scaffold(
-//       backgroundColor: Colors.grey.shade100,
+//       backgroundColor: Color(0xFFD9E1F0),
 //       appBar: AppBar(
-//         backgroundColor: Colors.white,
-//         elevation: 1,
-//         titleSpacing: 0,
-//         title: Row(
+//   backgroundColor:  Color(0xFF5C74B1), // Dark blue
+//   elevation: 1,
+//   titleSpacing: 0,
+//   title: Row(
+//     children: [
+//       CircleAvatar(
+//         radius: 20,
+//         backgroundImage: otherAvatar != null ? NetworkImage(otherAvatar!) : null,
+//         child: otherAvatar == null ? Icon(Icons.person, color: Colors.white) : null,
+//         backgroundColor: Color(0xFF5C74B1), // soft blue if no image
+//       ),
+//       SizedBox(width: 10),
+//       Flexible(
+//         child: Column(
+//           crossAxisAlignment: CrossAxisAlignment.start,
+//           mainAxisAlignment: MainAxisAlignment.center,
 //           children: [
-//             CircleAvatar(
-//                 radius: 20,
-//                 backgroundImage: otherAvatar != null ? NetworkImage(otherAvatar!) : null,
-//                 child: otherAvatar == null ? Icon(Icons.person) : null),
-//             SizedBox(width: 10),
-//             Flexible(
-//               child: Column(
-//                 crossAxisAlignment: CrossAxisAlignment.start,
-//                 mainAxisAlignment: MainAxisAlignment.center,
-//                 children: [
-//                   Text(otherName,
-//                       style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-//                       overflow: TextOverflow.ellipsis),
-//                   Text(otherOnline ? 'Online' : 'Offline',
-//                       style: TextStyle(
-//                           fontSize: 12, color: otherOnline ? Colors.green : Colors.green)),
-//                 ],
+//             Text(
+//               otherName,
+//               style: TextStyle(
+//                 fontSize: 16,
+//                 fontWeight: FontWeight.bold,
+//                 color: Colors.white, // white text on dark bar
+//               ),
+//               overflow: TextOverflow.ellipsis,
+//             ),
+//             Text(
+//               otherOnline ? 'Online' : 'Offline',
+//               style: TextStyle(
+//                 fontSize: 12,
+//                 color: otherOnline ? Colors.green : Colors.grey[300],
 //               ),
 //             ),
 //           ],
 //         ),
 //       ),
+//     ],
+//   ),
+// ),
+
+
+
 //       body: Column(
 //         children: [
 //           Expanded(
@@ -484,58 +509,66 @@
 //               },
 //             ),
 //           ),
-//           SafeArea(
-//             child: Container(
-//               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-//               decoration: BoxDecoration(
-//                   color: Colors.white,
-//                   boxShadow: [BoxShadow(color: Colors.grey.shade300, blurRadius: 3)]),
-//               child: Row(
-//                 children: [
-//                   Expanded(
-//                     child: TextField(
-//                       controller: _controller,
-//                       decoration: InputDecoration(
-//                         hintText: 'Type a message...',
-//                         border: OutlineInputBorder(
-//                             borderRadius: BorderRadius.circular(25),
-//                             borderSide: BorderSide.none),
-//                         fillColor: Colors.grey.shade100,
-//                         filled: true,
-//                         contentPadding:
-//                             EdgeInsets.symmetric(horizontal: 16, vertical: 0),
-//                       ),
-//                       onChanged: (_) {
-//                         socket.emit('typing', {
-//                           'userId': widget.currentUserId,
-//                           'isTyping': _controller.text.trim().isNotEmpty,
-//                         });
-//                         setState(() {});
-//                       },
-//                     ),
-//                   ),
-//                   IconButton(
-//                     icon: Icon(Icons.send,
-//                         color: _controller.text.trim().isEmpty
-//                             ? Colors.grey
-//                             : Colors.blue),
-//                     onPressed: _controller.text.trim().isEmpty
-//                         ? null
-//                         : () => sendMessage(_controller.text),
-//                   ),
-//                 ],
+
+
+//          SafeArea(
+//   child: Container(
+//     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+//     decoration: BoxDecoration(
+//       color: Colors.white,
+//       boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 3)],
+//     ),
+//     child: Row(
+//       children: [
+//         Expanded(
+//           child: TextField(
+//             controller: _controller,
+//             decoration: InputDecoration(
+//               hintText: 'Type a message...',
+//               hintStyle: TextStyle(color: Color(0xFF5C74B1)),
+//               border: OutlineInputBorder(
+//                 borderRadius: BorderRadius.circular(25),
+//                 borderSide: BorderSide.none,
 //               ),
+//               fillColor: Color(0xFFD9E1F0), // soft light blue
+//               filled: true,
+//               contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 0),
 //             ),
+//             style: TextStyle(color: Color(0xFF2A3A69)),
+//             onChanged: (_) {
+//               socket.emit('typing', {
+//                 'userId': widget.currentUserId,
+//                 'isTyping': _controller.text.trim().isNotEmpty,
+//               });
+//               setState(() {});
+//             },
 //           ),
-//         ],
-//       ),
-//     );
+//         ),
+//         IconButton(
+//           icon: Icon(
+//             Icons.send,
+//             color: _controller.text.trim().isEmpty
+//                 ? Colors.grey
+//                 : Color(0xFF2A3A69), // send button dark blue
+//           ),
+//           onPressed: _controller.text.trim().isEmpty
+//               ? null
+//               : () => sendMessage(_controller.text),
+//         ),
+//       ],
+//     ),
+//   ),
+//          )]
+//       )
+//          );
+         
+        
+
+
+    
 //   }
 // }
 
-
-///////////////////////////////
-///
 
 
 
@@ -914,7 +947,7 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
                           style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 12,
-                              color: Colors.grey[700])),
+                              color: Color(0xFF0A66C2),)),
                     ),
                  Container(
   padding: const EdgeInsets.all(10),
@@ -953,11 +986,6 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
   ),
 ),
 
-
-
-
-
-
                 ],
               ),
             ),
@@ -995,7 +1023,7 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
     return Scaffold(
       backgroundColor: Color(0xFFD9E1F0),
       appBar: AppBar(
-  backgroundColor:  Color(0xFF5C74B1), // Dark blue
+  backgroundColor:  Color(0xFF0A66C2), // Dark blue
   elevation: 1,
   titleSpacing: 0,
   title: Row(
@@ -1089,7 +1117,7 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
             Icons.send,
             color: _controller.text.trim().isEmpty
                 ? Colors.grey
-                : Color(0xFF2A3A69), // send button dark blue
+                :  Color(0xFF0A66C2), // send button dark blue
           ),
           onPressed: _controller.text.trim().isEmpty
               ? null
@@ -1101,10 +1129,5 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
          )]
       )
          );
-         
-        
-
-
-    
   }
 }

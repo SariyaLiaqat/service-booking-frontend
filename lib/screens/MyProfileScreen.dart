@@ -1,4 +1,6 @@
 
+
+
 // import 'dart:convert';
 // import 'dart:io';
 // import 'package:flutter/foundation.dart' show kIsWeb;
@@ -150,6 +152,41 @@
 //     }
 //     return null;
 //   }
+
+
+
+
+// Future<void> _openExternalProviderProfile(int providerId) async {
+//   setState(() => isLoading = true);
+//   try {
+//     final url = Uri.parse('${Backend.baseUrl}/auth/provider/$providerId');
+//     final response = await http.get(url);
+
+//     if (response.statusCode == 200) {
+//       final data = jsonDecode(response.body);
+//       final providerData = data['provider'];
+
+//       Navigator.push(
+//         context,
+//         MaterialPageRoute(
+//           builder: (_) => MyProfileScreen(
+//             userData: providerData,
+//             currentUserId: widget.currentUserId,
+//             readOnly: true, // external view
+//           ),
+//         ),
+//       );
+//     } else {
+//       ScaffoldMessenger.of(context).showSnackBar(
+//         SnackBar(content: Text('Failed to load provider profile ❌')),
+//       );
+//     }
+//   } catch (e) {
+//     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+//   } finally {
+//     setState(() => isLoading = false);
+//   }
+// }
 
 //   // ✅ Profile Save Function (self-only)
 //   Future<void> saveProfile() async {
@@ -377,25 +414,47 @@
 //     }
 //   }
 
+
+
 //   @override
 //   Widget build(BuildContext context) {
 //     final isExternalView = widget.readOnly;
 
 //     return Scaffold(
 //       backgroundColor: const Color(0xFFFFFFFF), // White background
-//       appBar: AppBar(
-//         backgroundColor: const Color(0xFF2A3A69), // Dark Blue primary
-//         title: Text(isExternalView ? 'Provider Profile' : 'My Profile'),
-//         actions: [
-//           if (!isExternalView)
-//             IconButton(
-//               icon: Icon(isEditing ? Icons.close : Icons.edit, color: Colors.white),
-//               onPressed: () => setState(() => isEditing = !isEditing),
-//             ),
-//         ],
+//      appBar: AppBar(
+//     backgroundColor: const Color(0xFF0A66C2), // LinkedIn Blue
+//     elevation: 4, // subtle shadow for depth
+//     shape: const RoundedRectangleBorder(
+//       borderRadius: BorderRadius.vertical(
+//         bottom: Radius.circular(16), // rounded bottom corners
 //       ),
+//     ),
+//     toolbarHeight: 60, // sets the height directly
+//     titleSpacing: 16, // padding from left
+//     title: Text(
+//       isExternalView ? 'Provider Profile' : 'My Profile',
+//       style: const TextStyle(
+//         color: Colors.white, // text color
+//         fontSize: 20,
+//         fontWeight: FontWeight.bold,
+//       ),
+//     ),
+//     actions: [
+//       if (!isExternalView)
+//         IconButton(
+//           icon: Icon(
+//             isEditing ? Icons.close : Icons.edit,
+//             color: Colors.white,
+//           ),
+//           onPressed: () => setState(() => isEditing = !isEditing),
+//         ),
+//     ],
+//   ),
+
+//   /////
 //       body: isLoading
-//           ? const Center(child: CircularProgressIndicator(color: Color(0xFF2A3A69)))
+//           ? const Center(child: CircularProgressIndicator(color: Color(0xFF0A66C2),))
 //           : SingleChildScrollView(
 //               padding: const EdgeInsets.all(16),
 //               child: Form(
@@ -404,195 +463,476 @@
 //                   crossAxisAlignment: CrossAxisAlignment.start,
 //                   children: [
 //                     // Cover + Profile layout
-//                     Stack(
-//                       children: [
-//                         GestureDetector(
-//                           onTap: isEditing && !isExternalView ? () => pickImage(false) : null,
-//                           child: Container(
-//                             height: 150,
-//                             width: double.infinity,
-//                             decoration: BoxDecoration(
-//                               color: const Color(0xFFD9E1F0), // Light Blue card/faint
-//                               borderRadius: BorderRadius.circular(8),
-//                             ),
-//                             child: _getImage(isProfile: false) != null
-//                                 ? ClipRRect(
-//                                     borderRadius: BorderRadius.circular(8),
-//                                     child: Image(
-//                                       image: _getImage(isProfile: false)!,
-//                                       fit: BoxFit.cover,
-//                                     ),
-//                                   )
-//                                 : const Center(
-//                                     child: Text('Upload Cover Photo',
-//                                         style: TextStyle(color: Color(0xFF5C74B1)))),
-//                           ),
-//                         ),
-//                         Positioned(
-//                           left: 16,
-//                           bottom: -40,
-//                           child: GestureDetector(
-//                             onTap: isEditing && !isExternalView ? () => pickImage(true) : null,
-//                             child: CircleAvatar(
-//                               radius: 50,
-//                               backgroundImage: _getImage(isProfile: true),
-//                               backgroundColor: const Color(0xFFD9E1F0),
-//                               child: _getImage(isProfile: true) == null
-//                                   ? const Icon(Icons.person, size: 50, color: Color(0xFF5C74B1))
-//                                   : null,
-//                             ),
-//                           ),
-//                         ),
-//                       ],
+//                    Stack(
+//   clipBehavior: Clip.none,
+//   children: [
+//     // --- Cover Photo ---
+//     GestureDetector(
+//       onTap: isEditing && !isExternalView ? () => pickImage(false) : null,
+//       child: Container(
+//         height: 220, // taller for premium look
+//         width: double.infinity,
+//         decoration: BoxDecoration(
+//           color: const Color(0xFFD9E1F0), // fallback color
+//           borderRadius: const BorderRadius.vertical(
+//             bottom: Radius.circular(16), // rounded bottom corners
+//           ),
+//         ),
+//         child: _getImage(isProfile: false) != null
+//             ? ClipRRect(
+//                 borderRadius: const BorderRadius.vertical(
+//                   bottom: Radius.circular(16),
+//                 ),
+//                 child: Stack(
+//                   fit: StackFit.expand,
+//                   children: [
+//                     Image(
+//                       image: _getImage(isProfile: false)!,
+//                       fit: BoxFit.cover,
 //                     ),
-//                     const SizedBox(height: 60),
+//                     Container(
+//                       color: Colors.black.withOpacity(0.2), // subtle overlay
+//                     ),
+//                   ],
+//                 ),
+//               )
+//             : const Center(
+//                 child: Text(
+//                   'Upload Cover Photo',
+//                   style: TextStyle(
+//                     color: Color(0xFF5C74B1),
+//                     fontSize: 18,
+//                     fontWeight: FontWeight.bold,
+//                   ),
+//                 ),
+//               ),
+//       ),
+//     ),
 
-//                     // Name & Username
-//                     isEditing && !isExternalView
-//                         ? Column(
-//                             children: [
-//                               _buildCustomTextField(nameController, 'Full Name'),
-//                               const SizedBox(height: 10),
-//                               _buildCustomTextField(usernameController, 'Username / Display Name'),
-//                               const SizedBox(height: 10),
-//                               _buildCustomTextField(bioController, 'Bio', maxLines: 2),
-//                             ],
-//                           )
-//                         : Column(
-//                             crossAxisAlignment: CrossAxisAlignment.start,
-//                             children: [
-//                               Text(user['name'] ?? 'Your Name',
-//                                   style: const TextStyle(
-//                                       fontSize: 22,
-//                                       fontWeight: FontWeight.bold,
-//                                       color: Color(0xFF2A3A69))), // Dark Blue
-//                               if (user['username'] != null)
-//                                 Text('@${user['username']}', style: const TextStyle(color: Color(0xFF5C74B1))), // Medium Blue
-//                               if (user['bio'] != null && (user['bio'] as String).isNotEmpty)
-//   Padding(
-//     padding: const EdgeInsets.symmetric(vertical: 8.0),
-//     child: Text(user['bio'] ?? '',
-//         style: const TextStyle(color: Color(0xFF5C74B1))),
-//   ),
+//     // --- Profile Picture ---
+//     Positioned(
+//       bottom: -50, // overlaps cover photo
+//       left: 0,
+//       right: 0,
+//       child: Center(
+//         child: GestureDetector(
+//           onTap: isEditing && !isExternalView ? () => pickImage(true) : null,
+//           child: CircleAvatar(
+//             radius: 60, // bigger for premium look
+//             backgroundColor: Colors.white, // border effect
+//             child: CircleAvatar(
+//               radius: 56, // inner circle for image
+//               backgroundImage: _getImage(isProfile: true),
+//               backgroundColor: const Color(0xFFD9E1F0),
+//               child: _getImage(isProfile: true) == null
+//                   ? const Icon(
+//                       Icons.person,
+//                       size: 60,
+//                       color: Color(0xFF5C74B1),
+//                     )
+//                   : null,
+//             ),
+//           ),
+//         ),
+//       ),
+//     ),
+//   ],
+// ),
+// const SizedBox(height: 70), // space for overlapping avatar
 
-//                             if (isExternalView)
-//   ExternalProfileWidget(
-//     userData: user,
-//     currentUserId: widget.currentUserId,
-//   ),
 
-//                             ],
-//                           ),
+
+//                     //const SizedBox(height: 60),
+
+//                    // Name & Username
+// isEditing && !isExternalView
+//     ? Column(
+//         children: [
+//           _buildCustomTextField(nameController, 'Full Name'),
+//           const SizedBox(height: 10),
+//           _buildCustomTextField(usernameController, 'Username / Display Name'),
+//           const SizedBox(height: 10),
+//           _buildCustomTextField(bioController, 'Bio', maxLines: 2),
+//         ],
+//       )
+//     : Column(
+//         crossAxisAlignment: CrossAxisAlignment.center, // Centered like LinkedIn
+//         children: [
+//           // ✅ Self profile view (non-external)
+//           if (!isExternalView) ...[
+//             Text(
+//               user['name'] ?? 'Your Name',
+//               style: const TextStyle(
+//                 fontSize: 24,
+//                 fontWeight: FontWeight.bold,
+//                 color: Colors.black, // Black text for premium look
+//               ),
+//             ),
+//             if (user['username'] != null)
+//               Padding(
+//                 padding: const EdgeInsets.only(top: 4),
+//                 child: Text(
+//                   '@${user['username']}',
+//                   style: const TextStyle(
+//                     fontSize: 16,
+//                     color: Colors.grey, // subtle grey for username
+//                   ),
+//                 ),
+//               ),
+//             if (user['bio'] != null && (user['bio'] as String).isNotEmpty)
+//               Padding(
+//                 padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+//                 child: Text(
+//                   user['bio'] ?? '',
+//                   textAlign: TextAlign.center,
+//                   style: const TextStyle(
+//                     fontSize: 15,
+//                     fontStyle: FontStyle.italic, // italic for short bio
+//                     color: Colors.black54, // softer black
+//                   ),
+//                 ),
+//               ),
+//           ],
+
+//           // ✅ External profile view
+//           if (isExternalView)
+//             ExternalProfileWidget(
+//               userData: user,
+//               currentUserId: widget.currentUserId,
+//             ),
+//         ],
+//       ),
+
+
 
 //                     const SizedBox(height: 16),
 
-//                     // Contact & Address
-//                     isEditing && !isExternalView
-//                         ? Column(
-//                             children: [
-//                               _buildCustomTextField(phoneController, 'Phone'),
-//                               const SizedBox(height: 10),
-//                               _buildCustomTextField(addressController, 'Address'),
-//                             ],
-//                           )
-//                         : Column(
-//                             crossAxisAlignment: CrossAxisAlignment.start,
-//                             children: [
-//                               Text('Phone: ${user['phone'] ?? '-'}', style: const TextStyle(color: Color(0xFF5C74B1))),
-//                               Text('Address: ${user['address'] ?? '-'}', style: const TextStyle(color: Color(0xFF5C74B1))),
-//                             ],
-//                           ),
+//                   // 📌 Contact Info Section
+// isEditing && !isExternalView
+//     ? Column(
+//         children: [
+//           _buildCustomTextField(phoneController, 'Phone'),
+//           const SizedBox(height: 10),
+//           _buildCustomTextField(addressController, 'Address'),
+//         ],
+//       )
+//     : Column(
+//         crossAxisAlignment: CrossAxisAlignment.start,
+//         children: [
+//           const Divider(
+//             color: Colors.grey, // subtle divider
+//             thickness: 0.6,
+//             height: 30,
+//           ),
+//           const Text(
+//             "Contact Info",
+//             style: TextStyle(
+//               fontSize: 18,
+//               fontWeight: FontWeight.bold,
+//               color: Colors.black,
+//             ),
+//           ),
+//           const SizedBox(height: 12),
 
-//                     const SizedBox(height: 16),
+//           // ✅ Phone
+//           Row(
+//             children: [
+//               const Icon(Icons.phone, size: 18, color: Colors.black54),
+//               const SizedBox(width: 8),
+//               Text(
+//                 user['phone'] ?? '-',
+//                 style: const TextStyle(
+//                   fontSize: 16,
+//                   color: Colors.black,
+//                 ),
+//               ),
+//             ],
+//           ),
+//           const SizedBox(height: 8),
+
+//           // ✅ Address
+//           Row(
+//             crossAxisAlignment: CrossAxisAlignment.start,
+//             children: [
+//               const Icon(Icons.location_on, size: 18, color: Colors.black54),
+//               const SizedBox(width: 8),
+//               Expanded(
+//                 child: Text(
+//                   user['address'] ?? '-',
+//                   style: const TextStyle(
+//                     fontSize: 16,
+//                     color: Colors.black,
+//                   ),
+//                 ),
+//               ),
+//             ],
+//           ),
+//         ],
+//       ),
+
+
+
+
+
+
+
+
+
+
+                   
 
 //                     // Skills
-//                     isEditing && !isExternalView
-//                         ? _buildCustomTextField(skillsController, 'Skills (comma separated)')
-//                         : Wrap(
-//                             spacing: 6,
-//                             children: user['skills'] != null
-//                                 ? (user['skills'] as List)
-//                                     .map<Widget>((skill) => Chip(
-//                                           label: Text(skill),
-//                                           backgroundColor: const Color(0xFF2A3A69), // Dark Blue
-//                                           labelStyle: const TextStyle(color: Colors.white),
-//                                         ))
-//                                     .toList()
-//                                 : const [Text('No skills', style: TextStyle(color: Color(0xFF5C74B1)))],
-//                           ),
+//                   const SizedBox(height: 16),
 
-//                     const SizedBox(height: 20),
+// // Skills Section
+// isEditing && !isExternalView
+//     ? _buildCustomTextField(skillsController, 'Skills (comma separated)')
+//     : Column(
+//         crossAxisAlignment: CrossAxisAlignment.start,
+//         children: [
+//           const Divider(
+//             color: Colors.grey,
+//             thickness: 0.6,
+//             height: 30,
+//           ),
+//           const Text(
+//             "Skills",
+//             style: TextStyle(
+//               fontSize: 18,
+//               fontWeight: FontWeight.bold,
+//               color: Colors.black,
+//             ),
+//           ),
+//           const SizedBox(height: 10),
 
-//                     // Provider Fields
-//                     if (user['role'] == 'provider')
-//                       ..._buildProviderFields(isEditing, isExternalView),
-
-//                     if (isEditing && !isExternalView)
-//                       CheckboxListTile(
-//                         title: const Text('Show your profile on services page?',
-//                             style: TextStyle(color: Color(0xFF5C74B1))),
-//                         value: showOnServices,
-//                         onChanged: (val) => setState(() => showOnServices = val ?? false),
-//                         activeColor: const Color(0xFF2A3A69),
-//                         checkColor: Colors.white,
-//                       ),
-
-//                     const SizedBox(height: 20),
-
-//                     if (isEditing && !isExternalView)
-//                       ElevatedButton(
-//                           onPressed: saveProfile,
-//                           style: ElevatedButton.styleFrom(
-//                               backgroundColor: const Color(0xFF2A3A69),
-//                               padding: const EdgeInsets.symmetric(vertical: 14)),
-//                           child: const Center(
-//                               child: Text('Save Changes',
-//                                   style: TextStyle(fontSize: 16, color: Colors.white)))),
-
-//                     if (!isExternalView) ...[
-//                       const SizedBox(height: 10),
-//                       ElevatedButton(
-//                         style: ElevatedButton.styleFrom(
-//                             backgroundColor: Colors.red,
-//                             padding: const EdgeInsets.symmetric(vertical: 14)),
-//                         onPressed: deleteProfile,
-//                         child: const Center(
-//                             child: Text('Delete Profile',
-//                                 style: TextStyle(fontSize: 16, color: Colors.white))),
+//           if (user['skills'] != null && (user['skills'] as List).isNotEmpty)
+//             Column(
+//               crossAxisAlignment: CrossAxisAlignment.start,
+//               children: (user['skills'] as List).map<Widget>((skill) {
+//                 return Padding(
+//                   padding: const EdgeInsets.symmetric(vertical: 4.0),
+//                   child: Row(
+//                     children: [
+//                       const Text("• ",
+//                           style: TextStyle(fontSize: 18, color: Colors.black)),
+//                       Expanded(
+//                         child: Text(
+//                           skill,
+//                           style: const TextStyle(fontSize: 16, color: Colors.black),
+//                         ),
 //                       ),
 //                     ],
-//                   ],
+//                   ),
+//                 );
+//               }).toList(),
+//             )
+//           else
+//             const Text(
+//               "No skills added yet",
+//               style: TextStyle(color: Colors.grey),
+//             ),
+//         ],
+//       ),
+
+
+
+
+
+//                   const SizedBox(height: 20),
+
+// // Provider Section
+// if (user['role'] == 'provider')
+//   Card(
+//     elevation: 2,
+//     shape: RoundedRectangleBorder(
+//       borderRadius: BorderRadius.circular(12),
+//     ),
+//     child: Padding(
+//       padding: const EdgeInsets.all(16.0),
+//       child: Column(
+//         crossAxisAlignment: CrossAxisAlignment.start,
+//         children: [
+//           const Text(
+//             "Provider Details",
+//             style: TextStyle(
+//               fontSize: 18,
+//               fontWeight: FontWeight.bold,
+//               color: Colors.black,
+//             ),
+//           ),
+//           const Divider(color: Colors.grey, thickness: 0.6, height: 20),
+
+//           // ✅ Provider fields
+//           ..._buildProviderFields(isEditing, isExternalView),
+
+//           const SizedBox(height: 10),
+
+//           // ✅ Checkbox (only in edit mode)
+//           if (isEditing && !isExternalView)
+//             Column(
+//               crossAxisAlignment: CrossAxisAlignment.start,
+//               children: [
+//                 CheckboxListTile(
+//                   title: const Text(
+//                     'Show your profile on services page?',
+//                     style: TextStyle(
+//                       fontSize: 15,
+//                       color: Colors.black,
+//                     ),
+//                   ),
+//                   value: showOnServices,
+//                   onChanged: (val) =>
+//                       setState(() => showOnServices = val ?? false),
+//                   activeColor: const Color(0xFF0A66C2), // LinkedIn Blue
+//                   checkColor: Colors.white,
+//                   contentPadding: EdgeInsets.zero,
+//                   controlAffinity: ListTileControlAffinity.leading,
+//                 ),
+//                 const Padding(
+//                   padding: EdgeInsets.only(left: 12.0),
+//                   child: Text(
+//                     "Enabling this makes your profile visible when users browse services.",
+//                     style: TextStyle(fontSize: 13, color: Colors.grey),
+//                   ),
+//                 ),
+//               ],
+//             ),
+//         ],
+//       ),
+//     ),
+//   ),
+
+
+
+
+
+
+
+//                    const SizedBox(height: 20),
+
+// // ✅ Save Button (only when editing)
+// if (isEditing && !isExternalView)
+//   ElevatedButton(
+//     onPressed: saveProfile,
+//     style: ElevatedButton.styleFrom(
+//       backgroundColor: const Color(0xFF0A66C2), // LinkedIn Blue
+//       padding: const EdgeInsets.symmetric(vertical: 14),
+//       shape: RoundedRectangleBorder(
+//         borderRadius: BorderRadius.circular(12),
+//       ),
+//       elevation: 3, // subtle shadow
+//     ),
+//     child: const Center(
+//       child: Text(
+//         'Save Changes',
+//         style: TextStyle(
+//           fontSize: 16,
+//           fontWeight: FontWeight.bold,
+//           color: Colors.white,
+//         ),
+//       ),
+//     ),
+//   ),
+
+// if (!isExternalView) ...[
+//   const SizedBox(height: 10),
+
+//   // ❌ Delete Button (Outlined style)
+//   OutlinedButton(
+//     onPressed: deleteProfile,
+//     style: OutlinedButton.styleFrom(
+//       padding: const EdgeInsets.symmetric(vertical: 14),
+//       shape: RoundedRectangleBorder(
+//         borderRadius: BorderRadius.circular(12),
+//       ),
+//       side: const BorderSide(color: Colors.red, width: 1.5),
+//       backgroundColor: Colors.white,
+//     ),
+//     child: const Center(
+//       child: Text(
+//         'Delete Profile',
+//         style: TextStyle(
+//           fontSize: 16,
+//           fontWeight: FontWeight.bold,
+//           color: Colors.red,
+//         ),
+//       ),
+//     ),
+//   ),
+// ],
+
+
+
+
+
+
+//                     ],
+                  
 //                 ),
 //               ),
 //             ),
 //     );
 //   }
 
+
+
+
+
 //   // Custom Text Field with theme colors
 //   Widget _buildCustomTextField(TextEditingController controller, String label,
-//       {int maxLines = 1}) {
-//     return TextFormField(
-//       controller: controller,
-//       maxLines: maxLines,
-//       style: const TextStyle(color: Color(0xFF2A3A69)),
-//       decoration: InputDecoration(
-//         labelText: label,
-//         labelStyle: const TextStyle(color: Color(0xFF5C74B1)),
-//         filled: true,
-//         fillColor: const Color(0xFFD9E1F0),
-//         focusedBorder: OutlineInputBorder(
-//             borderRadius: BorderRadius.circular(8),
-//             borderSide: const BorderSide(color: Color(0xFF2A3A69))),
-//         enabledBorder: OutlineInputBorder(
-//             borderRadius: BorderRadius.circular(8),
-//             borderSide: const BorderSide(color: Color(0xFF5C74B1))),
-//         errorBorder: OutlineInputBorder(
-//             borderRadius: BorderRadius.circular(8),
-//             borderSide: const BorderSide(color: Colors.red)),
+//     {int maxLines = 1}) {
+//   return TextFormField(
+//     controller: controller,
+//     maxLines: maxLines,
+//     style: const TextStyle(
+//       color: Colors.black, // Input text color
+//       fontSize: 16,
+//     ),
+//     decoration: InputDecoration(
+//       labelText: label,
+//       labelStyle: const TextStyle(
+//         color: Color(0xFF6C757D), // Medium Gray for label
+//         fontWeight: FontWeight.w500,
 //       ),
-//       validator: (val) => val == null || val.isEmpty ? 'Please enter $label' : null,
-//     );
-//   }
+//       filled: true,
+//       fillColor: Color(0xFFF5F5F5), // Light Gray background
+//       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+
+//       // Borders
+//       focusedBorder: OutlineInputBorder(
+//         borderRadius: BorderRadius.circular(8),
+//         borderSide: const BorderSide(
+//           color: Color(0xFF0A66C2), // LinkedIn Blue
+//           width: 1.5,
+//         ),
+//       ),
+//       enabledBorder: OutlineInputBorder(
+//         borderRadius: BorderRadius.circular(8),
+//         borderSide: const BorderSide(
+//           color: Color(0xFFD6D6D6), // Light Gray border
+//           width: 1.2,
+//         ),
+//       ),
+//       errorBorder: OutlineInputBorder(
+//         borderRadius: BorderRadius.circular(8),
+//         borderSide: const BorderSide(
+//           color: Colors.red,
+//           width: 1.5,
+//         ),
+//       ),
+//       focusedErrorBorder: OutlineInputBorder(
+//         borderRadius: BorderRadius.circular(8),
+//         borderSide: const BorderSide(
+//           color: Colors.red,
+//           width: 1.5,
+//         ),
+//       ),
+//     ),
+//     validator: (val) =>
+//         val == null || val.isEmpty ? 'Please enter $label' : null,
+//   );
+// }
+
 // /////////////////////////////////////////////////////////////
 // ///
 // ///
@@ -608,9 +948,14 @@
 //   List<Widget> _buildProviderFields(bool isEditing, bool isExternalView) {
 //   return [
 //     const SizedBox(height: 20),
-//     const Text('Provider Info',
-//         style: TextStyle(
-//             fontSize: 18, color: Color(0xFF2A3A69), fontWeight: FontWeight.bold)),
+//     const Text(
+//       'Provider Info',
+//       style: TextStyle(
+//         fontSize: 18,
+//         color: Colors.black,
+//         fontWeight: FontWeight.w600,
+//       ),
+//     ),
 //     const SizedBox(height: 10),
 
 //     // --- Edit Mode ---
@@ -620,26 +965,35 @@
 //         children: [
 //           _buildCustomTextField(experienceController, 'Experience (years)'),
 //           const SizedBox(height: 10),
+
+//           // Dropdown styled like text fields
 //           DropdownButtonFormField<String>(
 //             value: experienceLevel,
 //             decoration: InputDecoration(
 //               labelText: 'Experience Level',
-//               labelStyle: const TextStyle(color: Color(0xFF5C74B1)),
+//               labelStyle: const TextStyle(
+//                 color: Color(0xFF6C757D),
+//                 fontWeight: FontWeight.w500,
+//               ),
 //               filled: true,
-//               fillColor: const Color(0xFFD9E1F0),
+//               fillColor: Color(0xFFF5F5F5),
 //               focusedBorder: OutlineInputBorder(
-//                   borderRadius: BorderRadius.circular(8),
-//                   borderSide: const BorderSide(color: Color(0xFF2A3A69))),
+//                 borderRadius: BorderRadius.circular(8),
+//                 borderSide: const BorderSide(color: Color(0xFF0A66C2), width: 1.5),
+//               ),
 //               enabledBorder: OutlineInputBorder(
-//                   borderRadius: BorderRadius.circular(8),
-//                   borderSide: const BorderSide(color: Color(0xFF5C74B1))),
+//                 borderRadius: BorderRadius.circular(8),
+//                 borderSide: const BorderSide(color: Color(0xFFD6D6D6), width: 1.2),
+//               ),
 //             ),
 //             items: ['Beginner', 'Intermediate', 'Expert']
-//                 .map((level) => DropdownMenuItem(value: level, child: Text(level)))
+//                 .map((level) =>
+//                     DropdownMenuItem(value: level, child: Text(level)))
 //                 .toList(),
 //             onChanged: (val) => setState(() => experienceLevel = val),
 //           ),
 //           const SizedBox(height: 10),
+
 //           _buildCustomTextField(govIdController, 'Gov ID'),
 //           const SizedBox(height: 10),
 //           _buildCustomTextField(
@@ -648,30 +1002,45 @@
 //           const SizedBox(height: 10),
 //           _buildCustomTextField(hourlyRateController, 'Hourly Rate'),
 //           const SizedBox(height: 10),
-//           _buildCustomTextField(
-//               languagesController, 'Languages (comma separated)'),
+//           _buildCustomTextField(languagesController, 'Languages (comma separated)'),
 //           const SizedBox(height: 10),
-//           _buildCustomTextField(
-//               educationController, 'Education (comma separated)'),
+//           _buildCustomTextField(educationController, 'Education (comma separated)'),
 //           const SizedBox(height: 10),
-//           _buildCustomTextField(
-//               socialLinksController, 'Social Links (one per line)',
+//           _buildCustomTextField(socialLinksController, 'Social Links (one per line)',
 //               maxLines: 4),
+
 //           const SizedBox(height: 20),
-//           const Text('Services',
-//               style: TextStyle(
-//                   color: Color(0xFF2A3A69),
-//                   fontSize: 16,
-//                   fontWeight: FontWeight.bold)),
+//           const Text(
+//             'Services',
+//             style: TextStyle(
+//               color: Colors.black,
+//               fontSize: 16,
+//               fontWeight: FontWeight.w600,
+//             ),
+//           ),
 //           const SizedBox(height: 10),
+
 //           ...services.map((s) => Card(
-//                 color: const Color(0xFFD9E1F0),
+//                 color: const Color(0xFFF5F5F5),
+//                 elevation: 1,
+//                 shape: RoundedRectangleBorder(
+//                   borderRadius: BorderRadius.circular(10),
+//                 ),
 //                 child: ListTile(
-//                   title: Text(s['title'], style: const TextStyle(color: Color(0xFF2A3A69))),
-//                   subtitle: Text('${s['description'] ?? ''} - PKR ${s['price']}',
-//                       style: const TextStyle(color: Color(0xFF5C74B1))),
+//                   title: Text(
+//                     s['title'],
+//                     style: const TextStyle(
+//                       color: Colors.black,
+//                       fontWeight: FontWeight.w500,
+//                     ),
+//                   ),
+//                   subtitle: Text(
+//                     '${s['description'] ?? ''} - PKR ${s['price']}',
+//                     style: const TextStyle(color: Color(0xFF6C757D)),
+//                   ),
 //                 ),
 //               )),
+
 //           const SizedBox(height: 10),
 //           _buildCustomTextField(serviceTitleController, 'Service Title'),
 //           const SizedBox(height: 10),
@@ -679,13 +1048,26 @@
 //           const SizedBox(height: 10),
 //           _buildCustomTextField(servicePriceController, 'Service Price'),
 //           const SizedBox(height: 10),
+
 //           ElevatedButton(
-//               onPressed: addService,
-//               style: ElevatedButton.styleFrom(
-//                   backgroundColor: const Color(0xFF2A3A69),
-//                   padding: const EdgeInsets.symmetric(vertical: 14)),
-//               child: const Center(
-//                   child: Text('Add Service', style: TextStyle(color: Colors.white, fontSize: 16)))),
+//             onPressed: addService,
+//             style: ElevatedButton.styleFrom(
+//               backgroundColor: const Color(0xFF0A66C2),
+//               shape: RoundedRectangleBorder(
+//                   borderRadius: BorderRadius.circular(8)),
+//               padding: const EdgeInsets.symmetric(vertical: 14),
+//             ),
+//             child: const Center(
+//               child: Text(
+//                 'Add Service',
+//                 style: TextStyle(
+//                   color: Colors.white,
+//                   fontSize: 16,
+//                   fontWeight: FontWeight.w600,
+//                 ),
+//               ),
+//             ),
+//           ),
 //         ],
 //       )
 //     else
@@ -694,70 +1076,81 @@
 //         crossAxisAlignment: CrossAxisAlignment.start,
 //         children: [
 //           Text('Experience: ${user['experience_years'] ?? '-'} years',
-//               style: const TextStyle(color: Color(0xFF5C74B1))),
+//               style: const TextStyle(color: Color(0xFF6C757D))),
 //           Text('Level: ${user['experience_level'] ?? '-'}',
-//               style: const TextStyle(color: Color(0xFF5C74B1))),
+//               style: const TextStyle(color: Color(0xFF6C757D))),
 //           Text('Gov ID: ${user['gov_id'] ?? '-'}',
-//               style: const TextStyle(color: Color(0xFF5C74B1))),
+//               style: const TextStyle(color: Color(0xFF6C757D))),
 //           Text('Hourly Rate: PKR ${user['hourly_rate'] ?? '-'}',
-//               style: const TextStyle(color: Color(0xFF5C74B1))),
+//               style: const TextStyle(color: Color(0xFF6C757D))),
+
+//           const SizedBox(height: 10),
 //           Wrap(
 //             spacing: 6,
 //             children: user['languages'] != null
 //                 ? (user['languages'] as List)
 //                     .map<Widget>((l) => Chip(
 //                           label: Text(l),
-//                           backgroundColor: const Color(0xFF2A3A69),
+//                           backgroundColor: const Color(0xFF0A66C2),
 //                           labelStyle: const TextStyle(color: Colors.white),
 //                         ))
 //                     .toList()
-//                 : const [Text('-', style: TextStyle(color: Color(0xFF5C74B1)))],
+//                 : const [Text('-', style: TextStyle(color: Color(0xFF6C757D)))],
 //           ),
-//           const SizedBox(height: 10),
+
+//           const SizedBox(height: 12),
 //           const Text('Portfolio Links:',
-//               style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF2A3A69))),
-//           if (user['portfolio_links'] != null && (user['portfolio_links'] as List).isNotEmpty)
-//             ... (user['portfolio_links'] as List)
-//                 .map((link) => Text(link, style: const TextStyle(color: Color(0xFF5C74B1)))),
-//           const SizedBox(height: 10),
+//               style: TextStyle(
+//                   fontWeight: FontWeight.w600, color: Colors.black)),
+//           if (user['portfolio_links'] != null &&
+//               (user['portfolio_links'] as List).isNotEmpty)
+//             ...(user['portfolio_links'] as List).map((link) => Text(link,
+//                 style: const TextStyle(color: Color(0xFF6C757D)))),
+
+//           const SizedBox(height: 12),
 //           const Text('Social Links:',
-//               style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF2A3A69))),
-//           if (user['social_links'] != null && (user['social_links'] as List).isNotEmpty)
-//             ... (user['social_links'] as List)
-//                 .map((link) => Text(link, style: const TextStyle(color: Color(0xFF5C74B1)))),
-//           const SizedBox(height: 10),
+//               style: TextStyle(
+//                   fontWeight: FontWeight.w600, color: Colors.black)),
+//           if (user['social_links'] != null &&
+//               (user['social_links'] as List).isNotEmpty)
+//             ...(user['social_links'] as List).map((link) => Text(link,
+//                 style: const TextStyle(color: Color(0xFF6C757D)))),
+
+//           const SizedBox(height: 12),
 //           const Text('Services:',
-//               style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF2A3A69))),
-//           if (user['services'] != null && (user['services'] as List).isNotEmpty)
-//             ... (user['services'] as List).map((s) => Card(
-//                   color: const Color(0xFFD9E1F0),
+//               style: TextStyle(
+//                   fontWeight: FontWeight.w600, color: Colors.black)),
+//           if (user['services'] != null &&
+//               (user['services'] as List).isNotEmpty)
+//             ...(user['services'] as List).map((s) => Card(
+//                   color: const Color(0xFFF5F5F5),
+//                   elevation: 1,
+//                   shape: RoundedRectangleBorder(
+//                     borderRadius: BorderRadius.circular(10),
+//                   ),
 //                   child: ListTile(
-//                     title: Text(s['title'], style: const TextStyle(color: Color(0xFF2A3A69))),
-//                     subtitle: Text('${s['description'] ?? ''} - PKR ${s['price']}',
-//                         style: const TextStyle(color: Color(0xFF5C74B1))),
+//                     title: Text(
+//                       s['title'],
+//                       style: const TextStyle(
+//                         color: Colors.black,
+//                         fontWeight: FontWeight.w500,
+//                       ),
+//                     ),
+//                     subtitle: Text(
+//                       '${s['description'] ?? ''} - PKR ${s['price']}',
+//                       style: const TextStyle(color: Color(0xFF6C757D)),
+//                     ),
 //                   ),
 //                 ))
 //           else
-//             const Text('No services available', style: TextStyle(color: Color(0xFF5C74B1))),
+//             const Text('No services available',
+//                 style: TextStyle(color: Color(0xFF6C757D))),
 //         ],
 //       ),
 //   ];
 // }
 
 // }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -773,7 +1166,6 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import '../helpers/backend.dart';
-import '../models/action_buttons.dart';
 import '../models/ExternalProfileWidget.dart';
 
 class MyProfileScreen extends StatefulWidget {
@@ -821,22 +1213,61 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
   String? profileBase64;
   String? coverBase64;
   bool showOnServices = false;
-
+//int? selectedCategory; 
   // --- Services ---
   List<Map<String, dynamic>> services = [];
   TextEditingController serviceTitleController = TextEditingController();
   TextEditingController serviceDescController = TextEditingController();
   TextEditingController servicePriceController = TextEditingController();
+//--- Categories--
+
+Map<String, dynamic>? selectedCategory;
+
+List<Map<String, dynamic>> categories = [];
+bool isLoadingCategories = true;
+
+
+
+Future<void> fetchCategories() async {
+  try {
+    final response = await http.get(Uri.parse('${Backend.baseUrl}/categories'));
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+
+      print("Categories API response: $data"); // 🔍 Debug print
+
+      setState(() {
+        categories = List<Map<String, dynamic>>.from(
+          data is List ? data : data['categories'], // ✅ Safe parsing
+        );
+        isLoadingCategories = false;
+      });
+
+      print("Parsed categories: $categories"); // 🔍 Debug print
+    } else {
+      print('Failed to load categories');
+      setState(() => isLoadingCategories = false);
+    }
+  } catch (e) {
+    print('Error fetching categories: $e');
+    setState(() => isLoadingCategories = false);
+  }
+}
+
+
 
   @override
   void initState() {
     super.initState();
     _initUserData();
+    fetchCategories();
   }
 
   void _initUserData() {
     user = Map.from(widget.userData);
-
+// ✅ FIX: preselect category if editing
+    selectedCategory = user['category_id'];
     nameController = TextEditingController(text: user['name']);
     usernameController = TextEditingController(text: user['username']);
     bioController = TextEditingController(text: user['bio']);
@@ -849,7 +1280,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
     govIdController = TextEditingController(text: user['gov_id'] ?? '');
     portfolioController = TextEditingController(
         text: user['portfolio_links'] != null
-            ? (user['portfolio_links'] as List).join(', ')
+            ? (user['portfolio_links'] as List).join('\n')
             : '');
     hourlyRateController =
         TextEditingController(text: user['hourly_rate']?.toString() ?? '');
@@ -859,7 +1290,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
         text: user['education'] != null ? (user['education'] as List).join(', ') : '');
     socialLinksController = TextEditingController(
         text: user['social_links'] != null
-            ? (user['social_links'] as List).join(', ')
+            ? (user['social_links'] as List).join('\n')
             : '');
     experienceLevel = user['experience_level'];
     showOnServices = user['show_on_services'] ?? false;
@@ -890,7 +1321,10 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
             profileImageFile = File(picked.path);
           else
             coverImageFile = File(picked.path);
+
+             
         });
+
       }
     }
   }
@@ -1069,6 +1503,13 @@ Future<void> _openExternalProviderProfile(int providerId) async {
   final desc = serviceDescController.text.trim();
   final priceText = servicePriceController.text.trim();
 
+if (selectedCategory == null) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(content: Text('Please select a category ❌')),
+  );
+  return;
+}
+
   if (title.isEmpty || desc.isEmpty || priceText.isEmpty) {
     ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please fill all service fields ❌')));
@@ -1088,15 +1529,17 @@ Future<void> _openExternalProviderProfile(int providerId) async {
     final response = await http.post(
       url,
       headers: {"Content-Type": "application/json"},
-      body: jsonEncode({
-        "provider_id": user['id'],
-        "title": title,
-        "description": desc,
-        "price": price,
-        "availability_status": true,
-        "category": "General",
-        "sub_category": "Basic",
-      }),
+     body: jsonEncode({
+  "provider_id": user['id'],
+  "title": title,
+  "description": desc,
+  "price": price,
+  "availability_status": true,
+  "category_id": selectedCategory?['id'],   // 👈 null-safe
+  "category": selectedCategory?['name'],    // 👈 null-safe
+}),
+
+
     );
 
     if (response.statusCode == 201) {
@@ -1112,7 +1555,7 @@ Future<void> _openExternalProviderProfile(int providerId) async {
       serviceTitleController.clear();
       serviceDescController.clear();
       servicePriceController.clear();
-
+//selectedCategory = null; 
       if (widget.onProfileUpdated != null) widget.onProfileUpdated!();
 
       ScaffoldMessenger.of(context)
@@ -1129,6 +1572,8 @@ Future<void> _openExternalProviderProfile(int providerId) async {
     setState(() => isLoading = false);
   }
 }
+
+
 
 
 
@@ -1179,25 +1624,47 @@ Future<void> _openExternalProviderProfile(int providerId) async {
     }
   }
 
+
+
   @override
   Widget build(BuildContext context) {
     final isExternalView = widget.readOnly;
 
     return Scaffold(
       backgroundColor: const Color(0xFFFFFFFF), // White background
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF2A3A69), // Dark Blue primary
-        title: Text(isExternalView ? 'Provider Profile' : 'My Profile'),
-        actions: [
-          if (!isExternalView)
-            IconButton(
-              icon: Icon(isEditing ? Icons.close : Icons.edit, color: Colors.white),
-              onPressed: () => setState(() => isEditing = !isEditing),
-            ),
-        ],
+     appBar: AppBar(
+    backgroundColor: const Color(0xFF0A66C2), // LinkedIn Blue
+    elevation: 4, // subtle shadow for depth
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(
+        bottom: Radius.circular(16), // rounded bottom corners
       ),
+    ),
+    toolbarHeight: 60, // sets the height directly
+    titleSpacing: 16, // padding from left
+    title: Text(
+      isExternalView ? 'Provider Profile' : 'My Profile',
+      style: const TextStyle(
+        color: Colors.white, // text color
+        fontSize: 20,
+        fontWeight: FontWeight.bold,
+      ),
+    ),
+    actions: [
+      if (!isExternalView)
+        IconButton(
+          icon: Icon(
+            isEditing ? Icons.close : Icons.edit,
+            color: Colors.white,
+          ),
+          onPressed: () => setState(() => isEditing = !isEditing),
+        ),
+    ],
+  ),
+
+  /////
       body: isLoading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFF2A3A69)))
+          ? const Center(child: CircularProgressIndicator(color: Color(0xFF0A66C2),))
           : SingleChildScrollView(
               padding: const EdgeInsets.all(16),
               child: Form(
@@ -1206,195 +1673,470 @@ Future<void> _openExternalProviderProfile(int providerId) async {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Cover + Profile layout
-                    Stack(
-                      children: [
-                        GestureDetector(
-                          onTap: isEditing && !isExternalView ? () => pickImage(false) : null,
-                          child: Container(
-                            height: 150,
-                            width: double.infinity,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFD9E1F0), // Light Blue card/faint
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: _getImage(isProfile: false) != null
-                                ? ClipRRect(
-                                    borderRadius: BorderRadius.circular(8),
-                                    child: Image(
-                                      image: _getImage(isProfile: false)!,
-                                      fit: BoxFit.cover,
-                                    ),
-                                  )
-                                : const Center(
-                                    child: Text('Upload Cover Photo',
-                                        style: TextStyle(color: Color(0xFF5C74B1)))),
-                          ),
-                        ),
-                        Positioned(
-                          left: 16,
-                          bottom: -40,
-                          child: GestureDetector(
-                            onTap: isEditing && !isExternalView ? () => pickImage(true) : null,
-                            child: CircleAvatar(
-                              radius: 50,
-                              backgroundImage: _getImage(isProfile: true),
-                              backgroundColor: const Color(0xFFD9E1F0),
-                              child: _getImage(isProfile: true) == null
-                                  ? const Icon(Icons.person, size: 50, color: Color(0xFF5C74B1))
-                                  : null,
-                            ),
-                          ),
-                        ),
-                      ],
+                   Stack(
+  clipBehavior: Clip.none,
+  children: [
+    // --- Cover Photo ---
+    GestureDetector(
+      onTap: isEditing && !isExternalView ? () => pickImage(false) : null,
+      child: Container(
+        height: 220, // taller for premium look
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: const Color(0xFFD9E1F0), // fallback color
+          borderRadius: const BorderRadius.vertical(
+            bottom: Radius.circular(16), // rounded bottom corners
+          ),
+        ),
+        child: _getImage(isProfile: false) != null
+            ? ClipRRect(
+                borderRadius: const BorderRadius.vertical(
+                  bottom: Radius.circular(16),
+                ),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Image(
+                      image: _getImage(isProfile: false)!,
+                      fit: BoxFit.cover,
                     ),
-                    const SizedBox(height: 60),
+                    Container(
+                      color: Colors.black.withOpacity(0.2), // subtle overlay
+                    ),
+                  ],
+                ),
+              )
+            : const Center(
+                child: Text(
+                  'Upload Cover Photo',
+                  style: TextStyle(
+                    color: Color(0xFF5C74B1),
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+      ),
+    ),
 
-                    // Name & Username
-                    isEditing && !isExternalView
-                        ? Column(
-                            children: [
-                              _buildCustomTextField(nameController, 'Full Name'),
-                              const SizedBox(height: 10),
-                              _buildCustomTextField(usernameController, 'Username / Display Name'),
-                              const SizedBox(height: 10),
-                              _buildCustomTextField(bioController, 'Bio', maxLines: 2),
-                            ],
-                          )
-                        : Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(user['name'] ?? 'Your Name',
-                                  style: const TextStyle(
-                                      fontSize: 22,
-                                      fontWeight: FontWeight.bold,
-                                      color: Color(0xFF2A3A69))), // Dark Blue
-                              if (user['username'] != null)
-                                Text('@${user['username']}', style: const TextStyle(color: Color(0xFF5C74B1))), // Medium Blue
-                              if (user['bio'] != null && (user['bio'] as String).isNotEmpty)
-  Padding(
-    padding: const EdgeInsets.symmetric(vertical: 8.0),
-    child: Text(user['bio'] ?? '',
-        style: const TextStyle(color: Color(0xFF5C74B1))),
-  ),
+    // --- Profile Picture ---
+    Positioned(
+      bottom: -50, // overlaps cover photo
+      left: 0,
+      right: 0,
+      child: Center(
+        child: GestureDetector(
+          onTap: isEditing && !isExternalView ? () => pickImage(true) : null,
+          child: CircleAvatar(
+            radius: 60, // bigger for premium look
+            backgroundColor: Colors.white, // border effect
+            child: CircleAvatar(
+              radius: 56, // inner circle for image
+              backgroundImage: _getImage(isProfile: true),
+              backgroundColor: const Color(0xFFD9E1F0),
+              child: _getImage(isProfile: true) == null
+                  ? const Icon(
+                      Icons.person,
+                      size: 60,
+                      color: Color(0xFF5C74B1),
+                    )
+                  : null,
+            ),
+          ),
+        ),
+      ),
+    ),
+  ],
+),
+const SizedBox(height: 70), // space for overlapping avatar
 
-                            if (isExternalView)
-  ExternalProfileWidget(
-    userData: user,
-    currentUserId: widget.currentUserId,
-  ),
 
-                            ],
-                          ),
+
+                    //const SizedBox(height: 60),
+
+                   // Name & Username
+isEditing && !isExternalView
+    ? Column(
+        children: [
+          _buildCustomTextField(nameController, 'Full Name'),
+          const SizedBox(height: 10),
+          _buildCustomTextField(usernameController, 'Username / Display Name'),
+          const SizedBox(height: 10),
+          _buildCustomTextField(bioController, 'Bio', maxLines: 2),
+        ],
+      )
+    : Column(
+        crossAxisAlignment: CrossAxisAlignment.center, // Centered like LinkedIn
+        children: [
+          // ✅ Self profile view (non-external)
+          if (!isExternalView) ...[
+            Text(
+              user['name'] ?? 'Your Name',
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.black, // Black text for premium look
+              ),
+            ),
+            if (user['username'] != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(
+                  '@${user['username']}',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey, // subtle grey for username
+                  ),
+                ),
+              ),
+            if (user['bio'] != null && (user['bio'] as String).isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                child: Text(
+                  user['bio'] ?? '',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontStyle: FontStyle.italic, // italic for short bio
+                    color: Colors.black54, // softer black
+                  ),
+                ),
+              ),
+          ],
+
+          // ✅ External profile view
+          if (isExternalView)
+            ExternalProfileWidget(
+              userData: user,
+              currentUserId: widget.currentUserId,
+            ),
+        ],
+      ),
+
+
 
                     const SizedBox(height: 16),
 
-                    // Contact & Address
-                    isEditing && !isExternalView
-                        ? Column(
-                            children: [
-                              _buildCustomTextField(phoneController, 'Phone'),
-                              const SizedBox(height: 10),
-                              _buildCustomTextField(addressController, 'Address'),
-                            ],
-                          )
-                        : Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('Phone: ${user['phone'] ?? '-'}', style: const TextStyle(color: Color(0xFF5C74B1))),
-                              Text('Address: ${user['address'] ?? '-'}', style: const TextStyle(color: Color(0xFF5C74B1))),
-                            ],
-                          ),
+                  // 📌 Contact Info Section
+isEditing && !isExternalView
+    ? Column(
+        children: [
+          _buildCustomTextField(phoneController, 'Phone'),
+          const SizedBox(height: 10),
+          _buildCustomTextField(addressController, 'Address'),
+        ],
+      )
+    : Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Divider(
+            color: Colors.grey, // subtle divider
+            thickness: 0.6,
+            height: 30,
+          ),
+          const Text(
+            "Contact Info",
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+            ),
+          ),
+          const SizedBox(height: 12),
 
-                    const SizedBox(height: 16),
+          // ✅ Phone
+          Row(
+            children: [
+              const Icon(Icons.phone, size: 18, color: Colors.black54),
+              const SizedBox(width: 8),
+              Text(
+                user['phone'] ?? '-',
+                style: const TextStyle(
+                  fontSize: 16,
+                  color: Colors.black,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+
+          // ✅ Address
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(Icons.location_on, size: 18, color: Colors.black54),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  user['address'] ?? '-',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: Colors.black,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+
+
+
+
+
+
+
+
+
+
+                   
 
                     // Skills
-                    isEditing && !isExternalView
-                        ? _buildCustomTextField(skillsController, 'Skills (comma separated)')
-                        : Wrap(
-                            spacing: 6,
-                            children: user['skills'] != null
-                                ? (user['skills'] as List)
-                                    .map<Widget>((skill) => Chip(
-                                          label: Text(skill),
-                                          backgroundColor: const Color(0xFF2A3A69), // Dark Blue
-                                          labelStyle: const TextStyle(color: Colors.white),
-                                        ))
-                                    .toList()
-                                : const [Text('No skills', style: TextStyle(color: Color(0xFF5C74B1)))],
-                          ),
+                  const SizedBox(height: 16),
 
-                    const SizedBox(height: 20),
+// Skills Section
+isEditing && !isExternalView
+    ? _buildCustomTextField(skillsController, 'Skills (comma separated)')
+    : Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Divider(
+            color: Colors.grey,
+            thickness: 0.6,
+            height: 30,
+          ),
+          const Text(
+            "Skills",
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+            ),
+          ),
+          const SizedBox(height: 10),
 
-                    // Provider Fields
-                    if (user['role'] == 'provider')
-                      ..._buildProviderFields(isEditing, isExternalView),
-
-                    if (isEditing && !isExternalView)
-                      CheckboxListTile(
-                        title: const Text('Show your profile on services page?',
-                            style: TextStyle(color: Color(0xFF5C74B1))),
-                        value: showOnServices,
-                        onChanged: (val) => setState(() => showOnServices = val ?? false),
-                        activeColor: const Color(0xFF2A3A69),
-                        checkColor: Colors.white,
-                      ),
-
-                    const SizedBox(height: 20),
-
-                    if (isEditing && !isExternalView)
-                      ElevatedButton(
-                          onPressed: saveProfile,
-                          style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF2A3A69),
-                              padding: const EdgeInsets.symmetric(vertical: 14)),
-                          child: const Center(
-                              child: Text('Save Changes',
-                                  style: TextStyle(fontSize: 16, color: Colors.white)))),
-
-                    if (!isExternalView) ...[
-                      const SizedBox(height: 10),
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.red,
-                            padding: const EdgeInsets.symmetric(vertical: 14)),
-                        onPressed: deleteProfile,
-                        child: const Center(
-                            child: Text('Delete Profile',
-                                style: TextStyle(fontSize: 16, color: Colors.white))),
+          if (user['skills'] != null && (user['skills'] as List).isNotEmpty)
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: (user['skills'] as List).map<Widget>((skill) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4.0),
+                  child: Row(
+                    children: [
+                      const Text("• ",
+                          style: TextStyle(fontSize: 18, color: Colors.black)),
+                      Expanded(
+                        child: Text(
+                          skill,
+                          style: const TextStyle(fontSize: 16, color: Colors.black),
+                        ),
                       ),
                     ],
-                  ],
+                  ),
+                );
+              }).toList(),
+            )
+          else
+            const Text(
+              "No skills added yet",
+              style: TextStyle(color: Colors.grey),
+            ),
+        ],
+      ),
+
+
+
+
+
+                  const SizedBox(height: 20),
+
+// Provider Section
+if (user['role'] == 'provider')
+  Card(
+    elevation: 2,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(12),
+    ),
+    child: Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            "Provider Details",
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+            ),
+          ),
+          const Divider(color: Colors.grey, thickness: 0.6, height: 20),
+
+          // ✅ Provider fields
+          ..._buildProviderFields(isEditing, isExternalView),
+
+          const SizedBox(height: 10),
+
+          // ✅ Checkbox (only in edit mode)
+          if (isEditing && !isExternalView)
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                CheckboxListTile(
+                  title: const Text(
+                    'Show your profile on services page?',
+                    style: TextStyle(
+                      fontSize: 15,
+                      color: Colors.black,
+                    ),
+                  ),
+                  value: showOnServices,
+                  onChanged: (val) =>
+                      setState(() => showOnServices = val ?? false),
+                  activeColor: const Color(0xFF0A66C2), // LinkedIn Blue
+                  checkColor: Colors.white,
+                  contentPadding: EdgeInsets.zero,
+                  controlAffinity: ListTileControlAffinity.leading,
+                ),
+                const Padding(
+                  padding: EdgeInsets.only(left: 12.0),
+                  child: Text(
+                    "Enabling this makes your profile visible when users browse services.",
+                    style: TextStyle(fontSize: 13, color: Colors.grey),
+                  ),
+                ),
+              ],
+            ),
+        ],
+      ),
+    ),
+  ),
+
+
+
+
+
+
+
+                   const SizedBox(height: 20),
+
+// ✅ Save Button (only when editing)
+if (isEditing && !isExternalView)
+  ElevatedButton(
+    onPressed: saveProfile,
+    style: ElevatedButton.styleFrom(
+      backgroundColor: const Color(0xFF0A66C2), // LinkedIn Blue
+      padding: const EdgeInsets.symmetric(vertical: 14),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      elevation: 3, // subtle shadow
+    ),
+    child: const Center(
+      child: Text(
+        'Save Changes',
+        style: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+        ),
+      ),
+    ),
+  ),
+
+if (!isExternalView) ...[
+  const SizedBox(height: 10),
+
+  // ❌ Delete Button (Outlined style)
+  OutlinedButton(
+    onPressed: deleteProfile,
+    style: OutlinedButton.styleFrom(
+      padding: const EdgeInsets.symmetric(vertical: 14),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      side: const BorderSide(color: Colors.red, width: 1.5),
+      backgroundColor: Colors.white,
+    ),
+    child: const Center(
+      child: Text(
+        'Delete Profile',
+        style: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          color: Colors.red,
+        ),
+      ),
+    ),
+  ),
+],
+                    ],
+                  
                 ),
               ),
             ),
     );
   }
 
+
+
+
+
   // Custom Text Field with theme colors
   Widget _buildCustomTextField(TextEditingController controller, String label,
-      {int maxLines = 1}) {
-    return TextFormField(
-      controller: controller,
-      maxLines: maxLines,
-      style: const TextStyle(color: Color(0xFF2A3A69)),
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: const TextStyle(color: Color(0xFF5C74B1)),
-        filled: true,
-        fillColor: const Color(0xFFD9E1F0),
-        focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(color: Color(0xFF2A3A69))),
-        enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(color: Color(0xFF5C74B1))),
-        errorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(color: Colors.red)),
+    {int maxLines = 1}) {
+  return TextFormField(
+    controller: controller,
+    maxLines: maxLines,
+    style: const TextStyle(
+      color: Colors.black, // Input text color
+      fontSize: 16,
+    ),
+    decoration: InputDecoration(
+      labelText: label,
+      labelStyle: const TextStyle(
+        color: Color(0xFF6C757D), // Medium Gray for label
+        fontWeight: FontWeight.w500,
       ),
-      validator: (val) => val == null || val.isEmpty ? 'Please enter $label' : null,
-    );
-  }
+      filled: true,
+      fillColor: Color(0xFFF5F5F5), // Light Gray background
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+
+      // Borders
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(
+          color: Color(0xFF0A66C2), // LinkedIn Blue
+          width: 1.5,
+        ),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(
+          color: Color(0xFFD6D6D6), // Light Gray border
+          width: 1.2,
+        ),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(
+          color: Colors.red,
+          width: 1.5,
+        ),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(
+          color: Colors.red,
+          width: 1.5,
+        ),
+      ),
+    ),
+    validator: (val) =>
+        val == null || val.isEmpty ? 'Please enter $label' : null,
+  );
+}
+
 /////////////////////////////////////////////////////////////
 ///
 ///
@@ -1408,11 +2150,16 @@ Future<void> _openExternalProviderProfile(int providerId) async {
 
   // ✅ Provider Fields Builder
   List<Widget> _buildProviderFields(bool isEditing, bool isExternalView) {
-  return [
+   return [
     const SizedBox(height: 20),
-    const Text('Provider Info',
-        style: TextStyle(
-            fontSize: 18, color: Color(0xFF2A3A69), fontWeight: FontWeight.bold)),
+    const Text(
+      'Provider Info',
+      style: TextStyle(
+        fontSize: 18,
+        color: Colors.black,
+        fontWeight: FontWeight.w600,
+      ),
+    ),
     const SizedBox(height: 10),
 
     // --- Edit Mode ---
@@ -1422,26 +2169,28 @@ Future<void> _openExternalProviderProfile(int providerId) async {
         children: [
           _buildCustomTextField(experienceController, 'Experience (years)'),
           const SizedBox(height: 10),
+
+          // Experience Level
           DropdownButtonFormField<String>(
             value: experienceLevel,
             decoration: InputDecoration(
               labelText: 'Experience Level',
-              labelStyle: const TextStyle(color: Color(0xFF5C74B1)),
               filled: true,
-              fillColor: const Color(0xFFD9E1F0),
-              focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: Color(0xFF2A3A69))),
-              enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: Color(0xFF5C74B1))),
+              fillColor: const Color(0xFFF5F5F5),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
             items: ['Beginner', 'Intermediate', 'Expert']
-                .map((level) => DropdownMenuItem(value: level, child: Text(level)))
+                .map((level) => DropdownMenuItem(
+                      value: level,
+                      child: Text(level),
+                    ))
                 .toList(),
             onChanged: (val) => setState(() => experienceLevel = val),
           ),
           const SizedBox(height: 10),
+
           _buildCustomTextField(govIdController, 'Gov ID'),
           const SizedBox(height: 10),
           _buildCustomTextField(
@@ -1450,103 +2199,205 @@ Future<void> _openExternalProviderProfile(int providerId) async {
           const SizedBox(height: 10),
           _buildCustomTextField(hourlyRateController, 'Hourly Rate'),
           const SizedBox(height: 10),
-          _buildCustomTextField(
-              languagesController, 'Languages (comma separated)'),
+          _buildCustomTextField(languagesController, 'Languages (comma separated)'),
           const SizedBox(height: 10),
-          _buildCustomTextField(
-              educationController, 'Education (comma separated)'),
+          _buildCustomTextField(educationController, 'Education (comma separated)'),
           const SizedBox(height: 10),
-          _buildCustomTextField(
-              socialLinksController, 'Social Links (one per line)',
+          _buildCustomTextField(socialLinksController, 'Social Links (one per line)',
               maxLines: 4),
+
           const SizedBox(height: 20),
-          const Text('Services',
-              style: TextStyle(
-                  color: Color(0xFF2A3A69),
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold)),
+          const Text(
+            'Services',
+            style: TextStyle(
+              color: Colors.black,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
           const SizedBox(height: 10),
-          ...services.map((s) => Card(
-                color: const Color(0xFFD9E1F0),
-                child: ListTile(
-                  title: Text(s['title'], style: const TextStyle(color: Color(0xFF2A3A69))),
-                  subtitle: Text('${s['description'] ?? ''} - PKR ${s['price']}',
-                      style: const TextStyle(color: Color(0xFF5C74B1))),
-                ),
-              )),
+
+
+
+
+
+          // ✅ Category Dropdown (only once)
+          isLoadingCategories
+    ? const CircularProgressIndicator()
+    : DropdownButtonFormField<Map<String, dynamic>>(
+        value: selectedCategory,
+        decoration: InputDecoration(
+          labelText: 'Service Category',
+          filled: true,
+          fillColor: const Color(0xFFF5F5F5),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+        items: categories
+            .map((cat) => DropdownMenuItem<Map<String, dynamic>>(
+                  value: cat,   // 👈 ab Map hi value hai
+                  child: Text(cat['name']), // 👈 user ko naam dikhana hai
+                ))
+            .toList(),
+        onChanged: (val) =>
+            setState(() => selectedCategory = val),
+        validator: (val) =>
+            val == null ? 'Please select a category' : null,
+      ),
+
+
+
+
           const SizedBox(height: 10),
+
+          // ✅ Service Input Fields
           _buildCustomTextField(serviceTitleController, 'Service Title'),
           const SizedBox(height: 10),
           _buildCustomTextField(serviceDescController, 'Service Description'),
           const SizedBox(height: 10),
           _buildCustomTextField(servicePriceController, 'Service Price'),
           const SizedBox(height: 10),
+
+          // ✅ Add Service Button (only once)
           ElevatedButton(
-              onPressed: addService,
-              style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF2A3A69),
-                  padding: const EdgeInsets.symmetric(vertical: 14)),
-              child: const Center(
-                  child: Text('Add Service', style: TextStyle(color: Colors.white, fontSize: 16)))),
+            onPressed: addService,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF0A66C2),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              padding: const EdgeInsets.symmetric(vertical: 14),
+            ),
+            child: const Center(
+              child: Text(
+                'Add Service',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 20),
+          ...services.map((s) => Card(
+                color: const Color(0xFFF5F5F5),
+                elevation: 1,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: ListTile(
+                  title: Text(s['title']),
+                  subtitle: Text(
+                    '${s['description'] ?? ''} - PKR ${s['price']}',
+                  ),
+                ),
+              )),
         ],
       )
+
+
+
+
+
+
+
+
+
     else
       // --- Non-Edit Mode ---
       Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('Experience: ${user['experience_years'] ?? '-'} years',
-              style: const TextStyle(color: Color(0xFF5C74B1))),
+              style: const TextStyle(color: Color(0xFF6C757D))),
           Text('Level: ${user['experience_level'] ?? '-'}',
-              style: const TextStyle(color: Color(0xFF5C74B1))),
+              style: const TextStyle(color: Color(0xFF6C757D))),
           Text('Gov ID: ${user['gov_id'] ?? '-'}',
-              style: const TextStyle(color: Color(0xFF5C74B1))),
+              style: const TextStyle(color: Color(0xFF6C757D))),
           Text('Hourly Rate: PKR ${user['hourly_rate'] ?? '-'}',
-              style: const TextStyle(color: Color(0xFF5C74B1))),
+              style: const TextStyle(color: Color(0xFF6C757D))),
+
+          const SizedBox(height: 10),
           Wrap(
             spacing: 6,
             children: user['languages'] != null
                 ? (user['languages'] as List)
                     .map<Widget>((l) => Chip(
                           label: Text(l),
-                          backgroundColor: const Color(0xFF2A3A69),
+                          backgroundColor: const Color(0xFF0A66C2),
                           labelStyle: const TextStyle(color: Colors.white),
                         ))
                     .toList()
-                : const [Text('-', style: TextStyle(color: Color(0xFF5C74B1)))],
+                : const [Text('-', style: TextStyle(color: Color(0xFF6C757D)))],
           ),
-          const SizedBox(height: 10),
+
+          const SizedBox(height: 12),
           const Text('Portfolio Links:',
-              style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF2A3A69))),
-          if (user['portfolio_links'] != null && (user['portfolio_links'] as List).isNotEmpty)
-            ... (user['portfolio_links'] as List)
-                .map((link) => Text(link, style: const TextStyle(color: Color(0xFF5C74B1)))),
-          const SizedBox(height: 10),
+              style: TextStyle(
+                  fontWeight: FontWeight.w600, color: Colors.black)),
+          if (user['portfolio_links'] != null &&
+              (user['portfolio_links'] as List).isNotEmpty)
+            ...(user['portfolio_links'] as List).map((link) => Text(link,
+                style: const TextStyle(color: Color(0xFF6C757D)))),
+
+          const SizedBox(height: 12),
           const Text('Social Links:',
-              style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF2A3A69))),
-          if (user['social_links'] != null && (user['social_links'] as List).isNotEmpty)
-            ... (user['social_links'] as List)
-                .map((link) => Text(link, style: const TextStyle(color: Color(0xFF5C74B1)))),
-          const SizedBox(height: 10),
+              style: TextStyle(
+                  fontWeight: FontWeight.w600, color: Colors.black)),
+          if (user['social_links'] != null &&
+              (user['social_links'] as List).isNotEmpty)
+            ...(user['social_links'] as List).map((link) => Text(link,
+                style: const TextStyle(color: Color(0xFF6C757D)))),
+
+          const SizedBox(height: 12),
           const Text('Services:',
-              style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF2A3A69))),
-          if (user['services'] != null && (user['services'] as List).isNotEmpty)
-            ... (user['services'] as List).map((s) => Card(
-                  color: const Color(0xFFD9E1F0),
+              style: TextStyle(
+                  fontWeight: FontWeight.w600, color: Colors.black)),
+          if (user['services'] != null &&
+              (user['services'] as List).isNotEmpty)
+            ...(user['services'] as List).map((s) => Card(
+                  color: const Color(0xFFF5F5F5),
+                  elevation: 1,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                   child: ListTile(
-                    title: Text(s['title'], style: const TextStyle(color: Color(0xFF2A3A69))),
-                    subtitle: Text('${s['description'] ?? ''} - PKR ${s['price']}',
-                        style: const TextStyle(color: Color(0xFF5C74B1))),
+                    title: Text(
+                      s['title'],
+                      style: const TextStyle(
+                        color: Colors.black,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    subtitle: Text(
+                      '${s['description'] ?? ''} - PKR ${s['price']}',
+                      style: const TextStyle(color: Color(0xFF6C757D)),
+                    ),
                   ),
                 ))
           else
-            const Text('No services available', style: TextStyle(color: Color(0xFF5C74B1))),
+            const Text('No services available',
+                style: TextStyle(color: Color(0xFF6C757D))),
         ],
       ),
   ];
 }
 
+
+
+
+
+
+
+
+
+
+
 }
+
 
 
 

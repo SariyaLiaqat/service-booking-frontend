@@ -1,5 +1,6 @@
 
 
+
 // import 'package:flutter/material.dart';
 // import 'package:flutter_svg/flutter_svg.dart';
 // import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -7,6 +8,7 @@
 // import 'dart:convert';
 // import 'login.dart';
 // import '../helpers/backend.dart';
+// import 'package:geolocator/geolocator.dart';
 
 // class SignupScreen extends StatefulWidget {
 //   @override
@@ -37,10 +39,50 @@
 //   String? experienceLevel;
 //   bool isLoading = false;
 
+//   // 🔹 Location
+//   double? currentLatitude;
+//   double? currentLongitude;
+
+//   Future<void> _getCurrentLocation() async {
+//     try {
+//       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+//       if (!serviceEnabled) {
+//         ScaffoldMessenger.of(context).showSnackBar(
+//           const SnackBar(
+//             content: Text('Please enable location services!'),
+//           ),
+//         );
+//         return;
+//       }
+
+//       LocationPermission permission = await Geolocator.checkPermission();
+//       if (permission == LocationPermission.denied) {
+//         permission = await Geolocator.requestPermission();
+//         if (permission == LocationPermission.denied) return;
+//       }
+//       if (permission == LocationPermission.deniedForever) return;
+
+//       Position position = await Geolocator.getCurrentPosition(
+//           desiredAccuracy: LocationAccuracy.high);
+
+//       setState(() {
+//         currentLatitude = position.latitude;
+//         currentLongitude = position.longitude;
+//       });
+//     } catch (e) {
+//       print('Location error: $e');
+//     }
+//   }
+
 //   Future<void> signup() async {
 //     if (!_formKey.currentState!.validate()) return;
 
 //     setState(() => isLoading = true);
+
+//     // 🔹 Fetch location if provider
+//     if (selectedRole == "I am a service provider") {
+//       await _getCurrentLocation();
+//     }
 
 //     final Map<String, dynamic> body = {
 //       "name": nameController.text.trim(),
@@ -95,6 +137,9 @@
 //                 .where((s) => s.isNotEmpty)
 //                 .toList()
 //             : [],
+//         // 🔹 Add location
+//         "latitude": currentLatitude,
+//         "longitude": currentLongitude,
 //       });
 //     }
 
@@ -111,7 +156,7 @@
 
 //       if (response.statusCode == 201) {
 //         ScaffoldMessenger.of(context).showSnackBar(
-//           SnackBar(
+//           const SnackBar(
 //             content: Text(
 //               'Signup successful! ✅ Check your email to verify your account before login.',
 //             ),
@@ -142,7 +187,7 @@
 //     return InputDecoration(
 //       labelText: label,
 //       filled: true,
-//       fillColor: const Color(0xFFD9E1F0), // Light Blue
+//       fillColor: const Color(0xFFD9E1F0),
 //       labelStyle: const TextStyle(color: Color(0xFF2A3A69)),
 //       border: OutlineInputBorder(
 //         borderRadius: BorderRadius.circular(16),
@@ -158,7 +203,7 @@
 //   @override
 //   Widget build(BuildContext context) {
 //     return Scaffold(
-//       backgroundColor: const Color(0xFFFFFFFF), // White background
+//       backgroundColor: const Color(0xFFFFFFFF),
 //       body: Center(
 //         child: SingleChildScrollView(
 //           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
@@ -166,7 +211,6 @@
 //             key: _formKey,
 //             child: Column(
 //               children: [
-//                 // Top SVG Image
 //                 SvgPicture.asset(
 //                   'assets/svg/signup.svg',
 //                   height: 150,
@@ -180,8 +224,6 @@
 //                       fontWeight: FontWeight.bold),
 //                 ),
 //                 const SizedBox(height: 25),
-
-//                 // Name & Username
 //                 TextFormField(
 //                   controller: nameController,
 //                   decoration: _inputDecoration("Full Name"),
@@ -218,8 +260,6 @@
 //                   },
 //                 ),
 //                 const SizedBox(height: 12),
-
-//                 // Role dropdown
 //                 DropdownButtonFormField<String>(
 //                   value: selectedRole,
 //                   decoration: _inputDecoration("Select Role"),
@@ -239,10 +279,7 @@
 //                   style: const TextStyle(color: Color(0xFF2A3A69)),
 //                 ),
 //                 const SizedBox(height: 12),
-
-//                 // Provider fields
 //                 if (selectedRole == "I am a service provider") ...[
-//                   // ✅ Required
 //                   TextFormField(
 //                     controller: phoneController,
 //                     decoration: _inputDecoration("Phone"),
@@ -279,8 +316,7 @@
 //                     style: const TextStyle(color: Color(0xFF2A3A69)),
 //                   ),
 //                   const SizedBox(height: 12),
-
-//                   // ✅ Optional
+//                   // Optional fields
 //                   TextFormField(
 //                     controller: bioController,
 //                     decoration: _inputDecoration("Short Bio"),
@@ -322,7 +358,6 @@
 //                   ),
 //                   const SizedBox(height: 12),
 //                 ],
-
 //                 const SizedBox(height: 20),
 //                 isLoading
 //                     ? const CircularProgressIndicator(
@@ -348,8 +383,6 @@
 //                         ),
 //                       ),
 //                 const SizedBox(height: 20),
-
-//                 // Already have account
 //                 Row(
 //                   mainAxisAlignment: MainAxisAlignment.center,
 //                   children: [
@@ -382,6 +415,11 @@
 //     );
 //   }
 // }
+
+
+
+
+
 
 
 
@@ -544,7 +582,7 @@ class _SignupScreenState extends State<SignupScreen> {
             content: Text(
               'Signup successful! ✅ Check your email to verify your account before login.',
             ),
-            backgroundColor: Color(0xFF2A3A69),
+            backgroundColor:  const Color(0xFF0A66C2),
           ),
         );
 
@@ -568,21 +606,29 @@ class _SignupScreenState extends State<SignupScreen> {
   }
 
   InputDecoration _inputDecoration(String label) {
-    return InputDecoration(
-      labelText: label,
-      filled: true,
-      fillColor: const Color(0xFFD9E1F0),
-      labelStyle: const TextStyle(color: Color(0xFF2A3A69)),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide.none,
+  return InputDecoration(
+    labelText: label,
+    filled: true,
+    fillColor: const Color(0xFFE8F0FE), // Soft light blue for premium feel
+    labelStyle: const TextStyle(
+      color:  const Color(0xFF0A66C2),
+      fontWeight: FontWeight.w600, // Slightly bolder for premium look
+    ),
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(16),
+      borderSide: BorderSide.none,
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(16),
+      borderSide: const BorderSide(
+        color: Color(0xFF0A66C2), // Premium LinkedIn blue
+        width: 2,
       ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: Color(0xFF5C74B1), width: 2),
-      ),
-    );
-  }
+    ),
+    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+  );
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -603,7 +649,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 const Text(
                   "Create Account",
                   style: TextStyle(
-                      color: Color(0xFF2A3A69),
+                      color: const Color(0xFF0A66C2),
                       fontSize: 28,
                       fontWeight: FontWeight.bold),
                 ),
@@ -651,16 +697,16 @@ class _SignupScreenState extends State<SignupScreen> {
                     DropdownMenuItem(
                         value: "I need a service",
                         child: Text("I need a service",
-                            style: TextStyle(color: Color(0xFF2A3A69)))),
+                            style: TextStyle(color: const Color(0xFF0A66C2),))),
                     DropdownMenuItem(
                         value: "I am a service provider",
                         child: Text("I am a service provider",
-                            style: TextStyle(color: Color(0xFF2A3A69)))),
+                            style: TextStyle(color: const Color(0xFF0A66C2),))),
                   ],
                   dropdownColor: const Color(0xFFD9E1F0),
                   onChanged: (val) => setState(() => selectedRole = val),
                   validator: (val) => val == null ? "Select a role" : null,
-                  style: const TextStyle(color: Color(0xFF2A3A69)),
+                  style: const TextStyle(color:  const Color(0xFF0A66C2),),
                 ),
                 const SizedBox(height: 12),
                 if (selectedRole == "I am a service provider") ...[
@@ -686,19 +732,45 @@ class _SignupScreenState extends State<SignupScreen> {
                         val == null || val.isEmpty ? "Enter skills" : null,
                   ),
                   const SizedBox(height: 12),
-                  DropdownButtonFormField<String>(
-                    value: experienceLevel,
-                    decoration: _inputDecoration("Experience Level"),
-                    items: ["Beginner", "Intermediate", "Expert"]
-                        .map((e) =>
-                            DropdownMenuItem(value: e, child: Text(e)))
-                        .toList(),
-                    onChanged: (val) => setState(() => experienceLevel = val),
-                    validator: (val) =>
-                        val == null ? "Select experience level" : null,
-                    dropdownColor: const Color(0xFFD9E1F0),
-                    style: const TextStyle(color: Color(0xFF2A3A69)),
-                  ),
+                 DropdownButtonFormField<String>(
+  value: experienceLevel,
+  decoration: InputDecoration(
+    labelText: "Experience Level",
+    filled: true,
+    fillColor: const Color(0xFFD9E1F0), // Light background
+    labelStyle: const TextStyle(color: const Color(0xFF0A66C2), fontWeight: FontWeight.w600),
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(16),
+      borderSide: BorderSide.none,
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(16),
+      borderSide: const BorderSide(color: Color(0xFF0A66C2), width: 2),
+    ),
+    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+  ),
+  items: ["Beginner", "Intermediate", "Expert"]
+      .map((e) => DropdownMenuItem(
+            value: e,
+            child: Text(
+              e,
+              style: const TextStyle(
+                color:  const Color(0xFF0A66C2),
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ))
+      .toList(),
+  onChanged: (val) => setState(() => experienceLevel = val),
+  validator: (val) => val == null ? "Select experience level" : null,
+  dropdownColor: const Color(0xFFD9E1F0),
+  style: const TextStyle(
+    color: Color(0xFF2A3A69),
+    fontWeight: FontWeight.w500,
+  ),
+  icon: const Icon(Icons.keyboard_arrow_down, color: const Color(0xFF0A66C2),),
+),
+
                   const SizedBox(height: 12),
                   // Optional fields
                   TextFormField(
@@ -746,51 +818,71 @@ class _SignupScreenState extends State<SignupScreen> {
                 isLoading
                     ? const CircularProgressIndicator(
                         valueColor:
-                            AlwaysStoppedAnimation<Color>(Color(0xFF2A3A69)))
-                    : SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: signup,
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            backgroundColor: const Color(0xFF2A3A69),
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                          ),
-                          child: const Text(
-                            "Sign Up",
-                            style: TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      ),
+                            AlwaysStoppedAnimation<Color>(Color(0xFF0A66C2),))
+                    :SizedBox(
+  width: double.infinity,
+  child: ElevatedButton(
+    onPressed: signup,
+    style: ElevatedButton.styleFrom(
+      backgroundColor: const Color(0xFF0A66C2), // LinkedIn Dark Blue
+      foregroundColor: Colors.white,
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      elevation: 4, // subtle shadow for premium look
+    ),
+    child: const Text(
+      "Sign Up",
+      style: TextStyle(
+        fontSize: 18,
+        fontWeight: FontWeight.bold,
+      ),
+    ),
+  ),
+),
+
+
+
+
+
+                      
                 const SizedBox(height: 20),
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text("Already have an account? ",
-                        style: TextStyle(
-                            color: Color(0xFF5C74B1),
-                            fontWeight: FontWeight.w500)),
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                                builder: (_) => LoginScreen()));
-                      },
-                      child: const Text(
-                        "Login",
-                        style: TextStyle(
-                            color: Color(0xFF2A3A69),
-                            fontWeight: FontWeight.bold,
-                            decoration: TextDecoration.underline),
-                      ),
-                    ),
-                  ],
-                ),
+  mainAxisAlignment: MainAxisAlignment.center,
+  children: [
+    const Text(
+      "Already have an account? ",
+      style: TextStyle(
+        color: Color(0xFF5C74B1), // Light LinkedIn blue
+        fontWeight: FontWeight.w500,
+        fontSize: 16,
+      ),
+    ),
+    GestureDetector(
+      onTap: () {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => LoginScreen()),
+        );
+      },
+      child: const Text(
+        "Login",
+        style: TextStyle(
+          color:  const Color(0xFF0A66C2), // Dark LinkedIn blue
+          fontWeight: FontWeight.bold,
+          fontSize: 16,
+          decoration: TextDecoration.underline,
+          decorationColor: const Color(0xFF0A66C2),
+          decorationThickness: 2,
+        ),
+      ),
+    ),
+  ],
+)
+
+
+
               ],
             ),
           ),

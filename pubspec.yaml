@@ -38,6 +38,7 @@ dependencies:
   socket_io_client: ^2.0.0
   flutter_svg: ^2.0.10+1
   geolocator: ^14.0.2
+  flutter_rating_bar: ^4.0.1
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -69,6 +70,109 @@ flutter:
   assets:
     - assets/svg/signup.svg
     - assets/svg/login.svg
+    - assets/images/logo.png
+    - assets/categories/2.png
+    - assets/categories/3.png
+    - assets/categories/4.png
+    - assets/categories/5.png
+    - assets/categories/6.png
+    - assets/categories/7.png
+    - assets/categories/8.png
+    - assets/categories/9.png
+    - assets/categories/10.png
+    - assets/categories/13.png
+    - assets/categories/17.png
+    - assets/categories/19.png
+    - assets/categories/20.png
+    - assets/categories/23.png
+    - assets/categories/24.png
+    - assets/categories/25.png
+    - assets/categories/26.png
+    - assets/categories/27.png
+    - assets/categories/28.png
+    - assets/categories/29.png
+    - assets/categories/30.png
+    - assets/categories/31.png
+    - assets/categories/32.png
+    - assets/categories/34.png
+    - assets/categories/35.png
+    - assets/categories/36.png
+    - assets/categories/37.png
+    - assets/categories/38.png
+    - assets/categories/39.png
+    - assets/categories/40.png
+    - assets/categories/41.png
+    - assets/categories/42.png
+    - assets/categories/43.png
+    - assets/categories/44.png
+    - assets/categories/45.png
+    - assets/categories/46.png
+    - assets/categories/47.png
+    - assets/categories/48.png
+    - assets/categories/49.png
+    - assets/categories/50.png
+    - assets/categories/51.png
+    - assets/categories/52.png
+    - assets/categories/53.png
+    - assets/categories/54.png
+    - assets/categories/55.png
+    - assets/categories/56.png
+    - assets/categories/57.png
+    - assets/categories/58.png
+    - assets/categories/59.png
+    - assets/categories/60.png
+    - assets/categories/61.png
+    - assets/categories/62.png
+    - assets/categories/63.png
+    - assets/categories/64.png
+    - assets/categories/65.png
+    - assets/categories/66.png
+  
+    - assets/categories/68.png
+    - assets/categories/69.png
+    - assets/categories/70.png
+    - assets/categories/71.png
+    - assets/categories/72.png
+    - assets/categories/73.png
+   
+    - assets/categories/75.png
+    - assets/categories/76.png
+    - assets/categories/77.png
+    - assets/categories/81.png
+    - assets/categories/83.png
+    - assets/categories/84.png
+    - assets/categories/85.png
+    - assets/categories/86.png
+    - assets/categories/87.png
+    - assets/categories/88.png
+    - assets/categories/89.png
+    - assets/categories/90.png
+    - assets/categories/91.png
+    - assets/categories/92.png
+    - assets/categories/93.png
+    - assets/categories/94.png
+    - assets/categories/95.png
+    - assets/categories/96.png
+    - assets/categories/97.png
+    - assets/categories/98.png
+    - assets/categories/99.png
+    - assets/categories/100.png
+    - assets/categories/101.png
+    - assets/categories/102.png
+    - assets/categories/103.png
+    - assets/categories/104.png
+    - assets/categories/105.png
+    - assets/categories/106.png
+    - assets/categories/107.png
+    - assets/categories/108.png
+    - assets/categories/109.png
+    - assets/categories/112.png
+    - assets/categories/113.png
+    - assets/categories/114.png
+    - assets/categories/115.png
+    - assets/categories/117.png
+    - assets/categories/121.png
+
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see
