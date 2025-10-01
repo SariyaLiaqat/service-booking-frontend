@@ -39,10 +39,14 @@ dependencies:
   flutter_svg: ^2.0.10+1
   geolocator: ^14.0.2
   flutter_rating_bar: ^4.0.1
+  app_links: ^6.4.1
+  url_launcher: ^6.3.2
+
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
+  
 
 dev_dependencies:
   flutter_test:
@@ -172,6 +176,13 @@ flutter:
     - assets/categories/115.png
     - assets/categories/117.png
     - assets/categories/121.png
+    - assets/categories/124.jpeg
+    - assets/categories/125.jpeg
+    - assets/categories/126.jpeg
+    - assets/categories/127.jpeg
+    - assets/categories/128.jpeg
+    - assets/categories/129.jpeg
+    - assets/categories/130.jpeg
 
   #   - images/a_dot_ham.jpeg
 

@@ -1,5 +1,3 @@
-
-
 // import 'dart:convert';
 // import 'package:flutter/material.dart';
 // import 'package:http/http.dart' as http;
@@ -32,7 +30,7 @@
 //     required this.serviceTitle,
 //     required this.userName,
 //     required this.providerName,
-//     this.attachmentDetails, 
+//     this.attachmentDetails,
 //     this.completedAt,
 //     this.attachments = const [], // default empty list of maps
 //   });
@@ -252,6 +250,7 @@
 //               taskData: widget.role == "provider"
 //                   ? {
 //                       'id': task.id,
+//                       'user_id': task.userId,
 //                       'notes': task.notes,
 //                       'scheduled_date': task.scheduledDate.toIso8601String(),
 //                       'title': task.serviceTitle,
@@ -357,7 +356,7 @@
 //                   ElevatedButton(
 //                     onPressed: () => _updateTask(task, "completed"),
 //                     style: ElevatedButton.styleFrom(
-//                       backgroundColor: const Color(0xFF2A3A69),
+//                       backgroundColor:Color(0xFF0A66C2),
 //                       foregroundColor: Colors.white,
 //                     ),
 //                     child: const Text("Mark Completed"),
@@ -371,7 +370,7 @@
 
 //   Widget _buildTaskList(List<Task> tasks) {
 //     if (isLoading) return const Center(child: CircularProgressIndicator());
-//     if (tasks.isEmpty) return const Center(child: Text("No tasks found"));
+//     if (tasks.isEmpty) return const Center(child: Text("No tasks found",style: TextStyle(color: Color(0xFF0A66C2),),));
 
 //     return RefreshIndicator(
 //       onRefresh: _loadTasks,
@@ -385,42 +384,55 @@
 //   @override
 //   Widget build(BuildContext context) {
 //     return Scaffold(
-//       appBar: AppBar(
-//         backgroundColor: const Color(0xFF5C74B1),
-//         title: const Text(
-//           "📋 My Tasks",
-//           style: TextStyle(
-//             fontWeight: FontWeight.bold,
-//             color: Colors.white,
-//           ),
-//         ),
-//         bottom: TabBar(
-//           controller: _tabController,
-//           indicatorColor: Colors.white,
-//           tabs: const [
-//             Tab(
-//               child: Text(
-//                 "⏳ Pending",
-//                 style: TextStyle(
-//                   fontWeight: FontWeight.bold,
-//                   fontSize: 16,
-//                   color: Colors.white,
-//                 ),
-//               ),
-//             ),
-//             Tab(
-//               child: Text(
-//                 "✅ Completed",
-//                 style: TextStyle(
-//                   fontWeight: FontWeight.bold,
-//                   fontSize: 16,
-//                   color: Colors.white,
-//                 ),
-//               ),
-//             ),
-//           ],
-//         ),
+//     appBar: PreferredSize(
+//   preferredSize: const Size.fromHeight(120), // Increase height for premium look
+//   child: AppBar(
+//     backgroundColor: const Color(0xFF0A66C2), // Premium LinkedIn Blue
+//     elevation: 6, // subtle shadow for depth
+//     shape: const RoundedRectangleBorder(
+//       borderRadius: BorderRadius.vertical(
+//         bottom: Radius.circular(20), // Rounded bottom corners
 //       ),
+//     ),
+//     toolbarHeight: 70, // Height of title section
+//     title: const Text(
+//       "📋 My Tasks",
+//       style: TextStyle(
+//         fontWeight: FontWeight.bold,
+//         fontSize: 22,
+//         color: Colors.white,
+//       ),
+//     ),
+//     centerTitle: true,
+//     bottom: TabBar(
+//       controller: _tabController,
+//       indicator: BoxDecoration(
+//         color: Colors.white.withOpacity(0.2),
+//         borderRadius: BorderRadius.circular(12),
+//       ),
+//       indicatorPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+//       labelColor: Colors.white,
+//       unselectedLabelColor: Colors.white70,
+//       labelStyle: const TextStyle(
+//         fontWeight: FontWeight.bold,
+//         fontSize: 16,
+//       ),
+//       unselectedLabelStyle: const TextStyle(
+//         fontWeight: FontWeight.w500,
+//         fontSize: 16,
+//       ),
+//       tabs: const [
+//         Tab(
+//           text: "⏳ Pending",
+//         ),
+//         Tab(
+//           text: "✅ Completed",
+//         ),
+//       ],
+//     ),
+//   ),
+// ),
+
 //       body: TabBarView(
 //         controller: _tabController,
 //         children: [
@@ -431,14 +443,6 @@
 //     );
 //   }
 // }
-
-
-
-
-
-
-
-
 
 
 
@@ -475,7 +479,7 @@ class Task {
     required this.serviceTitle,
     required this.userName,
     required this.providerName,
-    this.attachmentDetails, 
+    this.attachmentDetails,
     this.completedAt,
     this.attachments = const [], // default empty list of maps
   });
@@ -695,6 +699,7 @@ class _MyTasksScreenState extends State<MyTasksScreen>
               taskData: widget.role == "provider"
                   ? {
                       'id': task.id,
+                      'user_id': task.userId,
                       'notes': task.notes,
                       'scheduled_date': task.scheduledDate.toIso8601String(),
                       'title': task.serviceTitle,
@@ -877,10 +882,6 @@ class _MyTasksScreenState extends State<MyTasksScreen>
   ),
 ),
 
-
-
-
-
       body: TabBarView(
         controller: _tabController,
         children: [
@@ -891,3 +892,5 @@ class _MyTasksScreenState extends State<MyTasksScreen>
     );
   }
 }
+
+

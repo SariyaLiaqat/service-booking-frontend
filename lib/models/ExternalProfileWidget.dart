@@ -563,3 +563,4 @@ if (_recentComments.length > 2) {
           );
   }
 }
+

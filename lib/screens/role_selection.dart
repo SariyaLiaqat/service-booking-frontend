@@ -1,425 +1,189 @@
-// // Current System
+// // ✅ Service Provider Status Feature – Todo / Checklist
+// // 1️⃣ Database Setup
 
-// // Service provider profile bana raha hai.
+// //  provider_statuses table me provider_id FK correctly providers(user_id) se linked hai
 
-// // Checkbox “Add your profile on services page” → save karte hi profile services page me show hoti hai.
+// //  media_url, status_type, created_at, expires_at, is_active fields exist karte hain
 
-// // Pehle service ka form fill karna parta hai (name, description, price).
+// //  expires_at automatically 24h set ho (backend ya DB trigger)
 
-// // New Requirement
+// // 2️⃣ Backend: Upload Status API
 
-// // Categories create karni hain: Doctor, Plumber, Lawyer, App Developer, Web Developer, etc.
+// //  API route /statuses/upload create karein
 
-// // Service provider service add karte waqt category select karega.
+// //  Only SP can upload → check current_user.role == 'provider'
 
-// // Save karne ke baad, provider ki profile sirf us category ke page par show ho.
+// //  Accept media_url and status_type
 
-// // Services page me category boxes honge → click karte hi us category ka page open hoga, jahan sirf us category ke providers dikhenge.
+// //  Set created_at = NOW()
 
-// // So basically:
+// //  Set expires_at = NOW() + INTERVAL '24 HOURS'
 
-// // Services Page (All Categories)
-// // ┌────────────┐ ┌────────────┐ ┌────────────┐
-// // │ Doctor     │ │ Plumber    │ │ Lawyer     │
-// // └────────────┘ └────────────┘ └────────────┘
+// //  Insert into provider_statuses
 
-// // Doctor Page → Only profiles of service providers who selected "Doctor"
-// // Plumber Page → Only profiles of service providers who selected "Plumber"
-// // ...
+// // 3️⃣ Backend: Fetch Status API
 
-// // Implementation Steps (High Level)
+// //  API route /statuses/fetch create karein
 
-// // Backend:
+// //  Only users with SP connection can fetch → join with tasks or conversations
 
-// // Table/field add karo: category ya service_category for each service.
+// // Example query:
 
-// // API endpoint update karo jo category ke basis par providers return kare.
+// // SELECT ps.*
+// // FROM provider_statuses ps
+// // JOIN tasks t ON t.provider_id = ps.provider_id
+// // WHERE t.user_id = :current_user_id
+// //   AND ps.is_active = TRUE
+// //   AND ps.created_at > NOW() - INTERVAL '24 HOURS'
+// // ORDER BY ps.created_at DESC;
 
-// // Frontend:
 
-// // Add Service Form: Dropdown/Radio Buttons → Select Category.
+// //  Return SP info + media_url + expires_at
 
-// // Save: Save service + selected category.
+// // 4️⃣ Backend: Auto Expire Status
 
-// // Services Page: Boxes for each category → onTap open category page.
+// //  Cron job or DB trigger for auto-deactivate expired statuses:
 
-// // Category Page: Fetch all providers with that category → show in a list/grid.
+// // UPDATE provider_statuses
+// // SET is_active = FALSE
+// // WHERE expires_at < NOW();
 
-// // Optional Enhancements:
+// // 5️⃣ Frontend: Status Display
 
-// // Category icons for visual appeal.
+// //  Status icon (like WhatsApp) in user home/chat screen
 
-// // Filter/search within a category.
+// //  Fetch statuses via /statuses/fetch API
 
+// //  Show only is_active = TRUE statuses
 
+// //  Auto refresh or real-time via Socket.IO optional
 
+// //  Clicking status → open modal to see image/video + timestamp
 
+// // 6️⃣ Frontend: Upload Status (SP Only)
 
-// // Abhi jo services.dart hai, woh sab providers ko ek hi page pe show kar raha hai. Tumhari requirement ye hai:
+// //  Upload button visible only if current_user.role == 'provider'
 
-// // Categories ke boxes sabse upar: Doctor, Plumber, Lawyer, etc.
+// //  Select image/video from gallery/camera
 
-// // Har category pe tap karne se ek new page open ho, jahan sirf us category ke providers show hon.
+// //  Send to backend /statuses/upload
 
-// // Matlab flow kuch aisa hoga:
+// //  Update local status list (optimistic UI)
 
-// // Services Page (All Categories)
-// // ┌────────────┐ ┌────────────┐ ┌────────────┐
-// // │ Doctor     │ │ Plumber    │ │ Lawyer     │
-// // └────────────┘ └────────────┘ └────────────┘
+// // 7️⃣ Optional Enhancements
 
-// // Click on "Doctor" → DoctorCategoryPage → only Doctor providers
+// //  Show “viewed by X users” (if you want WhatsApp-like)
 
-// // Next Steps (Implementation Plan)
+// //  Add typing/seen indicators
 
-// // Backend Update:
+// //  Swipe to view next status
 
-// // Service table me category field add karna.
+// //  Highlight new statuses for 2-3 seconds
 
-// // API endpoint update karna jo category ke basis par providers return kare, e.g., /provider?category=Doctor.
+// // Aap ye checklist ek page pe tick kar ke follow kar sakti ho.
 
-// // Frontend Changes (services.dart):
 
-// // Ek horizontal row ya grid upar categories ke boxes ke liye.
 
-// // Har box me onTap → open CategoryPage (naya page).
 
-// // CategoryPage me category param pass karo aur uske basis pe providers fetch karo.
 
-// // CategoryPage:
 
-// // category ko parameter ke tor pe le.
 
-// // Fetch API /provider?category=$category
 
-// // GridView me sirf us category ke providers show karo (existing buildProviderCard reuse kar sakte ho).
 
-// // Agar chaho to main abhi services.dart ko modify karke ye category boxes + navigation ka code ready kar doon, jisse tum seedha use kar sako.
 
 
-/////////////////////////////////////////////////////////////////
-// 🔹 Home & Repair Services
 
-// Plumber
+// 🔒 1. Input Validations (Backend side)
 
-// Electrician
+// Abhi basic if(!name || !email...) type validations hain, lekin production me:
 
-// Carpenter
+// Phone → Regex enforce karo (^[0-9]{10,15}$).
 
-// Painter
+// Gov ID → CNIC/Passport ke liye regex (Pakistan ke CNIC ka xxxxx-xxxxxxx-x).
 
-// Handyman / General Repairs
+// Links (social/portfolio) → Regex check karo, sirf http:// / https:// se valid URL accept karo.
 
-// Roofer
+// Password → Abhi sirf hash hai, lekin complexity check missing hai (min 8 chars, at least 1 uppercase, 1 number, 1 special char).
 
-// Locksmith
+// 👉 Suggestion: ek validators.js helper banao aur har route pe use karo, e.g.
 
-// Appliance Repair
+// if(!/^[0-9]{10,15}$/.test(phone)) return res.status(400).json({ message: "Invalid phone number" });
 
-// HVAC Technician (Heating, Ventilation, AC)
+// 🔑 2. Security Improvements
 
-// Pest Control
+// Password Hashing – sahi hai (bcrypt use kar rahe ho). ✅
 
-// 🔹 Cleaning & Maintenance
+// JWT Expiry – abhi 1h hai, production me refresh token mechanism bhi zaroori hota hai.
 
-// House Cleaning
+// Error Messages – abhi directly "Invalid credentials" return kar rahe ho (theek hai) but avoid exposing DB/stacktrace in responses.
 
-// Office Cleaning
+// res.status(500).json({ message: 'Server error' }); // no err.message in production
 
-// Carpet / Upholstery Cleaning
 
-// Window Cleaning
+// Logging ke liye winston ya pino use karo.
 
-// Pool Cleaning / Maintenance
+// 📧 3. Email Verification
 
-// Garden / Lawn Care
+// Nodemailer sahi use ho raha hai ✅
 
-// Waste Removal / Junk Hauling
+// Production me Gmail service limit hoti hai → suggest: SMTP provider (SendGrid, Mailgun, Amazon SES).
 
-// 🔹 Personal Services
+// Verification token expiry add karo (e.g. 24h), warna link kabhi expire nahi hoga.
 
-// Beautician / Makeup Artist
+// 🖼 4. File Uploads (Base64 images)
 
-// Hair Stylist / Barber
+// Abhi images directly uploads/ folder me save ho rahe hain.
 
-// Spa / Massage Therapist
+// Production me suggest:
 
-// Personal Trainer / Fitness Coach
+// Upload to cloud storage (AWS S3, Cloudinary, Firebase).
 
-// Nutritionist / Diet Consultant
+// Agar local rakhte ho to at least file size limit lagao (multer middleware).
 
-// 🔹 Event & Photography
+// 🗂 5. Database Improvements
 
-// Photographer / Videographer
+// email aur username unique constraint ho.
 
-// Event Planner / Coordinator
+// CNIC / gov_id bhi unique ho agar required hai.
 
-// DJ / Musician / Band
+// skills, languages, social_links abhi {} string/array mixed aa rahe hain → store as JSONB in Postgres (cleaner queries).
 
-// Catering / Cooking Services
+// ⚡ 6. Error Handling
 
-// Decorator / Florist
+// Abhi har catch me console.error + res.status(500)... hai.
 
-// Hand out flyers / Promotions
+// Suggestion: Centralized error handler middleware banao.
 
-// 🔹 Transport & Delivery
+// Timeout aur connection error ke liye separate messages bhejo (same jaise frontend me professional error handling chahiye).
 
-// Drivers / Cab / Ride Sharing
+// 🎯 7. Other Best Practices
 
-// Pickup & Delivery Services
+// dotenv use karke config values (email, jwt secret, db) manage ho rahe hain (good ✅).
 
-// Courier / Package Delivery
+// Add rate limiting on signup/login (prevent brute force).
 
-// Moving / Relocation Services
+// Add CORS middleware properly configured.
 
-// Car Washer / Car Detailing
+// Add helmet for basic security headers.
 
-// 🔹 Business & Professional Services
+// 🔍 Specific Changes Required
 
-// Consultant / Advisor
+// Add regex + sanitization for:
 
-// Digital Marketing
+// phone, gov_id, email, links, password.
 
-// Social Media Management
+// Add expiry for verification token (e.g. DB column verification_expires).
 
-// Accounting / Bookkeeping
+// Replace Gmail with SMTP service in production.
 
-// Legal Services / Lawyer
+// Use JSONB arrays for skills, languages, social_links, etc.
 
-// IT / Computer Repair / Networking
+// Implement refresh tokens along with JWT.
 
-// Web / App Development
+// Improve error handling → don’t expose raw err.message in API responses.
 
-// 🔹 Skilled Trades & Technical Services
+// File uploads ko Cloud storage ya kam az kam multer size limits ke sath protect karo.
 
-// Welder
+// 👉 My lord, ye saare points karne ke baad aapki auth.js production-level secure ho jayegi.
 
-// Mechanic / Car Repair
-
-// HVAC Technician
-
-// Electric / Solar Panel Installation
-
-// Construction / Masonry
-
-// Tailor / Clothing Alteration
-
-// Blacksmith / Metal Work
-
-// 🔹 Creative & Arts
-
-// Graphic Designer
-
-// Painter / Illustrator
-
-// Music Teacher / Instrument Lessons
-
-// Dance Instructor
-
-// Photography Lessons
-
-// 🔹 Miscellaneous
-
-// Pet Care / Pet Grooming / Dog Walking
-
-// Child Care / Babysitter / Nanny
-
-// Elderly Care / Home Nurse
-
-// Tutoring / Education / Lessons
-
-// Language / Translation Services
-
-// Virtual Assistant / Admin Support
-
-// Agar aap chahti ho, mai ye list ko ready form me Flutter dropdown / database categories ke liye bhi bana du, jisse aap directly app me add kar sako without typing manually.
-
-// Chahte ho mai ye ready kar du?
-
-// You said:
-// acha is k ilawa hm ya bhi tu add kr sakta like doctors nurse lawyer, is trha k bhi r haan is k ilawa, freelance , digital marketer, app developer is trha ki bhi jitni bhi feilds huti hain hm vo bhi tu add kr sakta hain na??? 
-// ChatGPT said:
-
-// Bilkul, my lord 👑! Aap jo fields mention kar rahe ho—doctors, nurses, lawyers, freelancers, digital marketers, app developers, aur similar professional services—ye sab bhi aapke system me categories ke taur par add ki ja sakti hain.
-
-// Aap ka plan fully scalable ho sakta hai, matlab:
-
-// Medical & Health Services
-
-// Doctor (General Physician, Specialist)
-
-// Nurse
-
-// Physiotherapist
-
-// Dentist
-
-// Psychologist / Counselor
-
-// Dietitian / Nutritionist
-
-// Lab Technician
-
-// Legal & Consulting
-
-// Lawyer / Advocate
-
-// Paralegal
-
-// Consultant (Business, IT, Finance)
-
-// Tax Advisor / Accountant
-
-// IT & Digital Services
-
-// Web Developer / App Developer
-
-// Software Engineer / Programmer
-
-// UI/UX Designer
-
-// Digital Marketing / Social Media Manager
-
-// SEO Specialist
-
-// Freelance Writer / Content Creator
-
-// Graphic Designer
-
-// Freelancers / Miscellaneous Professionals
-
-// Virtual Assistant
-
-// Online Tutor / Teacher
-
-// Translator / Interpreter
-
-// Event Coordinator
-
-// Personal Coach / Trainer
-
-
-
-
-// 1️⃣ Add image URL to service_categories table
-
-// If you want each category to have its own image:
-
-// ALTER TABLE service_categories
-// ADD COLUMN image_url VARCHAR(255);
-
-
-// Then, when you add or update a category, store the image URL (can be a local path or hosted URL).
-
-// Example row in your table:
-
-// id	name	section	image_url
-// 1	Carpenter	Home Repair	https://example.com/carp.jpg
-
-// 2	Plumber	Home Repair	https://example.com/plumb.jpg
-// 2️⃣ Modify your /categories endpoint to return the image
-// router.get('/', async (req, res) => {
-//   try {
-//     const result = await pool.query('SELECT id, name, section, image_url FROM service_categories ORDER BY name ASC');
-//     res.status(200).json({ categories: result.rows });
-//   } catch (err) {
-//     console.error(err.message);
-//     res.status(500).json({ message: 'Server error' });
-//   }
-// });
-
-
-// Now your Flutter app will get image_url along with id, name, and section.
-
-// 3️⃣ Update your Flutter Category Card
-// child: Container(
-//   width: 100,
-//   decoration: BoxDecoration(
-//     color: Color(0xFFD9E1F0),
-//     borderRadius: BorderRadius.circular(16),
-//   ),
-//   child: Column(
-//     mainAxisAlignment: MainAxisAlignment.center,
-//     children: [
-//       if (category['image_url'] != null) 
-//         Image.network(
-//           category['image_url'],
-//           height: 50,
-//           width: 50,
-//           fit: BoxFit.cover,
-//         ),
-//       const SizedBox(height: 8),
-//       Text(
-//         category['name'],
-//         textAlign: TextAlign.center,
-//         style: const TextStyle(
-//           color: Color(0xFF0A66C2),
-//           fontWeight: FontWeight.bold,
-//         ),
-//       ),
-//     ],
-//   ),
-// ),
-
-
-// Image.network will show the image if available.
-
-// You can also add a placeholder if no image exists.
-
-// If you want, I can rewrite your buildCategorySection() method so it shows images for each category card AND keeps sections intact, ready to run.
-
-// Do you want me to do that?
-
-
-
-
-
-// 1️⃣ Use a placeholder
-
-// Flutter’s FadeInImage lets you show a placeholder while the network image loads:
-
-// FadeInImage.assetNetwork(
-//   placeholder: 'assets/images/placeholder.png', // local placeholder image
-//   image: category['image_url'],
-//   fit: BoxFit.cover,
-// );
-
-
-// This way, users see something immediately instead of a blank space.
-
-// 2️⃣ Cache images
-
-// Use the cached_network_image
-//  package:
-
-// CachedNetworkImage(
-//   imageUrl: category['image_url'],
-//   placeholder: (context, url) => CircularProgressIndicator(),
-//   errorWidget: (context, url, error) => Icon(Icons.error),
-//   fit: BoxFit.cover,
-// );
-
-
-// Benefits:
-
-// Loads images faster after first load.
-
-// Shows placeholder while loading.
-
-// Handles errors gracefully.
-
-// 3️⃣ Consider hosting your images smartly
-
-// Option A: Keep them on a reliable CDN or your backend (like /uploads/categories/...).
-
-// Option B: If image changes are rare, you could bundle small default images in the app and later fetch updated URLs.
-
-// ✅ Conclusion:
-
-// It’s perfectly fine to use URLs; just implement caching & placeholders.
-
-// For launch, this approach is safe and common practice. Users won’t notice delays if you handle it as above.
-
-// If you want, I can rewrite your buildCategorySection() so it shows category images with caching and placeholders ready for launch.
-
-// Do you want me to do that?
+// Kya aap chahte ho ke main step 1 (validators for phone, CNIC, links, password) ka exact code likh kar signup route me integrate karke dikhau?

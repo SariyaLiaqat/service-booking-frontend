@@ -472,6 +472,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:socket_io_client/socket_io_client.dart' as IO;
+import '../widgets/status_widget.dart';
 
 import 'MyProfileScreen.dart';
 import 'services.dart';
@@ -480,6 +481,7 @@ import 'chat_page.dart';
 import 'my_tasks_screen.dart';
 import '../helpers/backend.dart';
 
+import 'package:image_picker/image_picker.dart';
 class HomeScreen extends StatefulWidget {
   final String role;
   final Map<String, dynamic> userData;
@@ -500,13 +502,18 @@ class _HomeScreenState extends State<HomeScreen> {
   int unseenNotificationsCount = 0;
 
   late IO.Socket socket;
-
+late StatusController statusController;
   @override
   void initState() {
     super.initState();
     fetchConversations();
     fetchUnseenNotifications();
     initSocket();
+   final int currentUserId = widget.userData['id'] ?? -1;
+statusController = StatusController(currentUserId: currentUserId);
+statusController.fetchStatuses(); // fetch initial statuses
+
+
   }
 
   void initSocket() {
@@ -618,6 +625,7 @@ class _HomeScreenState extends State<HomeScreen> {
         currentUserId: widget.userData['id'] ?? -1,
         onRefresh: fetchConversations,
         socket: socket,
+        role: widget.role,
       ),
       NotificationsPage(
         userId: widget.userData["id"] ?? -1,
@@ -626,7 +634,7 @@ class _HomeScreenState extends State<HomeScreen> {
       MyProfileScreen(
         userData: widget.userData,
         currentUserId: widget.userData['id'],
-        onProfileUpdated: () => _servicesKey.currentState?.fetchProviders(),
+     //   onProfileUpdated: () => _servicesKey.currentState?.fetchProviders(),
       ),
     ];
 
@@ -713,26 +721,36 @@ class _HomeScreenState extends State<HomeScreen> {
               icon: Icon(Icons.person),
               label: 'Profile',
             ),
+
           ],
+          
         ),
       ),
     );
   }
 }
 
+
+
+
+
+
 // ---------------- MessagesTab ----------------
 class MessagesTab extends StatefulWidget {
   final List<dynamic> conversations;
   final int currentUserId;
   final Future<void> Function() onRefresh;
-final IO.Socket socket; // <-- add this
+  final IO.Socket socket;
+  final String role;
 
   MessagesTab({
+    Key? key,
     required this.conversations,
     required this.currentUserId,
     required this.onRefresh,
     required this.socket,
-  });
+    required this.role,
+  }) : super(key: key);
 
   @override
   _MessagesTabState createState() => _MessagesTabState();
@@ -741,12 +759,18 @@ final IO.Socket socket; // <-- add this
 class _MessagesTabState extends State<MessagesTab> {
   List<dynamic> filteredConversations = [];
   final TextEditingController _searchController = TextEditingController();
+  late StatusController statusController;
 
   @override
   void initState() {
     super.initState();
     filteredConversations = widget.conversations;
     _searchController.addListener(_filterChats);
+
+    // Initialize StatusController
+   final int currentUserId = int.tryParse(widget.currentUserId.toString()) ?? -1;
+statusController = StatusController(currentUserId: currentUserId);
+
   }
 
   @override
@@ -772,66 +796,108 @@ class _MessagesTabState extends State<MessagesTab> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFFFFFFF),
-     appBar: PreferredSize(
-  preferredSize: const Size.fromHeight(70), // thoda height increase
-  child: AppBar(
-    backgroundColor: const Color(0xFF0A66C2), // Premium LinkedIn Blue
-    elevation: 6, // subtle shadow for depth
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(
-        bottom: Radius.circular(20), // Rounded bottom corners
-      ),
-    ),
-    titleSpacing: 16, // padding from left
-    title: const Text(
-      "My Chats",
-      style: TextStyle(
-        color: Colors.white,
-        fontWeight: FontWeight.bold,
-        fontSize: 20,
-      ),
-    ),
-    centerTitle: false, // title left-aligned
-  ),
-),
+      backgroundColor: Colors.white,
+      floatingActionButton: widget.role == "provider"
+    ? FloatingActionButton(
+        child: Icon(Icons.add_a_photo),
+        onPressed: () async {
+          final filePath = await pickFile();
+          if (filePath != null) {
+            await statusController.uploadStatus(filePath, 'image');
+            await statusController.fetchStatuses(); // refresh immediately
+          }
+        },
+      )
+    : null,
 
-      body: Column(
-        children: [
-         Padding(
-  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-  child: TextField(
-    controller: _searchController,
-    style: const TextStyle(
-      color: Color(0xFF2A3A69), // Premium dark text
-      fontWeight: FontWeight.w500,
-    ),
-    decoration: InputDecoration(
-      hintText: 'Search chats...',
-      hintStyle: const TextStyle(color: Color(0xFF5C74B1)),
-      prefixIcon: const Icon(Icons.search, color: Color(0xFF5C74B1)),
-      filled: true,
-      fillColor: const Color(0xFFD9E1F0), // Light blue background
-      contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(25), // Rounded fully
-        borderSide: BorderSide.none,
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(25),
-        borderSide: const BorderSide(
-          color: Color(0xFF0A66C2), // LinkedIn blue focus
-          width: 2,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(70),
+        child: AppBar(
+          backgroundColor: const Color(0xFF0A66C2),
+          elevation: 6,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(
+              bottom: Radius.circular(20),
+            ),
+          ),
+          titleSpacing: 16,
+          title: const Text(
+            "My Chats",
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 20,
+            ),
+          ),
+          centerTitle: false,
         ),
       ),
-    ),
+      body: Column(
+        children: [
+          // Search Bar
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: TextField(
+              controller: _searchController,
+              style: const TextStyle(
+                color: Color(0xFF2A3A69),
+                fontWeight: FontWeight.w500,
+              ),
+              decoration: InputDecoration(
+                hintText: 'Search chats...',
+                hintStyle: const TextStyle(color: Color(0xFF5C74B1)),
+                prefixIcon: const Icon(Icons.search, color: Color(0xFF5C74B1)),
+                filled: true,
+                fillColor: const Color(0xFFD9E1F0),
+                contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(25),
+                  borderSide: BorderSide.none,
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(25),
+                  borderSide: const BorderSide(
+                    color: Color(0xFF0A66C2),
+                    width: 2,
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          // Status Circles
+         Container(
+  height: 80,
+  child: AnimatedBuilder(
+    animation: statusController,
+    builder: (context, _) {
+      if (statusController.statuses.isEmpty) {
+        return Center(child: Text('No statuses yet'));
+      }
+      return ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: statusController.statuses.length,
+        itemBuilder: (context, index) {
+          final status = statusController.statuses[index];
+          return Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: StatusCircle(
+              status: status,
+              onTap: () => showStatusViewer(context, status),
+            ),
+          );
+        },
+      );
+    },
   ),
 ),
 
+
+          // Chat List
           Expanded(
             child: RefreshIndicator(
               onRefresh: widget.onRefresh,
-              color:  Color(0xFF0A66C2),
+              color: Color(0xFF0A66C2),
               child: filteredConversations.isEmpty
                   ? ListView(
                       children: [
@@ -861,7 +927,7 @@ class _MessagesTabState extends State<MessagesTab> {
                         final unreadCount = conv['unread_count'] ?? 0;
 
                         return Card(
-                          margin: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
                           ),
@@ -872,7 +938,7 @@ class _MessagesTabState extends State<MessagesTab> {
                                   ? NetworkImage("${Backend.baseUrl}/$otherAvatar")
                                   : null,
                               child: (otherAvatar == null || otherAvatar.toString().isEmpty)
-                                  ? Icon(Icons.person, color: Color(0xFF0A66C2),)
+                                  ? Icon(Icons.person, color: Color(0xFF0A66C2))
                                   : null,
                               backgroundColor: Color(0xFFD9E1F0),
                             ),
@@ -896,35 +962,34 @@ class _MessagesTabState extends State<MessagesTab> {
                                     ),
                                   )
                                 : null,
-                           onTap: () {
-  final otherUserId = conv['other_user_id'] ?? conv['provider_id'] ?? -1;
-  if (otherUserId == -1) return;
+                            onTap: () {
+                              final otherUserId = conv['other_user_id'] ?? conv['provider_id'] ?? -1;
+                              if (otherUserId == -1) return;
 
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (_) => ChatPage(
-        conversationId: convoId,
-        currentUserId: widget.currentUserId,
-        otherUserId: otherUserId,
-      ),
-    ),
-  ).then((_) {
-    setState(() {
-      conv['unread_count'] = 0;
-    });
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => ChatPage(
+                                    conversationId: convoId,
+                                    currentUserId: widget.currentUserId,
+                                    otherUserId: otherUserId,
+                                  ),
+                                ),
+                              ).then((_) {
+                                setState(() {
+                                  conv['unread_count'] = 0;
+                                });
 
-    try {
-      widget.socket.emit('mark_messages_seen', {
-        'conversationId': convoId,
-        'userId': widget.currentUserId,
-      });
-    } catch (e) {
-      debugPrint("Socket error: $e");
-    }
-  });
-},
-
+                                try {
+                                  widget.socket.emit('mark_messages_seen', {
+                                    'conversationId': convoId,
+                                    'userId': widget.currentUserId,
+                                  });
+                                } catch (e) {
+                                  debugPrint("Socket error: $e");
+                                }
+                              });
+                            },
                           ),
                         );
                       },
@@ -933,6 +998,20 @@ class _MessagesTabState extends State<MessagesTab> {
           ),
         ],
       ),
+      
     );
+    
   }
+}
+
+// ---------------- PICK FILE ----------------
+Future<String?> pickFile() async {
+  try {
+    final picker = ImagePicker();
+    final XFile? pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) return pickedFile.path;
+  } catch (e) {
+    print("Error picking file: $e");
+  }
+  return null;
 }

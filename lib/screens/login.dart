@@ -7,7 +7,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-
+import 'forgot_password.dart';
 import 'home_screen.dart';
 import 'signup.dart';
 import '../helpers/backend.dart';
@@ -25,6 +25,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController passwordController = TextEditingController();
 
   bool isLoading = false;
+bool _obscurePassword = true; // add this at top of your _LoginScreenState
 
   Future<void> login() async {
     if (!_formKey.currentState!.validate()) return;
@@ -145,25 +146,81 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 25),
 
                 // Email Field
-                TextFormField(
-                  controller: emailController,
-                  decoration: _inputDecoration("Email"),
-                  keyboardType: TextInputType.emailAddress,
-                  style: const TextStyle(color: Color(0xFF0A66C2),),
-                  validator: (val) =>
-                      val == null || val.isEmpty ? "Enter email" : null,
-                ),
+               TextFormField(
+  controller: emailController,
+  decoration: _inputDecoration("Email"),
+  keyboardType: TextInputType.emailAddress,
+  style: const TextStyle(color: Color(0xFF0A66C2)),
+  validator: (val) {
+    if (val == null || val.isEmpty) {
+      return "Enter email";
+    }
+    final emailRegex =
+        RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$");
+    if (!emailRegex.hasMatch(val)) {
+      return "Enter a valid email address";
+    }
+    return null;
+  },
+),
+
+
+
+
+
                 const SizedBox(height: 16),
 
                 // Password Field
-                TextFormField(
-                  controller: passwordController,
-                  decoration: _inputDecoration("Password"),
-                  obscureText: true,
-                  style: const TextStyle(color: Color(0xFF0A66C2),),
-                  validator: (val) =>
-                      val == null || val.isEmpty ? "Enter password" : null,
-                ),
+               TextFormField(
+  controller: passwordController,
+  decoration: _inputDecoration("Password").copyWith(
+    suffixIcon: IconButton(
+      icon: Icon(
+        _obscurePassword ? Icons.visibility_off : Icons.visibility,
+        color: const Color(0xFF0A66C2),
+      ),
+      onPressed: () {
+        setState(() {
+          _obscurePassword = !_obscurePassword;
+        });
+      },
+    ),
+  ),
+  obscureText: _obscurePassword,
+  style: const TextStyle(color: Color(0xFF0A66C2)),
+  validator: (val) {
+    if (val == null || val.isEmpty) {
+      return "Enter password";
+    }
+    final regex = RegExp(r'^(?=.*[A-Z])(?=.*\d)(?=.*[!@#\$&*~]).{8,}$');
+    if (!regex.hasMatch(val)) {
+      return "Password must be 8+ chars, include 1 uppercase, 1 number, and 1 special char";
+    }
+    return null;
+  },
+),
+// Forgot Password link
+Align(
+  alignment: Alignment.centerRight,
+  child: TextButton(
+    onPressed: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => ForgotPasswordScreen()),
+      );
+    },
+    child: const Text(
+      "Forgot Password?",
+      style: TextStyle(
+        color: Color(0xFF0A66C2),
+        fontWeight: FontWeight.w600,
+      ),
+    ),
+  ),
+),
+const SizedBox(height: 16),
+
+
                 const SizedBox(height: 24),
 
                 // Login Button

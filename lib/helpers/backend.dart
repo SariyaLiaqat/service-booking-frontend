@@ -39,8 +39,8 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 
 class Backend {
-  static String get baseUrl => "https://4c2b0556ba0b.ngrok-free.app";
-  static String get socketUrl => "https://4c2b0556ba0b.ngrok-free.app";
+  static String get baseUrl =>"https://368ddb26551b.ngrok-free.app";
+  static String get socketUrl =>"https://368ddb26551b.ngrok-free.app";
 
   // GET request
   static Future<Map<String, dynamic>?> get(String endpoint) async {
