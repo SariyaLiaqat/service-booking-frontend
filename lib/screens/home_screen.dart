@@ -1,16 +1,12 @@
-
-
 // ///////////////////////
 // ///
 // ///
-
 
 // import 'dart:convert';
 // import 'package:flutter/material.dart';
 // import 'package:flutter/services.dart';
 // import 'package:http/http.dart' as http;
 // import 'package:socket_io_client/socket_io_client.dart' as IO;
-
 // import 'MyProfileScreen.dart';
 // import 'services.dart';
 // import 'notifications_page.dart';
@@ -38,13 +34,17 @@
 //   int unseenNotificationsCount = 0;
 
 //   late IO.Socket socket;
-
+// //late StatusController statusController;
 //   @override
 //   void initState() {
 //     super.initState();
 //     fetchConversations();
 //     fetchUnseenNotifications();
 //     initSocket();
+//  //  final int currentUserId = widget.userData['id'] ?? -1;
+// // statusController = StatusController(currentUserId: currentUserId);
+// // statusController.fetchStatuses(); // fetch initial statuses
+
 //   }
 
 //   void initSocket() {
@@ -155,6 +155,8 @@
 //         conversations: conversations,
 //         currentUserId: widget.userData['id'] ?? -1,
 //         onRefresh: fetchConversations,
+//         socket: socket,
+//         role: widget.role,
 //       ),
 //       NotificationsPage(
 //         userId: widget.userData["id"] ?? -1,
@@ -163,7 +165,7 @@
 //       MyProfileScreen(
 //         userData: widget.userData,
 //         currentUserId: widget.userData['id'],
-//         onProfileUpdated: () => _servicesKey.currentState?.fetchProviders(),
+//      //   onProfileUpdated: () => _servicesKey.currentState?.fetchProviders(),
 //       ),
 //     ];
 
@@ -250,7 +252,9 @@
 //               icon: Icon(Icons.person),
 //               label: 'Profile',
 //             ),
+
 //           ],
+
 //         ),
 //       ),
 //     );
@@ -262,12 +266,17 @@
 //   final List<dynamic> conversations;
 //   final int currentUserId;
 //   final Future<void> Function() onRefresh;
+//   final IO.Socket socket;
+//   final String role;
 
 //   MessagesTab({
+//     Key? key,
 //     required this.conversations,
 //     required this.currentUserId,
 //     required this.onRefresh,
-//   });
+//     required this.socket,
+//     required this.role,
+//   }) : super(key: key);
 
 //   @override
 //   _MessagesTabState createState() => _MessagesTabState();
@@ -276,12 +285,18 @@
 // class _MessagesTabState extends State<MessagesTab> {
 //   List<dynamic> filteredConversations = [];
 //   final TextEditingController _searchController = TextEditingController();
+//   //late StatusController statusController;
 
 //   @override
 //   void initState() {
 //     super.initState();
 //     filteredConversations = widget.conversations;
 //     _searchController.addListener(_filterChats);
+
+//     // Initialize StatusController
+//   // final int currentUserId = int.tryParse(widget.currentUserId.toString()) ?? -1;
+// //statusController = StatusController(currentUserId: currentUserId);
+
 //   }
 
 //   @override
@@ -307,66 +322,82 @@
 //   @override
 //   Widget build(BuildContext context) {
 //     return Scaffold(
-//       backgroundColor: Color(0xFFFFFFFF),
-//      appBar: PreferredSize(
-//   preferredSize: const Size.fromHeight(70), // thoda height increase
-//   child: AppBar(
-//     backgroundColor: const Color(0xFF0A66C2), // Premium LinkedIn Blue
-//     elevation: 6, // subtle shadow for depth
-//     shape: const RoundedRectangleBorder(
-//       borderRadius: BorderRadius.vertical(
-//         bottom: Radius.circular(20), // Rounded bottom corners
-//       ),
-//     ),
-//     titleSpacing: 16, // padding from left
-//     title: const Text(
-//       "My Chats",
-//       style: TextStyle(
-//         color: Colors.white,
-//         fontWeight: FontWeight.bold,
-//         fontSize: 20,
-//       ),
-//     ),
-//     centerTitle: false, // title left-aligned
-//   ),
-// ),
+//       backgroundColor: Colors.white,
+//     //  floatingActionButton: widget.role == "provider"
+//     // ? FloatingActionButton(
+//     //     child: Icon(Icons.add_a_photo),
+//     //     onPressed: () async {
+//     //       final filePath = await pickFile();
+//     //       if (filePath != null) {
+//     //         await statusController.uploadStatus(filePath, 'image');
+//     //         await statusController.fetchStatuses(); // refresh immediately
+//     //       }
+//     //     },
+//     //   )
+//     // : null,
 
-//       body: Column(
-//         children: [
-//          Padding(
-//   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-//   child: TextField(
-//     controller: _searchController,
-//     style: const TextStyle(
-//       color: Color(0xFF2A3A69), // Premium dark text
-//       fontWeight: FontWeight.w500,
-//     ),
-//     decoration: InputDecoration(
-//       hintText: 'Search chats...',
-//       hintStyle: const TextStyle(color: Color(0xFF5C74B1)),
-//       prefixIcon: const Icon(Icons.search, color: Color(0xFF5C74B1)),
-//       filled: true,
-//       fillColor: const Color(0xFFD9E1F0), // Light blue background
-//       contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
-//       border: OutlineInputBorder(
-//         borderRadius: BorderRadius.circular(25), // Rounded fully
-//         borderSide: BorderSide.none,
-//       ),
-//       focusedBorder: OutlineInputBorder(
-//         borderRadius: BorderRadius.circular(25),
-//         borderSide: const BorderSide(
-//           color: Color(0xFF0A66C2), // LinkedIn blue focus
-//           width: 2,
+//       appBar: PreferredSize(
+//         preferredSize: const Size.fromHeight(70),
+//         child: AppBar(
+//           backgroundColor: const Color(0xFF0A66C2),
+//           elevation: 6,
+//           shape: const RoundedRectangleBorder(
+//             borderRadius: BorderRadius.vertical(
+//               bottom: Radius.circular(20),
+//             ),
+//           ),
+//           titleSpacing: 16,
+//           title: const Text(
+//             "My Chats",
+//             style: TextStyle(
+//               color: Colors.white,
+//               fontWeight: FontWeight.bold,
+//               fontSize: 20,
+//             ),
+//           ),
+//           centerTitle: false,
 //         ),
 //       ),
-//     ),
-//   ),
-// ),
+//       body: Column(
+//         children: [
+//           // Search Bar
+//           Padding(
+//             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+//             child: TextField(
+//               controller: _searchController,
+//               style: const TextStyle(
+//                 color: Color(0xFF2A3A69),
+//                 fontWeight: FontWeight.w500,
+//               ),
+//               decoration: InputDecoration(
+//                 hintText: 'Search chats...',
+//                 hintStyle: const TextStyle(color: Color(0xFF5C74B1)),
+//                 prefixIcon: const Icon(Icons.search, color: Color(0xFF5C74B1)),
+//                 filled: true,
+//                 fillColor: const Color(0xFFD9E1F0),
+//                 contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
+//                 border: OutlineInputBorder(
+//                   borderRadius: BorderRadius.circular(25),
+//                   borderSide: BorderSide.none,
+//                 ),
+//                 focusedBorder: OutlineInputBorder(
+//                   borderRadius: BorderRadius.circular(25),
+//                   borderSide: const BorderSide(
+//                     color: Color(0xFF0A66C2),
+//                     width: 2,
+//                   ),
+//                 ),
+//               ),
+//             ),
+//           ),
 
+//           // Status Circles
+
+//           // Chat List
 //           Expanded(
 //             child: RefreshIndicator(
 //               onRefresh: widget.onRefresh,
-//               color:  Color(0xFF0A66C2),
+//               color: Color(0xFF0A66C2),
 //               child: filteredConversations.isEmpty
 //                   ? ListView(
 //                       children: [
@@ -396,7 +427,7 @@
 //                         final unreadCount = conv['unread_count'] ?? 0;
 
 //                         return Card(
-//                           margin: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+//                           margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
 //                           shape: RoundedRectangleBorder(
 //                             borderRadius: BorderRadius.circular(16),
 //                           ),
@@ -407,7 +438,7 @@
 //                                   ? NetworkImage("${Backend.baseUrl}/$otherAvatar")
 //                                   : null,
 //                               child: (otherAvatar == null || otherAvatar.toString().isEmpty)
-//                                   ? Icon(Icons.person, color: Color(0xFF0A66C2),)
+//                                   ? Icon(Icons.person, color: Color(0xFF0A66C2))
 //                                   : null,
 //                               backgroundColor: Color(0xFFD9E1F0),
 //                             ),
@@ -444,7 +475,20 @@
 //                                     otherUserId: otherUserId,
 //                                   ),
 //                                 ),
-//                               );
+//                               ).then((_) {
+//                                 setState(() {
+//                                   conv['unread_count'] = 0;
+//                                 });
+
+//                                 try {
+//                                   widget.socket.emit('mark_messages_seen', {
+//                                     'conversationId': convoId,
+//                                     'userId': widget.currentUserId,
+//                                   });
+//                                 } catch (e) {
+//                                   debugPrint("Socket error: $e");
+//                                 }
+//                               });
 //                             },
 //                           ),
 //                         );
@@ -454,34 +498,29 @@
 //           ),
 //         ],
 //       ),
+
 //     );
+
 //   }
 // }
-
-
-
-
 
 ///////////////////////
 ///
 ///
-
 
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:socket_io_client/socket_io_client.dart' as IO;
-import '../widgets/status_widget.dart';
-
 import 'MyProfileScreen.dart';
 import 'services.dart';
 import 'notifications_page.dart';
 import 'chat_page.dart';
 import 'my_tasks_screen.dart';
 import '../helpers/backend.dart';
+import 'status_screen.dart';
 
-import 'package:image_picker/image_picker.dart';
 class HomeScreen extends StatefulWidget {
   final String role;
   final Map<String, dynamic> userData;
@@ -494,33 +533,28 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
-  final GlobalKey<ServicesScreenState> _servicesKey = GlobalKey<ServicesScreenState>();
+  final GlobalKey<ServicesScreenState> _servicesKey =
+      GlobalKey<ServicesScreenState>();
 
   List<dynamic> conversations = [];
   bool isLoadingConversations = true;
   int unreadMessagesCount = 0;
   int unseenNotificationsCount = 0;
-
   late IO.Socket socket;
-late StatusController statusController;
+  //late StatusController statusController;
   @override
   void initState() {
     super.initState();
     fetchConversations();
     fetchUnseenNotifications();
     initSocket();
-   final int currentUserId = widget.userData['id'] ?? -1;
-statusController = StatusController(currentUserId: currentUserId);
-statusController.fetchStatuses(); // fetch initial statuses
-
-
   }
 
   void initSocket() {
-    socket = IO.io(
-      Backend.baseUrl,
-      <String, dynamic>{'transports': ['websocket'], 'autoConnect': true},
-    );
+    socket = IO.io(Backend.baseUrl, <String, dynamic>{
+      'transports': ['websocket'],
+      'autoConnect': true,
+    });
 
     socket.connect();
 
@@ -561,20 +595,17 @@ statusController.fetchStatuses(); // fetch initial statuses
         final data = jsonDecode(response.body);
         setState(() {
           conversations = (data['conversations'] as List<dynamic>?) ?? [];
-          unreadMessagesCount = conversations.fold<int>(
-            0,
-            (sum, c) {
-              final count = c['unread_count'];
-              if (count is int) return sum + count;
-              if (count is double) return sum + count.toInt();
-              return sum;
-            },
-          );
+          unreadMessagesCount = conversations.fold<int>(0, (sum, c) {
+            final count = c['unread_count'];
+            if (count is int) return sum + count;
+            if (count is double) return sum + count.toInt();
+            return sum;
+          });
         });
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to load conversations')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to load conversations')));
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -627,14 +658,11 @@ statusController.fetchStatuses(); // fetch initial statuses
         socket: socket,
         role: widget.role,
       ),
-      NotificationsPage(
-        userId: widget.userData["id"] ?? -1,
-        role: widget.role,
-      ),
+      NotificationsPage(userId: widget.userData["id"] ?? -1, role: widget.role),
       MyProfileScreen(
         userData: widget.userData,
         currentUserId: widget.userData['id'],
-     //   onProfileUpdated: () => _servicesKey.currentState?.fetchProviders(),
+        //   onProfileUpdated: () => _servicesKey.currentState?.fetchProviders(),
       ),
     ];
 
@@ -644,16 +672,13 @@ statusController.fetchStatuses(); // fetch initial statuses
         decoration: BoxDecoration(
           color: Colors.white,
           boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.2),
-              blurRadius: 10,
-            ),
+            BoxShadow(color: Colors.grey.withOpacity(0.2), blurRadius: 10),
           ],
         ),
         child: BottomNavigationBar(
           currentIndex: _currentIndex,
           type: BottomNavigationBarType.fixed,
-          selectedItemColor:Color(0xFF0A66C2),
+          selectedItemColor: Color(0xFF0A66C2),
           unselectedItemColor: Color(0xFF5C74B1),
           onTap: (index) {
             setState(() => _currentIndex = index);
@@ -661,10 +686,7 @@ statusController.fetchStatuses(); // fetch initial statuses
             if (index == 3) resetUnseenNotifications();
           },
           items: [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home),
-              label: 'Services',
-            ),
+            BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Services'),
             BottomNavigationBarItem(
               icon: Icon(Icons.check_circle_outline),
               label: 'Tasks',
@@ -717,23 +739,13 @@ statusController.fetchStatuses(); // fetch initial statuses
               ),
               label: 'Notifications',
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.person),
-              label: 'Profile',
-            ),
-
+            BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
           ],
-          
         ),
       ),
     );
   }
 }
-
-
-
-
-
 
 // ---------------- MessagesTab ----------------
 class MessagesTab extends StatefulWidget {
@@ -759,18 +771,12 @@ class MessagesTab extends StatefulWidget {
 class _MessagesTabState extends State<MessagesTab> {
   List<dynamic> filteredConversations = [];
   final TextEditingController _searchController = TextEditingController();
-  late StatusController statusController;
-
+  bool _isChatsSelected = true;
   @override
   void initState() {
     super.initState();
     filteredConversations = widget.conversations;
     _searchController.addListener(_filterChats);
-
-    // Initialize StatusController
-   final int currentUserId = int.tryParse(widget.currentUserId.toString()) ?? -1;
-statusController = StatusController(currentUserId: currentUserId);
-
   }
 
   @override
@@ -787,7 +793,9 @@ statusController = StatusController(currentUserId: currentUserId);
         filteredConversations = List.from(widget.conversations);
       } else {
         filteredConversations = widget.conversations
-            .where((c) => (c['other_user_name'] ?? '').toLowerCase().contains(query))
+            .where(
+              (c) => (c['other_user_name'] ?? '').toLowerCase().contains(query),
+            )
             .toList();
       }
     });
@@ -796,222 +804,367 @@ statusController = StatusController(currentUserId: currentUserId);
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      floatingActionButton: widget.role == "provider"
-    ? FloatingActionButton(
-        child: Icon(Icons.add_a_photo),
-        onPressed: () async {
-          final filePath = await pickFile();
-          if (filePath != null) {
-            await statusController.uploadStatus(filePath, 'image');
-            await statusController.fetchStatuses(); // refresh immediately
-          }
-        },
-      )
-    : null,
-
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(70),
         child: AppBar(
           backgroundColor: const Color(0xFF0A66C2),
           elevation: 6,
           shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.vertical(
-              bottom: Radius.circular(20),
-            ),
+            borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
           ),
           titleSpacing: 16,
-          title: const Text(
-            "My Chats",
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: 20,
-            ),
-          ),
-          centerTitle: false,
-        ),
-      ),
-      body: Column(
-        children: [
-          // Search Bar
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            child: TextField(
-              controller: _searchController,
-              style: const TextStyle(
-                color: Color(0xFF2A3A69),
-                fontWeight: FontWeight.w500,
-              ),
-              decoration: InputDecoration(
-                hintText: 'Search chats...',
-                hintStyle: const TextStyle(color: Color(0xFF5C74B1)),
-                prefixIcon: const Icon(Icons.search, color: Color(0xFF5C74B1)),
-                filled: true,
-                fillColor: const Color(0xFFD9E1F0),
-                contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(25),
-                  borderSide: BorderSide.none,
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(25),
-                  borderSide: const BorderSide(
-                    color: Color(0xFF0A66C2),
-                    width: 2,
+          title: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              GestureDetector(
+                onTap: () => setState(() => _isChatsSelected = true),
+                child: Text(
+                  "My Chats",
+                  style: TextStyle(
+                    color: _isChatsSelected ? Colors.white : Colors.white70,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
                   ),
                 ),
               ),
+              GestureDetector(
+                onTap: () => setState(() => _isChatsSelected = false),
+                child: Text(
+                  "Status",
+                  style: TextStyle(
+                    color: !_isChatsSelected ? Colors.white : Colors.white70,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+
+      body: Column(
+  children: [
+    // Search Bar
+    Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      child: TextField(
+        controller: _searchController,
+        style: const TextStyle(
+          color: Color(0xFF2A3A69),
+          fontWeight: FontWeight.w500,
+        ),
+        decoration: InputDecoration(
+          hintText: 'Search chats...',
+          hintStyle: const TextStyle(color: Color(0xFF5C74B1)),
+          prefixIcon: const Icon(Icons.search, color: Color(0xFF5C74B1)),
+          filled: true,
+          fillColor: const Color(0xFFD9E1F0),
+          contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(25),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(25),
+            borderSide: const BorderSide(
+              color: Color(0xFF0A66C2),
+              width: 2,
             ),
           ),
+        ),
+      ),
+    ),
 
-          // Status Circles
-         Container(
-  height: 80,
-  child: AnimatedBuilder(
-    animation: statusController,
-    builder: (context, _) {
-      if (statusController.statuses.isEmpty) {
-        return Center(child: Text('No statuses yet'));
-      }
-      return ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: statusController.statuses.length,
-        itemBuilder: (context, index) {
-          final status = statusController.statuses[index];
-          return Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: StatusCircle(
-              status: status,
-              onTap: () => showStatusViewer(context, status),
-            ),
+    // Chat List / Status
+    Expanded(
+      child: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 300),
+        transitionBuilder: (child, animation) {
+          return SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(1, 0),
+              end: Offset.zero,
+            ).animate(animation),
+            child: child,
           );
         },
-      );
-    },
-  ),
-),
-
-
-          // Chat List
-          Expanded(
-            child: RefreshIndicator(
-              onRefresh: widget.onRefresh,
-              color: Color(0xFF0A66C2),
-              child: filteredConversations.isEmpty
-                  ? ListView(
-                      children: [
-                        Center(
-                          child: Padding(
-                            padding: EdgeInsets.all(20),
-                            child: Text(
-                              widget.conversations.isEmpty
-                                  ? 'No conversations yet'
-                                  : 'No results found',
-                              style: TextStyle(fontSize: 16, color: Color(0xFF5C74B1)),
+        child: _isChatsSelected
+            ? RefreshIndicator(
+                key: const ValueKey('chats'),
+                onRefresh: widget.onRefresh,
+                color: Color(0xFF0A66C2),
+                child: filteredConversations.isEmpty
+                    ? ListView(
+                        children: [
+                          Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(20),
+                              child: Text(
+                                widget.conversations.isEmpty
+                                    ? 'No conversations yet'
+                                    : 'No results found',
+                                style: TextStyle(fontSize: 16, color: Color(0xFF5C74B1)),
+                              ),
                             ),
-                          ),
-                        )
-                      ],
-                    )
-                  : ListView.builder(
-                      itemCount: filteredConversations.length,
-                      itemBuilder: (context, index) {
-                        final conv = filteredConversations[index];
-                        final convoId = conv['conversation_id'];
-                        if (convoId == null) return SizedBox();
+                          )
+                        ],
+                      )
+                    : ListView.builder(
+                        itemCount: filteredConversations.length,
+                        itemBuilder: (context, index) {
+                          final conv = filteredConversations[index];
+                          final convoId = conv['conversation_id'];
+                          if (convoId == null) return SizedBox();
 
-                        final otherName = conv['other_user_name'] ?? 'Unknown';
-                        final otherAvatar = conv['other_user_avatar'];
-                        final lastMessage = conv['last_message'] ?? '';
-                        final unreadCount = conv['unread_count'] ?? 0;
+                          final otherName = conv['other_user_name'] ?? 'Unknown';
+                          final otherAvatar = conv['other_user_avatar'];
+                          final lastMessage = conv['last_message'] ?? '';
+                          final unreadCount = conv['unread_count'] ?? 0;
 
-                        return Card(
-                          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          elevation: 2,
-                          child: ListTile(
-                            leading: CircleAvatar(
-                              backgroundImage: (otherAvatar != null && otherAvatar.toString().isNotEmpty)
-                                  ? NetworkImage("${Backend.baseUrl}/$otherAvatar")
+                          return Card(
+                            margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            elevation: 2,
+                            child: ListTile(
+                              leading: CircleAvatar(
+                                backgroundImage: (otherAvatar != null && otherAvatar.toString().isNotEmpty)
+                                    ? NetworkImage("${Backend.baseUrl}/$otherAvatar")
+                                    : null,
+                                child: (otherAvatar == null || otherAvatar.toString().isEmpty)
+                                    ? Icon(Icons.person, color: Color(0xFF0A66C2))
+                                    : null,
+                                backgroundColor: Color(0xFFD9E1F0),
+                              ),
+                              title: Text(
+                                otherName,
+                                style: TextStyle(color: Color(0xFF0A66C2), fontWeight: FontWeight.bold),
+                              ),
+                              subtitle: Text(
+                                lastMessage,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(color: Color(0xFF5C74B1)),
+                              ),
+                              trailing: unreadCount > 0
+                                  ? CircleAvatar(
+                                      radius: 12,
+                                      backgroundColor: Colors.red,
+                                      child: Text(
+                                        '$unreadCount',
+                                        style: TextStyle(color: Colors.white, fontSize: 12),
+                                      ),
+                                    )
                                   : null,
-                              child: (otherAvatar == null || otherAvatar.toString().isEmpty)
-                                  ? Icon(Icons.person, color: Color(0xFF0A66C2))
-                                  : null,
-                              backgroundColor: Color(0xFFD9E1F0),
-                            ),
-                            title: Text(
-                              otherName,
-                              style: TextStyle(color: Color(0xFF0A66C2), fontWeight: FontWeight.bold),
-                            ),
-                            subtitle: Text(
-                              lastMessage,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(color: Color(0xFF5C74B1)),
-                            ),
-                            trailing: unreadCount > 0
-                                ? CircleAvatar(
-                                    radius: 12,
-                                    backgroundColor: Colors.red,
-                                    child: Text(
-                                      '$unreadCount',
-                                      style: TextStyle(color: Colors.white, fontSize: 12),
+                              onTap: () {
+                                final otherUserId = conv['other_user_id'] ?? conv['provider_id'] ?? -1;
+                                if (otherUserId == -1) return;
+
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => ChatPage(
+                                      conversationId: convoId,
+                                      currentUserId: widget.currentUserId,
+                                      otherUserId: otherUserId,
                                     ),
-                                  )
-                                : null,
-                            onTap: () {
-                              final otherUserId = conv['other_user_id'] ?? conv['provider_id'] ?? -1;
-                              if (otherUserId == -1) return;
-
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => ChatPage(
-                                    conversationId: convoId,
-                                    currentUserId: widget.currentUserId,
-                                    otherUserId: otherUserId,
                                   ),
-                                ),
-                              ).then((_) {
-                                setState(() {
-                                  conv['unread_count'] = 0;
-                                });
-
-                                try {
-                                  widget.socket.emit('mark_messages_seen', {
-                                    'conversationId': convoId,
-                                    'userId': widget.currentUserId,
+                                ).then((_) {
+                                  setState(() {
+                                    conv['unread_count'] = 0;
                                   });
-                                } catch (e) {
-                                  debugPrint("Socket error: $e");
-                                }
-                              });
-                            },
-                          ),
-                        );
-                      },
-                    ),
-            ),
-          ),
-        ],
+
+                                  try {
+                                    widget.socket.emit('mark_messages_seen', {
+                                      'conversationId': convoId,
+                                      'userId': widget.currentUserId,
+                                    });
+                                  } catch (e) {
+                                    debugPrint("Socket error: $e");
+                                  }
+                                });
+                              },
+                            ),
+                          );
+                        },
+                      ),
+              )
+            : StatusPage(
+                key: const ValueKey('status'),
+                currentUserId: widget.currentUserId,
+                isProvider: widget.role == "provider",
+              ),
       ),
+    ),
+  ],
       
+      )
+
     );
-    
   }
 }
 
-// ---------------- PICK FILE ----------------
-Future<String?> pickFile() async {
-  try {
-    final picker = ImagePicker();
-    final XFile? pickedFile = await picker.pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) return pickedFile.path;
-  } catch (e) {
-    print("Error picking file: $e");
-  }
-  return null;
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+ 
+//       body: Column(
+//         children: [
+//           // Search Bar
+//           Padding(
+//             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+//             child: TextField(
+//               controller: _searchController,
+//               style: const TextStyle(
+//                 color: Color(0xFF2A3A69),
+//                 fontWeight: FontWeight.w500,
+//               ),
+//               decoration: InputDecoration(
+//                 hintText: 'Search chats...',
+//                 hintStyle: const TextStyle(color: Color(0xFF5C74B1)),
+//                 prefixIcon: const Icon(Icons.search, color: Color(0xFF5C74B1)),
+//                 filled: true,
+//                 fillColor: const Color(0xFFD9E1F0),
+//                 contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
+//                 border: OutlineInputBorder(
+//                   borderRadius: BorderRadius.circular(25),
+//                   borderSide: BorderSide.none,
+//                 ),
+//                 focusedBorder: OutlineInputBorder(
+//                   borderRadius: BorderRadius.circular(25),
+//                   borderSide: const BorderSide(
+//                     color: Color(0xFF0A66C2),
+//                     width: 2,
+//                   ),
+//                 ),
+//               ),
+//             ),
+//           ),
+
+//           // Status Circles
+//           // Chat List
+//           Expanded(
+//             child: RefreshIndicator(
+//               onRefresh: widget.onRefresh,
+//               color: Color(0xFF0A66C2),
+//               child: filteredConversations.isEmpty
+//                   ? ListView(
+//                       children: [
+//                         Center(
+//                           child: Padding(
+//                             padding: EdgeInsets.all(20),
+//                             child: Text(
+//                               widget.conversations.isEmpty
+//                                   ? 'No conversations yet'
+//                                   : 'No results found',
+//                               style: TextStyle(fontSize: 16, color: Color(0xFF5C74B1)),
+//                             ),
+//                           ),
+//                         )
+//                       ],
+//                     )
+//                   : ListView.builder(
+//                       itemCount: filteredConversations.length,
+//                       itemBuilder: (context, index) {
+//                         final conv = filteredConversations[index];
+//                         final convoId = conv['conversation_id'];
+//                         if (convoId == null) return SizedBox();
+
+//                         final otherName = conv['other_user_name'] ?? 'Unknown';
+//                         final otherAvatar = conv['other_user_avatar'];
+//                         final lastMessage = conv['last_message'] ?? '';
+//                         final unreadCount = conv['unread_count'] ?? 0;
+
+//                         return Card(
+//                           margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+//                           shape: RoundedRectangleBorder(
+//                             borderRadius: BorderRadius.circular(16),
+//                           ),
+//                           elevation: 2,
+//                           child: ListTile(
+//                             leading: CircleAvatar(
+//                               backgroundImage: (otherAvatar != null && otherAvatar.toString().isNotEmpty)
+//                                   ? NetworkImage("${Backend.baseUrl}/$otherAvatar")
+//                                   : null,
+//                               child: (otherAvatar == null || otherAvatar.toString().isEmpty)
+//                                   ? Icon(Icons.person, color: Color(0xFF0A66C2))
+//                                   : null,
+//                               backgroundColor: Color(0xFFD9E1F0),
+//                             ),
+//                             title: Text(
+//                               otherName,
+//                               style: TextStyle(color: Color(0xFF0A66C2), fontWeight: FontWeight.bold),
+//                             ),
+//                             subtitle: Text(
+//                               lastMessage,
+//                               maxLines: 1,
+//                               overflow: TextOverflow.ellipsis,
+//                               style: TextStyle(color: Color(0xFF5C74B1)),
+//                             ),
+//                             trailing: unreadCount > 0
+//                                 ? CircleAvatar(
+//                                     radius: 12,
+//                                     backgroundColor: Colors.red,
+//                                     child: Text(
+//                                       '$unreadCount',
+//                                       style: TextStyle(color: Colors.white, fontSize: 12),
+//                                     ),
+//                                   )
+//                                 : null,
+//                             onTap: () {
+//                               final otherUserId = conv['other_user_id'] ?? conv['provider_id'] ?? -1;
+//                               if (otherUserId == -1) return;
+
+//                               Navigator.push(
+//                                 context,
+//                                 MaterialPageRoute(
+//                                   builder: (_) => ChatPage(
+//                                     conversationId: convoId,
+//                                     currentUserId: widget.currentUserId,
+//                                     otherUserId: otherUserId,
+//                                   ),
+//                                 ),
+//                               ).then((_) {
+//                                 setState(() {
+//                                   conv['unread_count'] = 0;
+//                                 });
+
+//                                 try {
+//                                   widget.socket.emit('mark_messages_seen', {
+//                                     'conversationId': convoId,
+//                                     'userId': widget.currentUserId,
+//                                   });
+//                                 } catch (e) {
+//                                   debugPrint("Socket error: $e");
+//                                 }
+//                               });
+//                             },
+//                           ),
+//                         );
+//                       },
+//                     ),
+//             ),
+//           ),
+//         ],
+//       ),
+      
+//     );
+    
+//   }
+// }
+

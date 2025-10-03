@@ -1,189 +1,114 @@
-// // ✅ Service Provider Status Feature – Todo / Checklist
-// // 1️⃣ Database Setup
+// // Smooth Video Playback Plan (WhatsApp style)
+// // Step 1: Video Processing / Compression on Server
 
-// //  provider_statuses table me provider_id FK correctly providers(user_id) se linked hai
+// // Video upload hone ke baad turant compressed version ready ho.
 
-// //  media_url, status_type, created_at, expires_at, is_active fields exist karte hain
+// // Optionally, HLS (m3u8) format me convert karo taake streaming smooth ho.
 
-// //  expires_at automatically 24h set ho (backend ya DB trigger)
+// // FFmpeg commands:
 
-// // 2️⃣ Backend: Upload Status API
+// // Simple mp4 compression:
 
-// //  API route /statuses/upload create karein
+// // ffmpeg -i input.mp4 -vcodec libx264 -crf 23 -preset fast -acodec aac output.mp4
 
-// //  Only SP can upload → check current_user.role == 'provider'
 
-// //  Accept media_url and status_type
+// // HLS (chunked streaming):
 
-// //  Set created_at = NOW()
+// // ffmpeg -i input.mp4 -codec: copy -start_number 0 -hls_time 10 -hls_list_size 0 -f hls output.m3u8
 
-// //  Set expires_at = NOW() + INTERVAL '24 HOURS'
 
-// //  Insert into provider_statuses
+// // Save compressed file path / m3u8 URL in database.
 
-// // 3️⃣ Backend: Fetch Status API
+// // Step 2: Serve Video via Proper URL
 
-// //  API route /statuses/fetch create karein
+// // Backend should return compressed video URL or HLS playlist URL immediately.
 
-// //  Only users with SP connection can fetch → join with tasks or conversations
+// // Ensure CORS enabled for video URL.
 
-// // Example query:
+// // If HLS, return .m3u8 file URL, not .mp4.
 
-// // SELECT ps.*
-// // FROM provider_statuses ps
-// // JOIN tasks t ON t.provider_id = ps.provider_id
-// // WHERE t.user_id = :current_user_id
-// //   AND ps.is_active = TRUE
-// //   AND ps.created_at > NOW() - INTERVAL '24 HOURS'
-// // ORDER BY ps.created_at DESC;
+// // Step 3: Flutter Frontend Video Player Update
 
+// // Use video_player + chewie with network URL (compressed mp4 or HLS).
 
-// //  Return SP info + media_url + expires_at
+// // For HLS, video_player automatically streams chunks → playback starts instantly.
 
-// // 4️⃣ Backend: Auto Expire Status
+// // Optional: Preload / caching for smoother playback.
 
-// //  Cron job or DB trigger for auto-deactivate expired statuses:
+// // Step 4: Test Playback
 
-// // UPDATE provider_statuses
-// // SET is_active = FALSE
-// // WHERE expires_at < NOW();
+// // Upload a video → immediately fetch URL → verify playback starts without delay.
 
-// // 5️⃣ Frontend: Status Display
+// // Test multiple video durations (7 sec, 1 min, 3 min).
 
-// //  Status icon (like WhatsApp) in user home/chat screen
+// // Ensure audio/video sync and proper looping.
 
-// //  Fetch statuses via /statuses/fetch API
+// // Step 5: Optimize (Optional)
 
-// //  Show only is_active = TRUE statuses
+// // Adaptive bitrate for larger videos.
 
-// //  Auto refresh or real-time via Socket.IO optional
+// // Thumbnails for preview in status list.
 
-// //  Clicking status → open modal to see image/video + timestamp
+// // Background download for offline playback.
 
-// // 6️⃣ Frontend: Upload Status (SP Only)
+// // 💡 Summary:
+// // 1️⃣ Compress / HLS conversion on server
+// // 2️⃣ Serve proper video URL
+// // 3️⃣ Flutter player update for network/HLS playback
+// // 4️⃣ Test immediately
+// // 5️⃣ Optional optimizations
 
-// //  Upload button visible only if current_user.role == 'provider'
 
-// //  Select image/video from gallery/camera
 
-// //  Send to backend /statuses/upload
+// Step 1: Backend folder structure
 
-// //  Update local status list (optimistic UI)
+// Create folders if not exist:
 
-// // 7️⃣ Optional Enhancements
+// uploads/
+//    original/    → raw uploaded files
+//    compressed/  → compressed mp4 files
+//    hls/         → HLS chunks
 
-// //  Show “viewed by X users” (if you want WhatsApp-like)
 
-// //  Add typing/seen indicators
+// Ye har upload ke liye automatically check & create karna chahiye.
 
-// //  Swipe to view next status
+// Step 2: Receive upload (API)
 
-// //  Highlight new statuses for 2-3 seconds
+// Jab koi provider video upload kare → save to uploads/original/{filename}.
 
-// // Aap ye checklist ek page pe tick kar ke follow kar sakti ho.
+// Example: uploads/original/status_12345.mp4
 
+// Step 3: Compress video (FFmpeg)
 
+// Backend me automatically FFmpeg command run karo after upload:
 
+// ffmpeg -i uploads/original/status_12345.mp4 -vcodec libx264 -crf 23 -preset fast -acodec aac uploads/compressed/status_12345.mp4
 
 
+// Compressed version size chhoti → fast loading.
 
+// Step 4: Optional HLS for chunked streaming
+// ffmpeg -i uploads/compressed/status_12345.mp4 -codec: copy -start_number 0 -hls_time 10 -hls_list_size 0 -f hls uploads/hls/status_12345.m3u8
 
 
+// Ye frontend me streaming ke liye use hoga.
 
+// Step 5: Save paths in DB
 
+// Original: uploads/original/status_12345.mp4
 
+// Compressed: uploads/compressed/status_12345.mp4
 
-// 🔒 1. Input Validations (Backend side)
+// HLS playlist: uploads/hls/status_12345.m3u8
 
-// Abhi basic if(!name || !email...) type validations hain, lekin production me:
+// Frontend use karega compressed ya HLS URL.
 
-// Phone → Regex enforce karo (^[0-9]{10,15}$).
+// ✅ Iska benefit:
 
-// Gov ID → CNIC/Passport ke liye regex (Pakistan ke CNIC ka xxxxx-xxxxxxx-x).
+// Har provider ka video automatically compress aur HLS me convert ho jaye.
 
-// Links (social/portfolio) → Regex check karo, sirf http:// / https:// se valid URL accept karo.
+// Frontend smooth playback: short chunks → instant play.
 
-// Password → Abhi sirf hash hai, lekin complexity check missing hai (min 8 chars, at least 1 uppercase, 1 number, 1 special char).
+// WhatsApp jaise experience possible.
 
-// 👉 Suggestion: ek validators.js helper banao aur har route pe use karo, e.g.
-
-// if(!/^[0-9]{10,15}$/.test(phone)) return res.status(400).json({ message: "Invalid phone number" });
-
-// 🔑 2. Security Improvements
-
-// Password Hashing – sahi hai (bcrypt use kar rahe ho). ✅
-
-// JWT Expiry – abhi 1h hai, production me refresh token mechanism bhi zaroori hota hai.
-
-// Error Messages – abhi directly "Invalid credentials" return kar rahe ho (theek hai) but avoid exposing DB/stacktrace in responses.
-
-// res.status(500).json({ message: 'Server error' }); // no err.message in production
-
-
-// Logging ke liye winston ya pino use karo.
-
-// 📧 3. Email Verification
-
-// Nodemailer sahi use ho raha hai ✅
-
-// Production me Gmail service limit hoti hai → suggest: SMTP provider (SendGrid, Mailgun, Amazon SES).
-
-// Verification token expiry add karo (e.g. 24h), warna link kabhi expire nahi hoga.
-
-// 🖼 4. File Uploads (Base64 images)
-
-// Abhi images directly uploads/ folder me save ho rahe hain.
-
-// Production me suggest:
-
-// Upload to cloud storage (AWS S3, Cloudinary, Firebase).
-
-// Agar local rakhte ho to at least file size limit lagao (multer middleware).
-
-// 🗂 5. Database Improvements
-
-// email aur username unique constraint ho.
-
-// CNIC / gov_id bhi unique ho agar required hai.
-
-// skills, languages, social_links abhi {} string/array mixed aa rahe hain → store as JSONB in Postgres (cleaner queries).
-
-// ⚡ 6. Error Handling
-
-// Abhi har catch me console.error + res.status(500)... hai.
-
-// Suggestion: Centralized error handler middleware banao.
-
-// Timeout aur connection error ke liye separate messages bhejo (same jaise frontend me professional error handling chahiye).
-
-// 🎯 7. Other Best Practices
-
-// dotenv use karke config values (email, jwt secret, db) manage ho rahe hain (good ✅).
-
-// Add rate limiting on signup/login (prevent brute force).
-
-// Add CORS middleware properly configured.
-
-// Add helmet for basic security headers.
-
-// 🔍 Specific Changes Required
-
-// Add regex + sanitization for:
-
-// phone, gov_id, email, links, password.
-
-// Add expiry for verification token (e.g. DB column verification_expires).
-
-// Replace Gmail with SMTP service in production.
-
-// Use JSONB arrays for skills, languages, social_links, etc.
-
-// Implement refresh tokens along with JWT.
-
-// Improve error handling → don’t expose raw err.message in API responses.
-
-// File uploads ko Cloud storage ya kam az kam multer size limits ke sath protect karo.
-
-// 👉 My lord, ye saare points karne ke baad aapki auth.js production-level secure ho jayegi.
-
-// Kya aap chahte ho ke main step 1 (validators for phone, CNIC, links, password) ka exact code likh kar signup route me integrate karke dikhau?
+// Agar chaho, mai tumhe exact No

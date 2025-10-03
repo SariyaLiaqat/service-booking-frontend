@@ -249,13 +249,28 @@ Future<void> fetchCategoryProviders() async {
       for (var service in fetchedServices) {
         final pid = service['provider_id'];
         if (!uniqueProviders.containsKey(pid)) {
+
+           double avgRating = 0.0;
+  int totalRatings = 0;
+
+  try {
+    final ratingUrl = Uri.parse('${Backend.baseUrl}/provider/$pid/ratings');
+    final ratingResp = await http.get(ratingUrl);
+    if (ratingResp.statusCode == 200) {
+      final ratingData = jsonDecode(ratingResp.body);
+      avgRating = double.tryParse(ratingData['average_rating']?.toString() ?? '0') ?? 0.0;
+      totalRatings = ratingData['total_ratings'] ?? 0;
+    }
+  } catch (e) {
+    print('Error fetching rating for provider $pid: $e');
+  }
           uniqueProviders[pid] = {
             'provider_id': pid,
             'name': service['provider_name'],
             'profile_image': service['provider_image'],
             'skills': service['provider_skills'],
-            'average_rating': 0.0,
-            'total_ratings': 0,
+            'average_rating': avgRating,
+            'total_ratings':totalRatings,
             'services': [],
           };
         }
@@ -273,6 +288,10 @@ Future<void> fetchCategoryProviders() async {
     print('Error: $e');
   }
 }
+
+
+
+
 
 
 
@@ -503,7 +522,6 @@ class _NearbyProvidersWithRatingsWidgetState
     getUserLocation();
   }
 
-  // Use Geolocator for location
   Future<void> getUserLocation() async {
     try {
       final position = await Geolocator.getCurrentPosition(
@@ -513,9 +531,10 @@ class _NearbyProvidersWithRatingsWidgetState
         userLat = position.latitude;
         userLng = position.longitude;
       });
-      fetchNearbyProviders();
+      await fetchNearbyProviders();
     } catch (e) {
       setState(() => isLoading = false);
+      print('Location error: $e');
     }
   }
 
@@ -527,30 +546,51 @@ class _NearbyProvidersWithRatingsWidgetState
         '${Backend.baseUrl}/provider/nearest?lat=$userLat&lng=$userLng&limit=10',
       );
       final response = await http.get(url);
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         List rawProviders = data['providers'] ?? [];
 
-        // 🔹 Normalize providers data (same structure as CategoryPage)
-        nearbyProviders = rawProviders.map((p) {
-          return {
-            'provider_id': p['id'], // map id → provider_id
+        nearbyProviders = [];
+
+        for (var p in rawProviders) {
+          double avgRating = 0.0;
+          int totalRatings = 0;
+
+          try {
+            final ratingUrl = Uri.parse(
+                '${Backend.baseUrl}/provider/${p['id']}/ratings');
+            final ratingResp = await http.get(ratingUrl);
+
+            if (ratingResp.statusCode == 200) {
+              final ratingData = jsonDecode(ratingResp.body);
+              avgRating = double.tryParse(
+                      ratingData['average_rating']?.toString() ?? '0') ??
+                  0.0;
+              totalRatings = ratingData['total_ratings'] ?? 0;
+            }
+          } catch (e) {
+            print('Error fetching rating for provider ${p['id']}: $e');
+          }
+
+          nearbyProviders.add({
+            'provider_id': p['id'],
             'name': p['name'] ?? 'Unknown',
             'profile_image': p['profile_image'],
-            'skills': p['skills'] ?? [], // handle null
-            'average_rating':
-                double.tryParse(p['average_rating']?.toString() ?? '0') ?? 0.0,
-            'total_ratings':
-                int.tryParse(p['total_ratings']?.toString() ?? '0') ?? 0,
-          };
-        }).toList();
+            'skills': p['skills'] ?? [],
+            'average_rating': avgRating,
+            'total_ratings': totalRatings,
+          });
+        }
 
         setState(() => isLoading = false);
       } else {
         setState(() => isLoading = false);
+        print('Failed to fetch nearby providers: ${response.statusCode}');
       }
     } catch (e) {
       setState(() => isLoading = false);
+      print('Error fetching nearby providers: $e');
     }
   }
 
@@ -596,12 +636,12 @@ class _NearbyProvidersWithRatingsWidgetState
                 onTap: () async {
                   dynamic providerDetails;
                   try {
-                    // ✅ use provider_id here (not id)
                     final url = Uri.parse(
                         '${Backend.baseUrl}/provider/services/providers/${provider['provider_id']}');
                     final response = await http.get(url);
                     if (response.statusCode == 200) {
-                      providerDetails = jsonDecode(response.body)['provider'];
+                      providerDetails =
+                          jsonDecode(response.body)['provider'];
                     } else {
                       providerDetails = provider;
                     }
@@ -614,7 +654,8 @@ class _NearbyProvidersWithRatingsWidgetState
                     MaterialPageRoute(
                       builder: (_) => MyProfileScreen(
                         userData: providerDetails,
-                        readOnly: widget.currentUserId != provider['provider_id'],
+                        readOnly:
+                            widget.currentUserId != provider['provider_id'],
                         currentUserId: widget.currentUserId,
                       ),
                     ),
@@ -624,9 +665,8 @@ class _NearbyProvidersWithRatingsWidgetState
                   children: [
                     CircleAvatar(
                       radius: 40,
-                      backgroundImage: imageUrl != null
-                          ? NetworkImage(imageUrl)
-                          : null,
+                      backgroundImage:
+                          imageUrl != null ? NetworkImage(imageUrl) : null,
                       child: imageUrl == null
                           ? const Icon(
                               Icons.person,

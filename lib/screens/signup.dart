@@ -457,6 +457,8 @@
 //   }
 // }
 
+
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -610,13 +612,7 @@ class _SignupScreenState extends State<SignupScreen> {
         "hourly_rate": hourlyRateController.text.isNotEmpty
             ? double.tryParse(hourlyRateController.text)
             : null,
-        // "skills": skillsController.text.isNotEmpty
-        //     ? skillsController.text
-        //         .split(',')
-        //         .map((s) => s.trim())
-        //         .where((s) => s.isNotEmpty)
-        //         .toList()
-        //     : [],
+       
         "portfolio_links": portfolioController.text.isNotEmpty
             ? portfolioController.text
                   .split(',')

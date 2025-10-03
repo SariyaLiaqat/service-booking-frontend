@@ -3657,71 +3657,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                     // Skills
                     const SizedBox(height: 16),
 
-                    // Skills Section
-                    // isEditing && !isExternalView
-                    //     ? _buildCustomTextField(
-                    //         skillsController,
-                    //         'Skills (comma separated)',
-                    //       )
-                    //     : Column(
-                    //         crossAxisAlignment: CrossAxisAlignment.start,
-                    //         children: [
-                    //           const Divider(
-                    //             color: Colors.grey,
-                    //             thickness: 0.6,
-                    //             height: 30,
-                    //           ),
-                    //           const Text(
-                    //             "Skills",
-                    //             style: TextStyle(
-                    //               fontSize: 18,
-                    //               fontWeight: FontWeight.bold,
-                    //               color: Colors.black,
-                    //             ),
-                    //           ),
-                    //           const SizedBox(height: 10),
-
-                    //           if (user['skills'] != null &&
-                    //               (user['skills'] as List).isNotEmpty)
-                    //             Column(
-                    //               crossAxisAlignment: CrossAxisAlignment.start,
-                    //               children: (user['skills'] as List)
-                    //                   .map<Widget>((skill) {
-                    //                     return Padding(
-                    //                       padding: const EdgeInsets.symmetric(
-                    //                         vertical: 4.0,
-                    //                       ),
-                    //                       child: Row(
-                    //                         children: [
-                    //                           const Text(
-                    //                             "• ",
-                    //                             style: TextStyle(
-                    //                               fontSize: 18,
-                    //                               color: Colors.black,
-                    //                             ),
-                    //                           ),
-                    //                           Expanded(
-                    //                             child: Text(
-                    //                               skill,
-                    //                               style: const TextStyle(
-                    //                                 fontSize: 16,
-                    //                                 color: Colors.black,
-                    //                               ),
-                    //                             ),
-                    //                           ),
-                    //                         ],
-                    //                       ),
-                    //                     );
-                    //                   })
-                    //                   .toList(),
-                    //             )
-                    //           else
-                    //             const Text(
-                    //               "No skills added yet",
-                    //               style: TextStyle(color: Colors.grey),
-                    //             ),
-                    //         ],
-                    //       ),
+                   
                     const SizedBox(height: 20),
 
                     // Provider Section
@@ -3919,7 +3855,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
   }
 
   /////////////////////////////////////////////////////////////
-  ///
+  
   ///
 
   // ✅ Provider Fields Builder
@@ -4205,53 +4141,66 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
               ),
             ),
 
-        if (services.isNotEmpty)
+
+
+
+
+if (services.isNotEmpty)
   ...services.map(
     (s) => SizedBox(
-      width: 350, // fixed width
-      height: 200, // fixed height
+      width: 350,
+      height: 200,
       child: Card(
-        color: const Color(0xFFF5F5F5),
-        elevation: 1,
+        color: Colors.white, // clean white background
+        elevation: 3, // subtle shadow
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(12), // slightly more rounded
+          side: BorderSide(
+            color: Colors.grey.shade300, // thin subtle border
+            width: 1,
+          ),
         ),
         child: Padding(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(14),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 'Service',
                 style: TextStyle(
-                  fontWeight: FontWeight.bold,fontSize: 20
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                  color: Colors.grey.shade800, // subtle dark gray
                 ),
               ),
               const SizedBox(height: 6),
               Text(
                 s['title'] ?? '-',
-                style: const TextStyle(
+                style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: Color( 0xFF0A66C2,),
+                  color: Color(0xFF0A66C2), // primary brand color
                   fontSize: 16,
                 ),
               ),
               const SizedBox(height: 6),
-              // Scrollable description inside fixed height
               Expanded(
                 child: SingleChildScrollView(
                   child: Text(
                     s['description'] ?? '-',
-                    style: const TextStyle(fontSize: 14),
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey.shade700, // easy on eyes
+                      height: 1.3, // better line spacing
+                    ),
                   ),
                 ),
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 8),
               Text(
                 'PKR ${s['price'] ?? "-"}',
-                style: const TextStyle(
+                style: TextStyle(
                   fontWeight: FontWeight.w600,
-                  color: Color( 0xFF0A66C2,),
+                  color: Color(0xFF0A66C2),
                   fontSize: 16,
                 ),
               ),

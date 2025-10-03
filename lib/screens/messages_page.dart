@@ -903,7 +903,8 @@ Container(
             padding: const EdgeInsets.all(8.0),
             child: StatusCircle(
               status: status,
-              onTap: () => showStatusViewer(context, status),
+             onTap: () => showStatusViewer(context, status, statusController),
+
             ),
           );
         },
@@ -911,6 +912,8 @@ Container(
     },
   ),
 ),
+
+
 
                 // ------------------- CHAT LIST -------------------
                 Expanded(

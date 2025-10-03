@@ -39,8 +39,8 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 
 class Backend {
-  static String get baseUrl =>"https://368ddb26551b.ngrok-free.app";
-  static String get socketUrl =>"https://368ddb26551b.ngrok-free.app";
+  static String get baseUrl =>"https://cae1cb9c32b8.ngrok-free.app";
+  static String get socketUrl =>"https://cae1cb9c32b8.ngrok-free.app";
 
   // GET request
   static Future<Map<String, dynamic>?> get(String endpoint) async {
@@ -57,6 +57,16 @@ class Backend {
       return null;
     }
   }
+//------------------------
+
+
+
+static String buildMediaUrl(String path) {
+  if (path.startsWith("http")) return path; // already full URL
+  return "$baseUrl/$path".replaceAll("//", "/").replaceFirst("https:/", "https://");
+}
+
+
 
   // POST request with optional body
   static Future<Map<String, dynamic>?> post(String endpoint, Map<String, dynamic> body) async {
