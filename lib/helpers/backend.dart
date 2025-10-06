@@ -38,9 +38,10 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 
+
 class Backend {
-  static String get baseUrl =>"https://cae1cb9c32b8.ngrok-free.app";
-  static String get socketUrl =>"https://cae1cb9c32b8.ngrok-free.app";
+  static String get baseUrl =>"https://85f4f1006aff.ngrok-free.app";
+  static String get socketUrl =>"https://85f4f1006aff.ngrok-free.app";
 
   // GET request
   static Future<Map<String, dynamic>?> get(String endpoint) async {
@@ -88,3 +89,30 @@ static String buildMediaUrl(String path) {
     }
   }
 }
+
+
+class NotificationsApi {
+  static Future<void> sendNotification({
+    required int userId,
+    required String title,
+    required String body,
+    required int senderId,
+  }) async {
+    final uri = Uri.parse("${Backend.baseUrl}/notifications/send");
+    final response = await http.post(
+      uri,
+      headers: {"Content-Type": "application/json"},
+      body: json.encode({
+        "user_id": userId,
+        "title": title,
+        "body": body,
+        "sender_id": senderId,
+      }),
+    );
+
+    if (response.statusCode != 200) {
+      print("❌ Notification failed: ${response.body}");
+    }
+  }
+}
+

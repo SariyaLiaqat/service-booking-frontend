@@ -44,9 +44,13 @@ dependencies:
   url_launcher: ^6.3.2
   provider: ^6.1.0
   chewie: ^1.13.0
+  permission_handler: ^12.0.1
+  app_settings: ^6.1.1
+  shared_preferences: ^2.5.3
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
+  
   
 
 dev_dependencies:
@@ -75,7 +79,30 @@ flutter:
   assets:
     - assets/svg/signup.svg
     - assets/svg/login.svg
-    - assets/images/logo.png
+    - assets/images/mylogo.png
+    - assets/images/mainImg.png
+    - assets/images/newmain.png
+
+    - assets/images/one.png
+    - assets/images/two.png
+    - assets/images/three.png
+    - assets/images/four.png
+    - assets/images/five.png
+    - assets/images/six.png
+    - assets/images/seven.png
+    - assets/images/eight.png
+    - assets/images/nine.png
+    - assets/images/ten.png
+    - assets/images/eleven.png
+    - assets/images/twelve.png
+    - assets/images/thirteen.png
+    - assets/images/fourteen.png
+    - assets/images/fifteen.png
+    - assets/images/sixteen.png
+    - assets/images/seventeen.png
+    - assets/images/eighteen.png
+    
+
     - assets/categories/2.png
     - assets/categories/3.png
     - assets/categories/4.png

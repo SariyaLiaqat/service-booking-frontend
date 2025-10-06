@@ -734,6 +734,7 @@ class _ExternalProfileWidgetState extends State<ExternalProfileWidget> {
             providerName: user['name'] ?? 'Unknown',
             phone: user['phone'] ?? '',
             currentUserId: widget.currentUserId,
+            
             serviceData:
                 (user['services'] != null &&
                     (user['services'] as List).isNotEmpty)

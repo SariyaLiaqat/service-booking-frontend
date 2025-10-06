@@ -459,6 +459,8 @@
 
 
 
+
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -467,6 +469,7 @@ import 'dart:convert';
 import 'login.dart';
 import '../helpers/backend.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:app_settings/app_settings.dart';
 
 class SignupScreen extends StatefulWidget {
   @override
@@ -520,28 +523,32 @@ class _SignupScreenState extends State<SignupScreen> {
       LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
-        if (permission == LocationPermission.denied) {
-          ScaffoldMessenger.of(context).showMaterialBanner(
-            MaterialBanner(
-              content: const Text(
-                '📍 Enable location to see nearby providers. Without it, some services may not work.',
-                style: TextStyle(color: Colors.white),
-              ),
-              backgroundColor: Colors.blueAccent,
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
-                  },
-                  child: const Text(
-                    'DISMISS',
-                    style: TextStyle(color: Colors.white),
+
+        if (permission == LocationPermission.deniedForever) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.error_outline, color: Colors.white),
+                  const SizedBox(width: 8),
+                  const Expanded(
+                    child: Text(
+                      '❌ Location permission permanently denied. Open app settings to enable it.',
+                      style: TextStyle(color: Colors.white),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
+              backgroundColor: Colors.redAccent,
+              action: SnackBarAction(
+                label: 'SETTINGS',
+                textColor: Colors.white,
+                onPressed: () {
+                  AppSettings.openAppSettings();
+                },
+              ),
             ),
           );
-
           return;
         }
       }
@@ -612,7 +619,7 @@ class _SignupScreenState extends State<SignupScreen> {
         "hourly_rate": hourlyRateController.text.isNotEmpty
             ? double.tryParse(hourlyRateController.text)
             : null,
-       
+
         "portfolio_links": portfolioController.text.isNotEmpty
             ? portfolioController.text
                   .split(',')
@@ -903,21 +910,6 @@ class _SignupScreenState extends State<SignupScreen> {
                     },
                   ),
 
-                  //                   const SizedBox(height: 12),
-                  //                   TextFormField(
-                  //   controller: skillsController,
-                  //   decoration: _inputDecoration("Skills (comma separated)"),
-                  //   validator: (val) {
-                  //     if (val == null || val.isEmpty) return "Enter skills";
-                  //     final skills = val
-                  //         .split(',')
-                  //         .map((s) => s.trim())
-                  //         .where((s) => s.isNotEmpty)
-                  //         .toList();
-                  //     if (skills.isEmpty) return "Enter at least one valid skill";
-                  //     return null;
-                  //   },
-                  // ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
                     value: experienceLevel,

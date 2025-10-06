@@ -1,9 +1,15 @@
+
+
+
+
+
+
 // import 'dart:convert';
 // import 'package:flutter/material.dart';
 // import 'package:http/http.dart' as http;
 // import 'task_detail_screen.dart';
 // import '../helpers/backend.dart';
-
+// import '../helpers/colors.dart';
 // class Task {
 //   final int id;
 //   final int userId;
@@ -11,6 +17,9 @@
 //   final int serviceId;
 //   final String status;
 //   final DateTime scheduledDate;
+//   final String? address; // new
+//   final double? latitude; // new
+//   final double? longitude; // new
 //   final String notes;
 //   final String serviceTitle;
 //   final String userName;
@@ -26,6 +35,9 @@
 //     required this.serviceId,
 //     required this.status,
 //     required this.scheduledDate,
+//     this.address,
+//     this.latitude,
+//     this.longitude,
 //     required this.notes,
 //     required this.serviceTitle,
 //     required this.userName,
@@ -35,29 +47,37 @@
 //     this.attachments = const [], // default empty list of maps
 //   });
 
-//   factory Task.fromJson(Map<String, dynamic> json) => Task(
-//         id: json['id'],
-//         userId: json['user_id'],
-//         providerId: json['provider_id'],
-//         serviceId: json['service_id'],
-//         status: json['status'],
-//         scheduledDate: DateTime.parse(json['scheduled_date']),
-//         notes: json['notes'] ?? "",
-//         serviceTitle: json['service_title'] ?? "Service",
-//         userName: json['user_name'] ?? "User",
-//         providerName: json['provider_name'] ?? "Provider",
-//         attachmentDetails: json['attachment_details'],
-//         completedAt: json['completed_at'] != null
-//             ? DateTime.parse(json['completed_at'])
-//             : null,
-//         attachments: json['attachments'] != null
-//             ? List<Map<String, dynamic>>.from(
-//                 (json['attachments'] as List).map(
-//                   (a) => Map<String, dynamic>.from(a),
-//                 ),
-//               )
-//             : [],
-//       );
+//  factory Task.fromJson(Map<String, dynamic> json) => Task(
+//       id: json['id'],
+//       userId: json['user_id'],
+//       providerId: json['provider_id'],
+//       serviceId: json['service_id'],
+//       status: json['status'],
+//       scheduledDate: DateTime.parse(json['scheduled_date']),
+//       address: json['address'], // new
+//       latitude: json['latitude'] != null
+//           ? double.tryParse(json['latitude'].toString())
+//           : null, // new
+//       longitude: json['longitude'] != null
+//           ? double.tryParse(json['longitude'].toString())
+//           : null, // new
+//       notes: json['notes'] ?? "",
+//       serviceTitle: json['service_title'] ?? "Service",
+//       userName: json['user_name'] ?? "User",
+//       providerName: json['provider_name'] ?? "Provider",
+//       attachmentDetails: json['attachment_details'],
+//       completedAt: json['completed_at'] != null
+//           ? DateTime.parse(json['completed_at'])
+//           : null,
+//       attachments: json['attachments'] != null
+//           ? List<Map<String, dynamic>>.from(
+//               (json['attachments'] as List).map(
+//                 (a) => Map<String, dynamic>.from(a),
+//               ),
+//             )
+//           : [],
+//     );
+
 // }
 
 // class TasksApi {
@@ -152,50 +172,134 @@
 //     }
 //   }
 
-//   Future<void> _updateTask(Task task, String newStatus) async {
-//     bool confirm = true;
 
-//     if (newStatus == "completed") {
-//       confirm = await showDialog(
-//             context: context,
-//             builder: (ctx) => AlertDialog(
-//               title: const Text('Complete Task'),
-//               content: const Text(
-//                   'Are you sure you have completed this task carefully?'),
-//               actions: [
-//                 TextButton(
-//                   onPressed: () => Navigator.pop(ctx, false),
-//                   child: const Text('Cancel'),
-//                 ),
-//                 TextButton(
-//                   onPressed: () => Navigator.pop(ctx, true),
-//                   child: const Text('Yes, Completed'),
-//                 ),
-//               ],
+
+// Future<void> _updateTask(Task task, String newStatus) async {
+//   bool confirm = true;
+
+//   if (newStatus == "completed") {
+//     confirm = await showDialog(
+//           context: context,
+//           builder: (ctx) => AlertDialog(
+//             backgroundColor: AppColors.backgroundWhite,
+//             shape: RoundedRectangleBorder(
+//               borderRadius: BorderRadius.circular(16),
 //             ),
-//           ) ??
-//           false;
-//     }
-
-//     if (!confirm) return;
-
-//     try {
-//       await TasksApi.updateTaskStatus(task.id, newStatus);
-
-//       String message = '';
-//       if (newStatus == "confirmed") message = "✅ Task accepted";
-//       if (newStatus == "rejected") message = "❌ Task rejected";
-//       if (newStatus == "completed") message = "🎉 Task completed";
-
-//       ScaffoldMessenger.of(context)
-//           .showSnackBar(SnackBar(content: Text(message)));
-
-//       await _loadTasks();
-//     } catch (e) {
-//       ScaffoldMessenger.of(context).showSnackBar(
-//           SnackBar(content: Text("❌ Failed to update task: $e")));
-//     }
+//             title: Text(
+//               'Complete Task',
+//               style: TextStyle(
+//                 fontWeight: FontWeight.bold,
+//                 fontSize: 20,
+//                 color: AppColors.darkBlue,
+//               ),
+//             ),
+//             content: Text(
+//               'Are you sure you have completed this task carefully?',
+//               style: TextStyle(
+//                 fontSize: 16,
+//                 color: AppColors.textDark,
+//               ),
+//             ),
+//             actions: [
+//               TextButton(
+//                 onPressed: () => Navigator.pop(ctx, false),
+//                 style: TextButton.styleFrom(
+//                   backgroundColor: AppColors.lightGrey.withOpacity(0.3),
+//                   shape: RoundedRectangleBorder(
+//                       borderRadius: BorderRadius.circular(12)),
+//                 ),
+//                 child: Text(
+//                   'Cancel',
+//                   style: TextStyle(
+//                     color: AppColors.textDark,
+//                     fontWeight: FontWeight.w600,
+//                   ),
+//                 ),
+//               ),
+//               TextButton(
+//                 onPressed: () => Navigator.pop(ctx, true),
+//                 style: TextButton.styleFrom(
+//                   backgroundColor: AppColors.darkBlue,
+//                   shape: RoundedRectangleBorder(
+//                       borderRadius: BorderRadius.circular(12)),
+//                 ),
+//                 child: const Text(
+//                   'Yes, Completed',
+//                   style: TextStyle(
+//                     color: Colors.white,
+//                     fontWeight: FontWeight.bold,
+//                   ),
+//                 ),
+//               ),
+//             ],
+//           ),
+//         ) ??
+//         false;
 //   }
+
+//   if (!confirm) return;
+
+//   try {
+//     await TasksApi.updateTaskStatus(task.id, newStatus);
+
+//     String message = '';
+//     Color snackColor = AppColors.darkBlue;
+
+//     if (newStatus == "confirmed") {
+//       message = "✅ Task accepted";
+//       snackColor = Colors.green.shade700;
+//     }
+//     if (newStatus == "rejected") {
+//       message = "❌ Task rejected";
+//       snackColor = Colors.red.shade600;
+//     }
+//     if (newStatus == "completed") {
+//       message = "🎉 Task completed";
+//       snackColor = AppColors.darkBlue;
+//     }
+
+//     ScaffoldMessenger.of(context).showSnackBar(
+//       SnackBar(
+//         content: Text(
+//           message,
+//           style: const TextStyle(
+//             fontWeight: FontWeight.bold,
+//             color: Colors.white,
+//           ),
+//         ),
+//         backgroundColor: snackColor,
+//         behavior: SnackBarBehavior.floating,
+//         shape: RoundedRectangleBorder(
+//           borderRadius: BorderRadius.circular(12),
+//         ),
+//         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+//         duration: const Duration(seconds: 2),
+//       ),
+//     );
+
+//     await _loadTasks();
+//   } catch (e) {
+//     ScaffoldMessenger.of(context).showSnackBar(
+//       SnackBar(
+//         content: Text(
+//           "❌ Failed to update task: $e",
+//           style: const TextStyle(color: Colors.white),
+//         ),
+//         backgroundColor: Colors.red.shade600,
+//         behavior: SnackBarBehavior.floating,
+//         shape: RoundedRectangleBorder(
+//           borderRadius: BorderRadius.circular(12),
+//         ),
+//         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+//         duration: const Duration(seconds: 3),
+//       ),
+//     );
+//   }
+// }
+
+
+
+
 
 //   Color _statusColor(String status) {
 //     switch (status) {
@@ -211,6 +315,8 @@
 //         return Colors.grey;
 //     }
 //   }
+
+
 
 //   Widget _statusBadge(String status) {
 //     return Container(
@@ -259,6 +365,10 @@
 //                       'description': task.notes,
 //                       'attachments': task.attachments,
 //                       'attachment_details': task.attachmentDetails ?? '',
+//                       'address': task.address,
+// 'latitude': task.latitude,
+// 'longitude': task.longitude,
+
 
 //                     }
 //                   : null,
@@ -276,7 +386,7 @@
 //       },
 //       child: Card(
 //         margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-//         color: isNew ? Colors.blue.shade50 : const Color(0xFFD9E1F0),
+//         color: isNew ? const Color(0xFFE6F0FA) : AppColors.backgroundWhite,
 //         elevation: 3,
 //         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
 //         child: Padding(
@@ -287,50 +397,141 @@
 //               Row(
 //                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
 //                 children: [
-//                   Text(
-//                     task.serviceTitle,
-//                     style: const TextStyle(
-//                         fontWeight: FontWeight.bold,
-//                         fontSize: 16,
-//                         color: Color(0xFF2A3A69)),
-//                   ),
+//                  Text(
+//   task.serviceTitle,
+//   style: TextStyle(
+//     fontWeight: FontWeight.bold,
+//     fontSize: 18,
+//     color: AppColors.textDark,
+//     shadows: [
+//       Shadow(
+//         color: Colors.black.withOpacity(0.1),
+//         offset: const Offset(0, 1),
+//         blurRadius: 2,
+//       ),
+//     ],
+//   ),
+// ),
+
 //                   _statusBadge(task.status),
 //                 ],
 //               ),
 //               const SizedBox(height: 6),
-//               Text(
-//                 "📅 Date: ${task.scheduledDate.toLocal().toString().split(' ')[0]}",
-//                 style: const TextStyle(color: Color(0xFF2A3A69)),
-//               ),
-//               Text(
-//                 widget.role == "user"
-//                     ? "👨‍🔧 Provider: ${task.providerName}"
-//                     : "👤 User: ${task.userName}",
-//                 style: const TextStyle(color: Color(0xFF2A3A69)),
-//               ),
-//               if (notesPreview.isNotEmpty)
-//                 Text(
-//                   "📝 Notes: $notesPreview",
-//                   style: const TextStyle(color: Color(0xFF2A3A69)),
-//                 ),
-//               if (task.status != "completed")
-//                 const Padding(
-//                   padding: EdgeInsets.only(top: 6.0),
-//                   child: Text(
-//                     "⚠️ This task is not completed yet",
-//                     style: TextStyle(
-//                         fontWeight: FontWeight.bold, color: Color(0xFF2A3A69)),
-//                   ),
-//                 ),
-//               if (task.status == "completed" && task.completedAt != null)
-//                 Padding(
-//                   padding: const EdgeInsets.only(top: 6.0),
-//                   child: Text(
-//                     "✅ Completed on: ${task.completedAt!.toLocal().toString().split(' ')[0]}",
-//                     style: const TextStyle(
-//                         fontWeight: FontWeight.bold, color: Color(0xFF2A3A69)),
-//                   ),
-//                 ),
+//              Container(
+//   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+//   decoration: BoxDecoration(
+//     color: AppColors.lightTeal.withOpacity(0.2),
+//     borderRadius: BorderRadius.circular(8),
+//   ),
+//   child: Row(
+//     mainAxisSize: MainAxisSize.min,
+//     children: [
+//       const Icon(Icons.calendar_today, size: 14, color: AppColors.darkBlue),
+//       const SizedBox(width: 4),
+//       Text(
+//         task.scheduledDate.toLocal().toString().split(' ')[0],
+//         style: const TextStyle(
+//           fontWeight: FontWeight.w500,
+//           fontSize: 14,
+//           color: AppColors.darkBlue,
+//         ),
+//       ),
+//     ],
+//   ),
+// ),
+
+//              Container(
+//   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+//   decoration: BoxDecoration(
+//     color: AppColors.lightGrey.withOpacity(0.2),
+//     borderRadius: BorderRadius.circular(8),
+//   ),
+//   child: Row(
+//     mainAxisSize: MainAxisSize.min,
+//     children: [
+//       Icon(
+//         widget.role == "user" ? Icons.handyman : Icons.person,
+//         size: 14,
+//         color: AppColors.darkBlue,
+//       ),
+//       const SizedBox(width: 4),
+//       Text(
+//         widget.role == "user"
+//             ? task.providerName
+//             : task.userName,
+//         style: const TextStyle(
+//           fontWeight: FontWeight.w500,
+//           fontSize: 14,
+//           color: AppColors.darkBlue,
+//         ),
+//       ),
+//     ],
+//   ),
+// ),
+
+//              if (notesPreview.isNotEmpty)
+//   Padding(
+//     padding: const EdgeInsets.only(top: 4.0),
+//     child: Container(
+//       width: double.infinity,
+//       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+//       decoration: BoxDecoration(
+//         color: AppColors.lightGrey.withOpacity(0.2),
+//         borderRadius: BorderRadius.circular(8),
+//       ),
+//       child: Text(
+//         "📝 Notes: $notesPreview",
+//         style: TextStyle(
+//           color: AppColors.textDark,
+//           fontSize: 13,
+//           fontWeight: FontWeight.w400,
+//         ),
+//       ),
+//     ),
+//   ),
+
+//              if (task.status != "completed")
+//   Padding(
+//     padding: const EdgeInsets.only(top: 6.0, bottom: 4.0),
+//     child: Container(
+//       width: double.infinity,
+//       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+//       decoration: BoxDecoration(
+//         color: AppColors.lightTeal.withOpacity(0.2),
+//         borderRadius: BorderRadius.circular(6),
+//       ),
+//       child: Text(
+//         "⚠️ This task is not completed yet",
+//         style: TextStyle(
+//           fontWeight: FontWeight.w600,
+//           color: AppColors.textDark,
+//           fontSize: 13,
+//         ),
+//       ),
+//     ),
+//   ),
+
+//              if (task.status == "completed" && task.completedAt != null)
+//   Padding(
+//     padding: const EdgeInsets.only(top: 6.0, bottom: 4.0),
+//     child: Container(
+//       width: double.infinity,
+//       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+//       decoration: BoxDecoration(
+//         color: AppColors.lightTeal.withOpacity(0.2),
+//         borderRadius: BorderRadius.circular(6),
+//       ),
+//       child: Text(
+//         "✅ Completed on: ${task.completedAt!.toLocal().toString().split(' ')[0]}",
+//         style: TextStyle(
+//           fontWeight: FontWeight.bold,
+//           color: AppColors.darkBlue,
+//           fontSize: 13,
+//         ),
+//       ),
+//     ),
+//   ),
+
 //               if (widget.role == "provider")
 //                 if (task.status == "pending")
 //                   Row(
@@ -340,7 +541,7 @@
 //                         style: ElevatedButton.styleFrom(
 //                           backgroundColor: Colors.green,
 //                         ),
-//                         child: const Text("Accept"),
+//                         child: const Text("Accept",style: TextStyle(color: AppColors.textLight),),
 //                       ),
 //                       const SizedBox(width: 8),
 //                       ElevatedButton(
@@ -348,7 +549,7 @@
 //                         style: ElevatedButton.styleFrom(
 //                           backgroundColor: Colors.red,
 //                         ),
-//                         child: const Text("Reject"),
+//                         child: const Text("Reject",style: TextStyle(color: AppColors.textLight),),
 //                       ),
 //                     ],
 //                   )
@@ -356,7 +557,7 @@
 //                   ElevatedButton(
 //                     onPressed: () => _updateTask(task, "completed"),
 //                     style: ElevatedButton.styleFrom(
-//                       backgroundColor:Color(0xFF0A66C2),
+//                       backgroundColor: AppColors.darkBlue,
 //                       foregroundColor: Colors.white,
 //                     ),
 //                     child: const Text("Mark Completed"),
@@ -370,7 +571,7 @@
 
 //   Widget _buildTaskList(List<Task> tasks) {
 //     if (isLoading) return const Center(child: CircularProgressIndicator());
-//     if (tasks.isEmpty) return const Center(child: Text("No tasks found",style: TextStyle(color: Color(0xFF0A66C2),),));
+//     if (tasks.isEmpty) return const Center(child: Text("No tasks found",style: TextStyle(color: AppColors.darkBlue,),));
 
 //     return RefreshIndicator(
 //       onRefresh: _loadTasks,
@@ -384,58 +585,55 @@
 //   @override
 //   Widget build(BuildContext context) {
 //     return Scaffold(
-//     appBar: PreferredSize(
-//   preferredSize: const Size.fromHeight(120), // Increase height for premium look
-//   child: AppBar(
-//     backgroundColor: const Color(0xFF0A66C2), // Premium LinkedIn Blue
-//     elevation: 6, // subtle shadow for depth
-//     shape: const RoundedRectangleBorder(
-//       borderRadius: BorderRadius.vertical(
-//         bottom: Radius.circular(20), // Rounded bottom corners
-//       ),
+//    appBar: AppBar(
+//   title: Text(
+//     "📋 My Tasks",
+//     style: const TextStyle(
+//       fontWeight: FontWeight.bold,
+//       fontSize: 20,
+//       color: Colors.white,
 //     ),
-//     toolbarHeight: 70, // Height of title section
-//     title: const Text(
-//       "📋 My Tasks",
-//       style: TextStyle(
-//         fontWeight: FontWeight.bold,
-//         fontSize: 22,
-//         color: Colors.white,
-//       ),
+//   ),
+//   backgroundColor: AppColors.darkBlue, // your premium blue
+//   elevation: 4,
+//   centerTitle: true,
+//   shape: const RoundedRectangleBorder(
+//     borderRadius: BorderRadius.vertical(
+//       bottom: Radius.circular(16),
 //     ),
-//     centerTitle: true,
-//     bottom: TabBar(
-//       controller: _tabController,
-//       indicator: BoxDecoration(
-//         color: Colors.white.withOpacity(0.2),
-//         borderRadius: BorderRadius.circular(12),
-//       ),
-//       indicatorPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-//       labelColor: Colors.white,
-//       unselectedLabelColor: Colors.white70,
-//       labelStyle: const TextStyle(
-//         fontWeight: FontWeight.bold,
-//         fontSize: 16,
-//       ),
-//       unselectedLabelStyle: const TextStyle(
-//         fontWeight: FontWeight.w500,
-//         fontSize: 16,
-//       ),
-//       tabs: const [
-//         Tab(
-//           text: "⏳ Pending",
+//   ),
+//   bottom: PreferredSize(
+//     preferredSize: const Size.fromHeight(50),
+//     child: Align(
+//       alignment: Alignment.center,
+//       child: TabBar(
+//         controller: _tabController,
+//         indicatorSize: TabBarIndicatorSize.label,
+//         indicatorColor: AppColors.textLight, // underline highlight
+//         labelColor: AppColors.lightGrey,
+//         unselectedLabelColor: const Color.fromARGB(136, 213, 211, 211),
+//         labelStyle: const TextStyle(
+//           fontWeight: FontWeight.bold,
+//           fontSize: 16,
 //         ),
-//         Tab(
-//           text: "✅ Completed",
+//         unselectedLabelStyle: const TextStyle(
+//           fontWeight: FontWeight.w500,
+//           fontSize: 16,
 //         ),
-//       ],
+//         tabs: const [
+//           Tab(text: "⏳ Pending"),
+//           Tab(text: "✅ Completed"),
+//         ],
+//       ),
 //     ),
 //   ),
 // ),
 
+
 //       body: TabBarView(
 //         controller: _tabController,
 //         children: [
+          
 //           _buildTaskList(pendingTasks),
 //           _buildTaskList(completedTasks),
 //         ],
@@ -447,12 +645,33 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'task_detail_screen.dart';
 import '../helpers/backend.dart';
-
+import '../helpers/colors.dart';
 class Task {
   final int id;
   final int userId;
@@ -460,6 +679,9 @@ class Task {
   final int serviceId;
   final String status;
   final DateTime scheduledDate;
+  final String? address; // new
+  final double? latitude; // new
+  final double? longitude; // new
   final String notes;
   final String serviceTitle;
   final String userName;
@@ -475,6 +697,9 @@ class Task {
     required this.serviceId,
     required this.status,
     required this.scheduledDate,
+    this.address,
+    this.latitude,
+    this.longitude,
     required this.notes,
     required this.serviceTitle,
     required this.userName,
@@ -484,29 +709,37 @@ class Task {
     this.attachments = const [], // default empty list of maps
   });
 
-  factory Task.fromJson(Map<String, dynamic> json) => Task(
-        id: json['id'],
-        userId: json['user_id'],
-        providerId: json['provider_id'],
-        serviceId: json['service_id'],
-        status: json['status'],
-        scheduledDate: DateTime.parse(json['scheduled_date']),
-        notes: json['notes'] ?? "",
-        serviceTitle: json['service_title'] ?? "Service",
-        userName: json['user_name'] ?? "User",
-        providerName: json['provider_name'] ?? "Provider",
-        attachmentDetails: json['attachment_details'],
-        completedAt: json['completed_at'] != null
-            ? DateTime.parse(json['completed_at'])
-            : null,
-        attachments: json['attachments'] != null
-            ? List<Map<String, dynamic>>.from(
-                (json['attachments'] as List).map(
-                  (a) => Map<String, dynamic>.from(a),
-                ),
-              )
-            : [],
-      );
+ factory Task.fromJson(Map<String, dynamic> json) => Task(
+      id: json['id'],
+      userId: json['user_id'],
+      providerId: json['provider_id'],
+      serviceId: json['service_id'],
+      status: json['status'],
+      scheduledDate: DateTime.parse(json['scheduled_date']),
+      address: json['address'], // new
+      latitude: json['latitude'] != null
+          ? double.tryParse(json['latitude'].toString())
+          : null, // new
+      longitude: json['longitude'] != null
+          ? double.tryParse(json['longitude'].toString())
+          : null, // new
+      notes: json['notes'] ?? "",
+      serviceTitle: json['service_title'] ?? "Service",
+      userName: json['user_name'] ?? "User",
+      providerName: json['provider_name'] ?? "Provider",
+      attachmentDetails: json['attachment_details'],
+      completedAt: json['completed_at'] != null
+          ? DateTime.parse(json['completed_at'])
+          : null,
+      attachments: json['attachments'] != null
+          ? List<Map<String, dynamic>>.from(
+              (json['attachments'] as List).map(
+                (a) => Map<String, dynamic>.from(a),
+              ),
+            )
+          : [],
+    );
+
 }
 
 class TasksApi {
@@ -601,50 +834,165 @@ class _MyTasksScreenState extends State<MyTasksScreen>
     }
   }
 
-  Future<void> _updateTask(Task task, String newStatus) async {
-    bool confirm = true;
+
+
+Future<void> _updateTask(Task task, String newStatus) async {
+  bool confirm = true;
+
+  if (newStatus == "completed") {
+    confirm = await showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            backgroundColor: AppColors.backgroundWhite,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            title: Text(
+              'Complete Task',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+                color: AppColors.darkBlue,
+              ),
+            ),
+            content: Text(
+              'Are you sure you have completed this task carefully?',
+              style: TextStyle(
+                fontSize: 16,
+                color: AppColors.textDark,
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                style: TextButton.styleFrom(
+                  backgroundColor: AppColors.lightGrey.withOpacity(0.3),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                ),
+                child: Text(
+                  'Cancel',
+                  style: TextStyle(
+                    color: AppColors.textDark,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                style: TextButton.styleFrom(
+                  backgroundColor: AppColors.darkBlue,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                ),
+                child: const Text(
+                  'Yes, Completed',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+  }
+
+  if (!confirm) return;
+
+  try {
+ 
+
+    await TasksApi.updateTaskStatus(task.id, newStatus);
+
+    String message = '';
+    Color snackColor = AppColors.darkBlue;
+
+   if (newStatus == "confirmed") {
+  message = "✅ Task accepted";
+  snackColor = Colors.green.shade700;
+
+  // 🔹 Send notification to user
+  NotificationsApi.sendNotification(
+    userId: task.userId,
+    title: "Task Accepted ✅",
+    body: "Your task '${task.serviceTitle}' has been accepted✅ by the provider",
+    senderId: task.providerId,
+  );
+}
+
+   if (newStatus == "rejected") {
+  message = "❌ Task rejected";
+  snackColor = Colors.red.shade600;
+
+  // 🔹 Send notification to user
+  NotificationsApi.sendNotification(
+    userId: task.userId,
+    title: "Task Rejected ❌",
+    body: "Your task '${task.serviceTitle}' has been rejected❌ by the provider",
+    senderId: task.providerId,
+  );
+}
+
+
 
     if (newStatus == "completed") {
-      confirm = await showDialog(
-            context: context,
-            builder: (ctx) => AlertDialog(
-              title: const Text('Complete Task'),
-              content: const Text(
-                  'Are you sure you have completed this task carefully?'),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx, false),
-                  child: const Text('Cancel'),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx, true),
-                  child: const Text('Yes, Completed'),
-                ),
-              ],
-            ),
-          ) ??
-          false;
-    }
+  message = "🎉 Task completed";
+  snackColor = AppColors.darkBlue;
 
-    if (!confirm) return;
+  // 🔹 Send notification to user
+  NotificationsApi.sendNotification(
+    userId: task.userId,
+    title: "Task Completed 🎉",
+    body: "Your task '${task.serviceTitle}' has been marked as completed🎉 by the provider",
+    senderId: task.providerId,
+  );
+}
 
-    try {
-      await TasksApi.updateTaskStatus(task.id, newStatus);
 
-      String message = '';
-      if (newStatus == "confirmed") message = "✅ Task accepted";
-      if (newStatus == "rejected") message = "❌ Task rejected";
-      if (newStatus == "completed") message = "🎉 Task completed";
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        backgroundColor: snackColor,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        duration: const Duration(seconds: 2),
+      ),
+    );
 
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(message)));
-
-      await _loadTasks();
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("❌ Failed to update task: $e")));
-    }
+    await _loadTasks();
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          "❌ Failed to update task: $e",
+          style: const TextStyle(color: Colors.white),
+        ),
+        backgroundColor: Colors.red.shade600,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        duration: const Duration(seconds: 3),
+      ),
+    );
   }
+}
+
+
+
+
 
   Color _statusColor(String status) {
     switch (status) {
@@ -660,6 +1008,8 @@ class _MyTasksScreenState extends State<MyTasksScreen>
         return Colors.grey;
     }
   }
+
+
 
   Widget _statusBadge(String status) {
     return Container(
@@ -708,6 +1058,10 @@ class _MyTasksScreenState extends State<MyTasksScreen>
                       'description': task.notes,
                       'attachments': task.attachments,
                       'attachment_details': task.attachmentDetails ?? '',
+                      'address': task.address,
+'latitude': task.latitude,
+'longitude': task.longitude,
+
 
                     }
                   : null,
@@ -725,7 +1079,7 @@ class _MyTasksScreenState extends State<MyTasksScreen>
       },
       child: Card(
         margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        color: isNew ? Colors.blue.shade50 : const Color(0xFFD9E1F0),
+        color: isNew ? const Color(0xFFE6F0FA) : AppColors.backgroundWhite,
         elevation: 3,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         child: Padding(
@@ -736,50 +1090,141 @@ class _MyTasksScreenState extends State<MyTasksScreen>
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    task.serviceTitle,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: Color(0xFF2A3A69)),
-                  ),
+                 Text(
+  task.serviceTitle,
+  style: TextStyle(
+    fontWeight: FontWeight.bold,
+    fontSize: 18,
+    color: AppColors.textDark,
+    shadows: [
+      Shadow(
+        color: Colors.black.withOpacity(0.1),
+        offset: const Offset(0, 1),
+        blurRadius: 2,
+      ),
+    ],
+  ),
+),
+
                   _statusBadge(task.status),
                 ],
               ),
               const SizedBox(height: 6),
-              Text(
-                "📅 Date: ${task.scheduledDate.toLocal().toString().split(' ')[0]}",
-                style: const TextStyle(color: Color(0xFF2A3A69)),
-              ),
-              Text(
-                widget.role == "user"
-                    ? "👨‍🔧 Provider: ${task.providerName}"
-                    : "👤 User: ${task.userName}",
-                style: const TextStyle(color: Color(0xFF2A3A69)),
-              ),
-              if (notesPreview.isNotEmpty)
-                Text(
-                  "📝 Notes: $notesPreview",
-                  style: const TextStyle(color: Color(0xFF2A3A69)),
-                ),
-              if (task.status != "completed")
-                const Padding(
-                  padding: EdgeInsets.only(top: 6.0),
-                  child: Text(
-                    "⚠️ This task is not completed yet",
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold, color: Color(0xFF2A3A69)),
-                  ),
-                ),
-              if (task.status == "completed" && task.completedAt != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 6.0),
-                  child: Text(
-                    "✅ Completed on: ${task.completedAt!.toLocal().toString().split(' ')[0]}",
-                    style: const TextStyle(
-                        fontWeight: FontWeight.bold, color: Color(0xFF2A3A69)),
-                  ),
-                ),
+             Container(
+  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+  decoration: BoxDecoration(
+    color: AppColors.lightTeal.withOpacity(0.2),
+    borderRadius: BorderRadius.circular(8),
+  ),
+  child: Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      const Icon(Icons.calendar_today, size: 14, color: AppColors.darkBlue),
+      const SizedBox(width: 4),
+      Text(
+        task.scheduledDate.toLocal().toString().split(' ')[0],
+        style: const TextStyle(
+          fontWeight: FontWeight.w500,
+          fontSize: 14,
+          color: AppColors.darkBlue,
+        ),
+      ),
+    ],
+  ),
+),
+
+             Container(
+  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+  decoration: BoxDecoration(
+    color: AppColors.lightGrey.withOpacity(0.2),
+    borderRadius: BorderRadius.circular(8),
+  ),
+  child: Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Icon(
+        widget.role == "user" ? Icons.handyman : Icons.person,
+        size: 14,
+        color: AppColors.darkBlue,
+      ),
+      const SizedBox(width: 4),
+      Text(
+        widget.role == "user"
+            ? task.providerName
+            : task.userName,
+        style: const TextStyle(
+          fontWeight: FontWeight.w500,
+          fontSize: 14,
+          color: AppColors.darkBlue,
+        ),
+      ),
+    ],
+  ),
+),
+
+             if (notesPreview.isNotEmpty)
+  Padding(
+    padding: const EdgeInsets.only(top: 4.0),
+    child: Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColors.lightGrey.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        "📝 Notes: $notesPreview",
+        style: TextStyle(
+          color: AppColors.textDark,
+          fontSize: 13,
+          fontWeight: FontWeight.w400,
+        ),
+      ),
+    ),
+  ),
+
+             if (task.status != "completed")
+  Padding(
+    padding: const EdgeInsets.only(top: 6.0, bottom: 4.0),
+    child: Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColors.lightTeal.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        "⚠️ This task is not completed yet",
+        style: TextStyle(
+          fontWeight: FontWeight.w600,
+          color: AppColors.textDark,
+          fontSize: 13,
+        ),
+      ),
+    ),
+  ),
+
+             if (task.status == "completed" && task.completedAt != null)
+  Padding(
+    padding: const EdgeInsets.only(top: 6.0, bottom: 4.0),
+    child: Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColors.lightTeal.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        "✅ Completed on: ${task.completedAt!.toLocal().toString().split(' ')[0]}",
+        style: TextStyle(
+          fontWeight: FontWeight.bold,
+          color: AppColors.darkBlue,
+          fontSize: 13,
+        ),
+      ),
+    ),
+  ),
+
               if (widget.role == "provider")
                 if (task.status == "pending")
                   Row(
@@ -789,7 +1234,7 @@ class _MyTasksScreenState extends State<MyTasksScreen>
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.green,
                         ),
-                        child: const Text("Accept"),
+                        child: const Text("Accept",style: TextStyle(color: AppColors.textLight),),
                       ),
                       const SizedBox(width: 8),
                       ElevatedButton(
@@ -797,7 +1242,7 @@ class _MyTasksScreenState extends State<MyTasksScreen>
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.red,
                         ),
-                        child: const Text("Reject"),
+                        child: const Text("Reject",style: TextStyle(color: AppColors.textLight),),
                       ),
                     ],
                   )
@@ -805,7 +1250,7 @@ class _MyTasksScreenState extends State<MyTasksScreen>
                   ElevatedButton(
                     onPressed: () => _updateTask(task, "completed"),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor:Color(0xFF0A66C2),
+                      backgroundColor: AppColors.darkBlue,
                       foregroundColor: Colors.white,
                     ),
                     child: const Text("Mark Completed"),
@@ -819,7 +1264,7 @@ class _MyTasksScreenState extends State<MyTasksScreen>
 
   Widget _buildTaskList(List<Task> tasks) {
     if (isLoading) return const Center(child: CircularProgressIndicator());
-    if (tasks.isEmpty) return const Center(child: Text("No tasks found",style: TextStyle(color: Color(0xFF0A66C2),),));
+    if (tasks.isEmpty) return const Center(child: Text("No tasks found",style: TextStyle(color: AppColors.darkBlue,),));
 
     return RefreshIndicator(
       onRefresh: _loadTasks,
@@ -833,58 +1278,55 @@ class _MyTasksScreenState extends State<MyTasksScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-    appBar: PreferredSize(
-  preferredSize: const Size.fromHeight(120), // Increase height for premium look
-  child: AppBar(
-    backgroundColor: const Color(0xFF0A66C2), // Premium LinkedIn Blue
-    elevation: 6, // subtle shadow for depth
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(
-        bottom: Radius.circular(20), // Rounded bottom corners
-      ),
+   appBar: AppBar(
+  title: Text(
+    "📋 My Tasks",
+    style: const TextStyle(
+      fontWeight: FontWeight.bold,
+      fontSize: 20,
+      color: Colors.white,
     ),
-    toolbarHeight: 70, // Height of title section
-    title: const Text(
-      "📋 My Tasks",
-      style: TextStyle(
-        fontWeight: FontWeight.bold,
-        fontSize: 22,
-        color: Colors.white,
-      ),
+  ),
+  backgroundColor: AppColors.darkBlue, // your premium blue
+  elevation: 4,
+  centerTitle: true,
+  shape: const RoundedRectangleBorder(
+    borderRadius: BorderRadius.vertical(
+      bottom: Radius.circular(16),
     ),
-    centerTitle: true,
-    bottom: TabBar(
-      controller: _tabController,
-      indicator: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      indicatorPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      labelColor: Colors.white,
-      unselectedLabelColor: Colors.white70,
-      labelStyle: const TextStyle(
-        fontWeight: FontWeight.bold,
-        fontSize: 16,
-      ),
-      unselectedLabelStyle: const TextStyle(
-        fontWeight: FontWeight.w500,
-        fontSize: 16,
-      ),
-      tabs: const [
-        Tab(
-          text: "⏳ Pending",
+  ),
+  bottom: PreferredSize(
+    preferredSize: const Size.fromHeight(50),
+    child: Align(
+      alignment: Alignment.center,
+      child: TabBar(
+        controller: _tabController,
+        indicatorSize: TabBarIndicatorSize.label,
+        indicatorColor: AppColors.textLight, // underline highlight
+        labelColor: AppColors.lightGrey,
+        unselectedLabelColor: const Color.fromARGB(136, 213, 211, 211),
+        labelStyle: const TextStyle(
+          fontWeight: FontWeight.bold,
+          fontSize: 16,
         ),
-        Tab(
-          text: "✅ Completed",
+        unselectedLabelStyle: const TextStyle(
+          fontWeight: FontWeight.w500,
+          fontSize: 16,
         ),
-      ],
+        tabs: const [
+          Tab(text: "⏳ Pending"),
+          Tab(text: "✅ Completed"),
+        ],
+      ),
     ),
   ),
 ),
 
+
       body: TabBarView(
         controller: _tabController,
         children: [
+          
           _buildTaskList(pendingTasks),
           _buildTaskList(completedTasks),
         ],
