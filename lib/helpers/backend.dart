@@ -40,8 +40,8 @@ import 'package:flutter/foundation.dart';
 
 
 class Backend {
-  static String get baseUrl =>"https://85f4f1006aff.ngrok-free.app";
-  static String get socketUrl =>"https://85f4f1006aff.ngrok-free.app";
+  static String get baseUrl =>"http://192.168.1.193:5000";
+  static String get socketUrl =>"http://192.168.1.193:5000";
 
   // GET request
   static Future<Map<String, dynamic>?> get(String endpoint) async {
@@ -64,8 +64,13 @@ class Backend {
 
 static String buildMediaUrl(String path) {
   if (path.startsWith("http")) return path; // already full URL
-  return "$baseUrl/$path".replaceAll("//", "/").replaceFirst("https:/", "https://");
+
+  // Ensure exactly one slash between baseUrl and path
+  return baseUrl.endsWith('/')
+      ? "$baseUrl${path.startsWith('/') ? path.substring(1) : path}"
+      : "$baseUrl${path.startsWith('/') ? path : '/$path'}";
 }
+
 
 
 

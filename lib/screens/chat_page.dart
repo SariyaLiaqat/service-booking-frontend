@@ -1,9 +1,3 @@
-
-
-
-
-// //////////////////////////////
-
 // import 'dart:async';
 // import 'dart:convert';
 // import 'package:flutter/material.dart';
@@ -11,7 +5,7 @@
 // import 'package:socket_io_client/socket_io_client.dart' as IO;
 // import '../helpers/backend.dart';
 // import 'package:http/http.dart' as http;
-
+// import '../helpers/my_colors.dart';
 // class ChatPage extends StatefulWidget {
 //   final int conversationId;
 //   final int currentUserId;
@@ -28,7 +22,7 @@
 //   _ChatPageState createState() => _ChatPageState();
 // }
 
-// class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
+// class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin , WidgetsBindingObserver{
 //   List<dynamic> messages = [];
 //   final TextEditingController _controller = TextEditingController();
 //   final ScrollController _scrollController = ScrollController();
@@ -42,18 +36,35 @@
 //   @override
 //   void initState() {
 //     super.initState();
+//     WidgetsBinding.instance.addObserver(this);
 //     _conversationId = widget.conversationId > 0 ? widget.conversationId : null;
 //     initSocket();
 //     fetchConversationDetails();
 //     if (_conversationId != null) fetchMessages();
+//      markMessagesSeen();
 //   }
 
 //   @override
 //   void dispose() {
+//     socket.disconnect();
 //     _controller.dispose();
 //     _scrollController.dispose();
 //     socket.dispose();
 //     super.dispose();
+//   }
+// //-------------
+
+// @override
+//   void didChangeAppLifecycleState(AppLifecycleState state) {
+//     if (state == AppLifecycleState.paused || state == AppLifecycleState.detached) {
+//       // App background me chali gayi
+//       socket.emit('user_offline', widget.currentUserId);
+//       socket.disconnect();
+//     } else if (state == AppLifecycleState.resumed) {
+//       // App foreground me aayi
+//       socket.connect();
+//       socket.emit('user_online', widget.currentUserId);
+//     }
 //   }
 
 //   void initSocket() {
@@ -69,6 +80,13 @@
 //       }
 //       socket.emit('user_online', widget.currentUserId);
 //     });
+// socket.on('message_seen', (data) {
+//   final msgId = data['messageId'];
+//   setState(() {
+//     int idx = messages.indexWhere((m) => m['id'] == msgId);
+//     if (idx != -1) messages[idx]['hasBeenSeen'] = true;
+//   });
+// });
 
 //     // New message listener
 //     socket.on('new_message', (data) {
@@ -87,12 +105,7 @@
 //       scrollToBottom();
 //       // Auto remove new highlight after 2 seconds
 //       if (data['sender_id'] != widget.currentUserId) {
-//         Timer(Duration(seconds: 2), () {
-//           setState(() {
-//             int idx = messages.indexWhere((m) => m['id'] == data['id']);
-//             if (idx != -1) messages[idx]['isNew'] = false;
-//           });
-//         });
+
 //       }
 //     });
 
@@ -133,6 +146,25 @@
 //     });
 //   }
 
+// Future<void> markMessagesSeen() async {
+//   if (_conversationId == null) return;
+
+//   try {
+//     await http.post(
+//       Uri.parse("${Backend.baseUrl}/messages/mark-seen"),
+//       headers: {"Content-Type": "application/json"},
+//       body: jsonEncode({
+//         "conversationId": _conversationId,
+//         "userId": widget.currentUserId,
+//       }),
+//     );
+
+//    setState(() {});
+
+//   } catch (e) {
+//     print("Error marking messages as seen: $e");
+//   }
+// }
 //   Future<void> fetchConversationDetails() async {
 //     if (_conversationId == null) return;
 //     try {
@@ -215,16 +247,15 @@
 
 //       final tempId = DateTime.now().millisecondsSinceEpoch;
 
-//       setState(() {
-//         messages.add({
-//           "id": tempId,
-//           "conversation_id": conversationId,
-//           "sender_id": widget.currentUserId,
-//           "message": text.trim(),
-//           "created_at": DateTime.now().toIso8601String(),
-//           "isNew": true,
-//         });
-//       });
+//      setState(() {
+//   messages.add({
+//     "id": tempId,
+//     "conversation_id": conversationId,
+//     "sender_id": widget.currentUserId,
+//     "message": text.trim(),
+//     "created_at": DateTime.now().toIso8601String(),
+//   });
+// });
 
 //       socket.emit('send_message', {
 //         "conversationId": conversationId,
@@ -334,94 +365,105 @@
 //     );
 //   }
 
-//   Widget buildMessageBubble(dynamic message) {
-//     final isMe = message['sender_id'] == widget.currentUserId;
-//     final messageText = message['message'] ?? '';
-//     final createdAt = message['created_at'] != null
-//         ? DateTime.tryParse(message['created_at'])?.toLocal()
-//         : null;
-//     final senderName = isMe ? 'You' : otherName;
-//     final senderAvatar = isMe ? null : otherAvatar;
-//     final isNew = message['isNew'] ?? false;
+// // ... inside _ChatPageState ...
 
-//     return GestureDetector(
-//       onLongPress: () => handleLongPress(message),
-//       child: AnimatedContainer(
-//         duration: Duration(milliseconds: 300),
-//         margin: EdgeInsets.symmetric(vertical: 3, horizontal: 8),
-//         child: Row(
-//           crossAxisAlignment: CrossAxisAlignment.start,
-//           mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
-//           children: [
-//             if (!isMe)
-//               Padding(
-//                 padding: const EdgeInsets.only(right: 8.0),
-//                 child: CircleAvatar(
-//                   radius: 16,
-//                   backgroundImage: senderAvatar != null ? NetworkImage(senderAvatar) : null,
-//                   child: senderAvatar == null ? Icon(Icons.person, size: 18) : null,
+// Widget buildMessageBubble(dynamic message) {
+//   final isMe = message['sender_id'] == widget.currentUserId;
+//   final messageText = message['message'] ?? '';
+//   final createdAt = message['created_at'] != null
+//       ? DateTime.tryParse(message['created_at'])?.toLocal()
+//       : null;
+//  // final hasBeenSeen = message['hasBeenSeen'] ?? false;
+
+//   // --- Define Colors based on the Instagram Dark Theme image ---
+//   final Color myMessageColor = MyColors.primary; // your elegant indigo or gold tone
+// final Color otherMessageColor = MyColors.surface; // dark background for received messages
+// final Color myTextColor = MyColors.textPrimary;
+// final Color otherTextColor = MyColors.textPrimary;
+// final Color timeTextColor = MyColors.textSecondary;
+
+//   // --- Determine final colors ---
+//   final Color bubbleColor = isMe ? myMessageColor : otherMessageColor;
+//   final Color textColor = isMe ? myTextColor : otherTextColor;
+
+//   // --- Define Border Radius for the Bubble ---
+//   final BorderRadius borderRadius = BorderRadius.only(
+//     // Top-left corner: Always curved, unless it's the very first message
+//     topLeft: Radius.circular(isMe ? 18.0 : 4.0),
+//     // Top-right corner: Always curved, unless it's the very first message
+//     topRight: Radius.circular(isMe ? 4.0 : 18.0),
+//     // Bottom-left corner: Always curved
+//     bottomLeft: const Radius.circular(18.0),
+//     // Bottom-right corner: Always curved
+//     bottomRight: const Radius.circular(18.0),
+//   );
+
+//   return Padding(
+//     padding: EdgeInsets.only(
+//       top: 2,
+//       bottom: 2,
+//       left: isMe ? 50 : 8, // My message: pushed left
+//       right: isMe ? 8 : 50, // Other message: pushed right
+//     ),
+//     child: Row(
+//       // Align message to the start (other) or end (me)
+//       mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+//       crossAxisAlignment: CrossAxisAlignment.end, // Align time to the bottom of the bubble
+//       children: [
+//         Flexible(
+//           child: Column(
+//             crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+//             children: [
+//               // Message Bubble Container
+//               Container(
+//                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+//                 decoration: BoxDecoration(
+//                   color: bubbleColor,
+//                   borderRadius: borderRadius,
+
+//                 ),
+//                 child: Column(
+//                   crossAxisAlignment: CrossAxisAlignment.start,
+//                   mainAxisSize: MainAxisSize.min,
+//                   children: [
+//                     // Message Text
+//                     Text(
+//                       messageText,
+//                       style: TextStyle(
+//                         color: textColor,
+//                         fontSize: 16,
+//                       ),
+//                       softWrap: true,
+//                     ),
+//                   ],
 //                 ),
 //               ),
-//             Flexible(
-//               child: Column(
-//                 crossAxisAlignment:
-//                     isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-//                 children: [
-//                   if (!isMe)
-//                     Padding(
-//                       padding: const EdgeInsets.only(bottom: 2.0),
-//                       child: Text(senderName,
-//                           style: TextStyle(
-//                               fontWeight: FontWeight.bold,
-//                               fontSize: 12,
-//                               color: Color(0xFF0A66C2),)),
-//                     ),
-//                  Container(
-//   padding: const EdgeInsets.all(10),
-//   margin: EdgeInsets.only(left: isMe ? 50 : 0, right: isMe ? 0 : 50),
-//   decoration: BoxDecoration(
-//     color: isNew
-//         ? Color(0xFF5C74B1).withOpacity(0.2) // soft blue highlight
-//         : isMe
-//             ? Color(0xFF2A3A69) // my msg dark blue
-//             : Colors.white, // others white
-//     borderRadius: BorderRadius.circular(12),
-//   ),
-//   child: Column(
-//     crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-//     children: [
-//       Text(
-//         messageText,
-//         style: TextStyle(
-//           color: isMe ? Colors.white : Color(0xFF2A3A69), // contrast
-//           fontSize: 16,
-//         ),
-//         softWrap: true,
-//       ),
-//       if (createdAt != null)
-//         Padding(
-//           padding: const EdgeInsets.only(top: 4),
-//           child: Text(
-//             "${createdAt.hour.toString().padLeft(2, '0')}:${createdAt.minute.toString().padLeft(2, '0')}",
-//             style: TextStyle(
-//               color: isMe ? Colors.white70 : Color(0xFF5C74B1),
-//               fontSize: 10,
-//             ),
+
+//               // Time and Seen Status
+//               if (createdAt != null)
+//                 Padding(
+//                   padding: const EdgeInsets.only(top: 2, right: 4, left: 4),
+//                   child: Row(
+//                     mainAxisSize: MainAxisSize.min,
+//                     children: [
+//                       Text(
+//                         // Format time as H:MM
+//                         "${createdAt.hour.toString().padLeft(2, '0')}:${createdAt.minute.toString().padLeft(2, '0')}",
+//                         style: TextStyle(
+//                           color: timeTextColor,
+//                           fontSize: 10,
+//                         ),
+//                       ),
+//             ],
 //           ),
 //         ),
-//     ],
-//   ),
-// ),
-
-//                 ],
-//               ),
-//             ),
-//             if (isMe) SizedBox(width: 8),
-//           ],
+//       ],
+//     ),
 //         ),
-//       ),
-//     );
-//   }
+//       ]
+//     )
+//   );
+// }
 
 //   Widget typingIndicator() {
 //     return otherTyping
@@ -434,10 +476,10 @@
 //                 Container(
 //                   padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
 //                   decoration: BoxDecoration(
-//                     color: Colors.grey[300],
+//                     color: MyColors.surface,
 //                     borderRadius: BorderRadius.circular(12),
 //                   ),
-//                   child: Text('Typing...'),
+//                   child: Text('Typing...', style: TextStyle(color: MyColors.textSecondary)),
 //                 ),
 //               ],
 //             ),
@@ -448,9 +490,11 @@
 //   @override
 //   Widget build(BuildContext context) {
 //     return Scaffold(
-//       backgroundColor: Color(0xFFD9E1F0),
+//       backgroundColor: MyColors.background,
+
 //       appBar: AppBar(
-//   backgroundColor:  Color(0xFF0A66C2), // Dark blue
+//   backgroundColor: MyColors.surface,
+
 //   elevation: 1,
 //   titleSpacing: 0,
 //   title: Row(
@@ -459,7 +503,7 @@
 //         radius: 20,
 //         backgroundImage: otherAvatar != null ? NetworkImage(otherAvatar!) : null,
 //         child: otherAvatar == null ? Icon(Icons.person, color: Colors.white) : null,
-//         backgroundColor: Color(0xFF5C74B1), // soft blue if no image
+//         backgroundColor: MyColors.primary, // soft blue if no image
 //       ),
 //       SizedBox(width: 10),
 //       Flexible(
@@ -472,15 +516,15 @@
 //               style: TextStyle(
 //                 fontSize: 16,
 //                 fontWeight: FontWeight.bold,
-//                 color: Colors.white, // white text on dark bar
+//                 color: MyColors.textPrimary,
 //               ),
 //               overflow: TextOverflow.ellipsis,
 //             ),
 //             Text(
-//               otherOnline ? 'Online' : 'Offline',
+//               otherOnline ? 'Active' : 'Offline',
 //               style: TextStyle(
 //                 fontSize: 12,
-//                 color: otherOnline ? Colors.green : Colors.grey[300],
+//                 color: otherOnline ? MyColors.primary : MyColors.textSecondary,
 //               ),
 //             ),
 //           ],
@@ -489,8 +533,6 @@
 //     ],
 //   ),
 // ),
-
-
 
 //       body: Column(
 //         children: [
@@ -505,46 +547,52 @@
 //             ),
 //           ),
 
-
 //          SafeArea(
 //   child: Container(
 //     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
 //     decoration: BoxDecoration(
-//       color: Colors.white,
+//       color: MyColors.surface,
+
 //       boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 3)],
 //     ),
 //     child: Row(
 //       children: [
-//         Expanded(
-//           child: TextField(
-//             controller: _controller,
-//             decoration: InputDecoration(
-//               hintText: 'Type a message...',
-//               hintStyle: TextStyle(color: Color(0xFF5C74B1)),
-//               border: OutlineInputBorder(
-//                 borderRadius: BorderRadius.circular(25),
-//                 borderSide: BorderSide.none,
-//               ),
-//               fillColor: Color(0xFFD9E1F0), // soft light blue
-//               filled: true,
-//               contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 0),
-//             ),
-//             style: TextStyle(color: Color(0xFF2A3A69)),
-//             onChanged: (_) {
-//               socket.emit('typing', {
-//                 'userId': widget.currentUserId,
-//                 'isTyping': _controller.text.trim().isNotEmpty,
-//               });
-//               setState(() {});
-//             },
-//           ),
-//         ),
+//        Expanded(
+//   child: TextField(
+//     controller: _controller,
+//     minLines: 1, // start with one line
+//     maxLines: 5, // expand up to 5 lines as user types
+//     keyboardType: TextInputType.multiline, // enable multiline typing
+//     textInputAction: TextInputAction.newline, // Enter adds new line
+//     decoration: InputDecoration(
+//       hintText: 'Type a message...',
+//       hintStyle: TextStyle(color: MyColors.textSecondary),
+//       border: OutlineInputBorder(
+//         borderRadius: BorderRadius.circular(25),
+//         borderSide: BorderSide.none,
+//       ),
+//       fillColor: MyColors.inputFill,
+//       filled: true,
+//       contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+//     ),
+//    style: TextStyle(color: MyColors.textPrimary),
+//     onChanged: (_) {
+//       socket.emit('typing', {
+//         'userId': widget.currentUserId,
+//         'isTyping': _controller.text.trim().isNotEmpty,
+//       });
+//       setState(() {});
+//     },
+//   ),
+// ),
+
 //         IconButton(
 //           icon: Icon(
 //             Icons.send,
 //             color: _controller.text.trim().isEmpty
-//                 ? Colors.grey
-//                 :  Color(0xFF0A66C2), // send button dark blue
+//     ? MyColors.textSecondary
+//     : MyColors.primary,
+
 //           ),
 //           onPressed: _controller.text.trim().isEmpty
 //               ? null
@@ -563,12 +611,6 @@
 
 
 
-
-
-
-
-//////////////////////////////
-
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
@@ -576,6 +618,7 @@ import 'package:flutter/services.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import '../helpers/backend.dart';
 import 'package:http/http.dart' as http;
+import '../helpers/my_colors.dart';
 
 class ChatPage extends StatefulWidget {
   final int conversationId;
@@ -593,7 +636,8 @@ class ChatPage extends StatefulWidget {
   _ChatPageState createState() => _ChatPageState();
 }
 
-class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
+class _ChatPageState extends State<ChatPage>
+    with TickerProviderStateMixin, WidgetsBindingObserver {
   List<dynamic> messages = [];
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
@@ -607,43 +651,89 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _conversationId = widget.conversationId > 0 ? widget.conversationId : null;
     initSocket();
     fetchConversationDetails();
     if (_conversationId != null) fetchMessages();
-     markMessagesSeen(); 
+    markMessagesSeen();
+
+    if (_conversationId != null) {
+      socket.emit('open_chat', {
+        'conversationId': _conversationId,
+        'userId': widget.currentUserId,
+      });
+    }
   }
 
   @override
   void dispose() {
+    if (_conversationId != null) {
+    socket.emit('close_chat', {
+      'conversationId': _conversationId,
+      'userId': widget.currentUserId,
+    });
+  }
+    socket.disconnect();
     _controller.dispose();
     _scrollController.dispose();
     socket.dispose();
     super.dispose();
   }
+  //-------------
+
+  @override
+void didChangeAppLifecycleState(AppLifecycleState state) {
+  if (state == AppLifecycleState.paused || state == AppLifecycleState.detached) {
+    if (_conversationId != null) {
+      socket.emit('close_chat', {
+        'conversationId': _conversationId,
+        'userId': widget.currentUserId,
+      });
+    }
+    socket.disconnect();
+  } else if (state == AppLifecycleState.resumed) {
+    socket.connect();
+    socket.emit('user_online', widget.currentUserId);
+    if (_conversationId != null) {
+      socket.emit('open_chat', {
+        'conversationId': _conversationId,
+        'userId': widget.currentUserId,
+      });
+    }
+  }
+}
+
 
   void initSocket() {
-    socket = IO.io(
-      Backend.baseUrl,
-      <String, dynamic>{'transports': ['websocket'], 'autoConnect': true},
-    );
+    socket = IO.io(Backend.baseUrl, <String, dynamic>{
+      'transports': ['websocket'],
+      'autoConnect': true,
+    });
     socket.connect();
 
     socket.onConnect((_) {
       if (_conversationId != null) {
-        socket.emit('join_conversation', [_conversationId, widget.currentUserId]);
+        socket.emit('join_conversation', [
+          _conversationId,
+          widget.currentUserId,
+        ]);
       }
       socket.emit('user_online', widget.currentUserId);
     });
-socket.on('message_seen', (data) {
-  final msgId = data['messageId'];
-  setState(() {
-    int idx = messages.indexWhere((m) => m['id'] == msgId);
-    if (idx != -1) messages[idx]['hasBeenSeen'] = true;
-  });
+    socket.on('message_seen', (data) {
+      final msgId = data['messageId'];
+      setState(() {
+        int idx = messages.indexWhere((m) => m['id'] == msgId);
+        if (idx != -1) messages[idx]['hasBeenSeen'] = true;
+      });
+    });
+//------------------------------------update active status
+socket.on('update_active_status', (data) {
+  if (data['userId'] == widget.otherUserId) {
+    setState(() => otherOnline = data['isActive'] ?? false);
+  }
 });
-
-
 
     // New message listener
     socket.on('new_message', (data) {
@@ -661,14 +751,7 @@ socket.on('message_seen', (data) {
       });
       scrollToBottom();
       // Auto remove new highlight after 2 seconds
-      if (data['sender_id'] != widget.currentUserId) {
-        // Timer(Duration(seconds: 2), () {
-        //   setState(() {
-        //     int idx = messages.indexWhere((m) => m['id'] == data['id']);
-        //     if (idx != -1) messages[idx]['isNew'] = false;
-        //   });
-        // });
-      }
+      if (data['sender_id'] != widget.currentUserId) {}
     });
 
     // Message deleted
@@ -700,7 +783,8 @@ socket.on('message_seen', (data) {
 
     // Seen/unseen count reset
     socket.on('update_conversation_list', (data) {
-      if (_conversationId != null && data['conversation_id'] == _conversationId) {
+      if (_conversationId != null &&
+          data['conversation_id'] == _conversationId) {
         setState(() {
           // no local badge shown in chat page, handled in dashboard
         });
@@ -708,55 +792,31 @@ socket.on('message_seen', (data) {
     });
   }
 
+  Future<void> markMessagesSeen() async {
+    if (_conversationId == null) return;
 
-Future<void> markMessagesSeen() async {
-  if (_conversationId == null) return;
+    try {
+      await http.post(
+        Uri.parse("${Backend.baseUrl}/messages/mark-seen"),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "conversationId": _conversationId,
+          "userId": widget.currentUserId,
+        }),
+      );
 
-  try {
-    await http.post(
-      Uri.parse("${Backend.baseUrl}/messages/mark-seen"),
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode({
-        "conversationId": _conversationId,
-        "userId": widget.currentUserId,
-      }),
-    );
-
-   setState(() {
-  for (var m in messages) {
-    if (m['sender_id'] != widget.currentUserId) {
-      // Messages from other user seen by me
-      m['isNew'] = false;   // stop highlighting red
-    } else {
-      // My sent messages seen by other user → green
-      m['hasBeenSeen'] = true;
+      setState(() {});
+    } catch (e) {
+      print("Error marking messages as seen: $e");
     }
   }
-});
-
-// Emit socket event so sender sees green in real-time
-socket.emit('message_seen', {
-  "conversationId": _conversationId,
-  "userId": widget.currentUserId,
-  "messageIds": messages
-      .where((m) => m['sender_id'] == widget.currentUserId)
-      .map((m) => m['id'])
-      .toList(),
-});
-
-  } catch (e) {
-    print("Error marking messages as seen: $e");
-  }
-}
-
-
-
-
 
   Future<void> fetchConversationDetails() async {
     if (_conversationId == null) return;
     try {
-      final url = Uri.parse("${Backend.baseUrl}/conversations/$_conversationId");
+      final url = Uri.parse(
+        "${Backend.baseUrl}/conversations/$_conversationId",
+      );
       final response = await http.get(url);
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -768,7 +828,8 @@ socket.emit('message_seen', {
         if (otherUser != null) {
           setState(() {
             otherName = otherUser['name'] ?? 'Unknown';
-            otherAvatar = (otherUser['profile_image'] != null &&
+            otherAvatar =
+                (otherUser['profile_image'] != null &&
                     otherUser['profile_image'].toString().isNotEmpty)
                 ? "${Backend.baseUrl}/${otherUser['profile_image']}"
                 : null;
@@ -784,13 +845,18 @@ socket.emit('message_seen', {
   Future<void> fetchMessages() async {
     if (_conversationId == null) return;
     try {
-      final url = Uri.parse("${Backend.baseUrl}/messages?conversation_id=$_conversationId");
+      final url = Uri.parse(
+        "${Backend.baseUrl}/messages?conversation_id=$_conversationId",
+      );
       final response = await http.get(url);
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         setState(() {
           messages = (data['messages'] as List<dynamic>? ?? [])
-              .where((m) => m != null && m['sender_id'] != null && m['message'] != null)
+              .where(
+                (m) =>
+                    m != null && m['sender_id'] != null && m['message'] != null,
+              )
               .toList();
         });
         scrollToBottom();
@@ -829,24 +895,25 @@ socket.emit('message_seen', {
           final convData = jsonDecode(convResponse.body);
           conversationId = convData['id'] ?? convData['conversation_id'];
           setState(() => _conversationId = conversationId);
-          socket.emit('join_conversation', [conversationId, widget.currentUserId]);
-        } else return;
+          socket.emit('join_conversation', [
+            conversationId,
+            widget.currentUserId,
+          ]);
+        } else
+          return;
       }
 
       final tempId = DateTime.now().millisecondsSinceEpoch;
 
-     setState(() {
-  messages.add({
-    "id": tempId,
-    "conversation_id": conversationId,
-    "sender_id": widget.currentUserId,
-    "message": text.trim(),
-    "created_at": DateTime.now().toIso8601String(),
-    "isNew": true,         // for receiver highlighting
-    "hasBeenSeen": false,  // ✅ important for red → green logic
-  });
-});
-
+      setState(() {
+        messages.add({
+          "id": tempId,
+          "conversation_id": conversationId,
+          "sender_id": widget.currentUserId,
+          "message": text.trim(),
+          "created_at": DateTime.now().toIso8601String(),
+        });
+      });
 
       socket.emit('send_message', {
         "conversationId": conversationId,
@@ -862,11 +929,6 @@ socket.emit('message_seen', {
       print("Error sending message: $e");
     }
   }
-
-
-
-
-
 
   void handleLongPress(dynamic message) {
     showModalBottomSheet(
@@ -897,8 +959,9 @@ socket.emit('message_seen', {
                 onTap: () {
                   Clipboard.setData(ClipboardData(text: message['message']));
                   Navigator.pop(context);
-                  ScaffoldMessenger.of(context)
-                      .showSnackBar(SnackBar(content: Text('Message copied')));
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text('Message copied')));
                 },
               ),
             ],
@@ -915,7 +978,10 @@ socket.emit('message_seen', {
         title: Text("Delete Message"),
         content: Text("Are you sure you want to delete this message?"),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: Text("Cancel")),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text("Cancel"),
+          ),
           TextButton(
             onPressed: () {
               if (_conversationId != null) {
@@ -942,139 +1008,131 @@ socket.emit('message_seen', {
           title: Text('Edit Message'),
           content: TextField(controller: editController),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: Text('Cancel')),
             TextButton(
-                onPressed: () {
-                  if (_conversationId != null) {
-                    socket.emit('edit_message', {
-                      'messageId': message['id'],
-                      'conversationId': _conversationId,
-                      'newText': editController.text.trim(),
-                    });
-                  }
-                  Navigator.pop(context);
-                },
-                child: Text('Save')),
+              onPressed: () => Navigator.pop(context),
+              child: Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                if (_conversationId != null) {
+                  socket.emit('edit_message', {
+                    'messageId': message['id'],
+                    'conversationId': _conversationId,
+                    'newText': editController.text.trim(),
+                  });
+                }
+                Navigator.pop(context);
+              },
+              child: Text('Save'),
+            ),
           ],
         );
       },
     );
   }
 
-  
-Widget buildMessageBubble(dynamic message) {
-  final isMe = message['sender_id'] == widget.currentUserId;
-  final messageText = message['message'] ?? '';
-  final createdAt = message['created_at'] != null
-      ? DateTime.tryParse(message['created_at'])?.toLocal()
-      : null;
-  final senderName = isMe ? 'You' : otherName;
-  final senderAvatar = isMe ? null : otherAvatar;
-  final isNew = message['isNew'] ?? false;
-  final hasBeenSeen = message['hasBeenSeen'] ?? false; // ✅ server ya socket me set hona chahiye
+  // ... inside _ChatPageState ...
 
-  // -------------------- Bubble color logic --------------------
-  Color bubbleColor;
+  Widget buildMessageBubble(dynamic message) {
+    final isMe = message['sender_id'] == widget.currentUserId;
+    final messageText = message['message'] ?? '';
+    final createdAt = message['created_at'] != null
+        ? DateTime.tryParse(message['created_at'])?.toLocal()
+        : null;
+    // final hasBeenSeen = message['hasBeenSeen'] ?? false;
 
-if (isMe) {
-  // My sent messages
-  if (!hasBeenSeen) {
-    bubbleColor = Colors.red.withOpacity(0.2); // not yet seen by receiver
-  } else {
-    bubbleColor = Colors.green.withOpacity(0.2); // seen by receiver
-  }
-} else {
-  // Messages I received
-  if (isNew) {
-    bubbleColor = Colors.red.withOpacity(0.2); // unread
-  } else {
-    bubbleColor = Colors.white; // read
-  }
-}
+    // --- Define Colors based on the Instagram Dark Theme image ---
+    final Color myMessageColor =
+        MyColors.primary; // your elegant indigo or gold tone
+    final Color otherMessageColor =
+        MyColors.surface; // dark background for received messages
+    final Color myTextColor = MyColors.textPrimary;
+    final Color otherTextColor = MyColors.textPrimary;
+    final Color timeTextColor = MyColors.textSecondary;
 
+    // --- Determine final colors ---
+    final Color bubbleColor = isMe ? myMessageColor : otherMessageColor;
+    final Color textColor = isMe ? myTextColor : otherTextColor;
 
+    // --- Define Border Radius for the Bubble ---
+    final BorderRadius borderRadius = BorderRadius.only(
+      // Top-left corner: Always curved, unless it's the very first message
+      topLeft: Radius.circular(isMe ? 18.0 : 4.0),
+      // Top-right corner: Always curved, unless it's the very first message
+      topRight: Radius.circular(isMe ? 4.0 : 18.0),
+      // Bottom-left corner: Always curved
+      bottomLeft: const Radius.circular(18.0),
+      // Bottom-right corner: Always curved
+      bottomRight: const Radius.circular(18.0),
+    );
 
-  final textColor = isMe ? Colors.white : Color(0xFF2A3A69);
-
-
-  return GestureDetector(
-    onLongPress: () => handleLongPress(message),
-    child: AnimatedContainer(
-      duration: Duration(milliseconds: 300),
-      margin: EdgeInsets.symmetric(vertical: 3, horizontal: 8),
+    return Padding(
+      padding: EdgeInsets.only(
+        top: 2,
+        bottom: 2,
+        left: isMe ? 50 : 8, // My message: pushed left
+        right: isMe ? 8 : 50, // Other message: pushed right
+      ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+        // Align message to the start (other) or end (me)
+        mainAxisAlignment: isMe
+            ? MainAxisAlignment.end
+            : MainAxisAlignment.start,
+        crossAxisAlignment:
+            CrossAxisAlignment.end, // Align time to the bottom of the bubble
         children: [
-          if (!isMe)
-            Padding(
-              padding: const EdgeInsets.only(right: 8.0),
-              child: CircleAvatar(
-                radius: 16,
-                backgroundImage: senderAvatar != null ? NetworkImage(senderAvatar) : null,
-                child: senderAvatar == null ? Icon(Icons.person, size: 18) : null,
-              ),
-            ),
           Flexible(
             child: Column(
-              crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+              crossAxisAlignment: isMe
+                  ? CrossAxisAlignment.end
+                  : CrossAxisAlignment.start,
               children: [
-                if (!isMe)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 2.0),
-                    child: Text(
-                      senderName,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                        color: Color(0xFF0A66C2),
-                      ),
-                    ),
-                  ),
+                // Message Bubble Container
                 Container(
-                  padding: const EdgeInsets.all(10),
-                  margin: EdgeInsets.only(left: isMe ? 50 : 0, right: isMe ? 0 : 50),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
-                    color: bubbleColor, // ✅ updated
-                    borderRadius: BorderRadius.circular(12),
+                    color: bubbleColor,
+                    borderRadius: borderRadius,
                   ),
                   child: Column(
-                    crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
+                      // Message Text
                       Text(
                         messageText,
-                        style: TextStyle(
-                          color: textColor,
-                          fontSize: 16,
-                        ),
+                        style: TextStyle(color: textColor, fontSize: 16),
                         softWrap: true,
                       ),
-                      if (createdAt != null)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 4),
-                          child: Text(
-                            "${createdAt.hour.toString().padLeft(2, '0')}:${createdAt.minute.toString().padLeft(2, '0')}",
-                            style: TextStyle(
-                              color: isMe ? Colors.white70 : Color(0xFF5C74B1),
-                              fontSize: 10,
-                            ),
-                          ),
-                        ),
                     ],
                   ),
                 ),
+
+                // Time and Seen Status
+                if (createdAt != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2, right: 4, left: 4),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          // Format time as H:MM
+                          "${createdAt.hour.toString().padLeft(2, '0')}:${createdAt.minute.toString().padLeft(2, '0')}",
+                          style: TextStyle(color: timeTextColor, fontSize: 10),
+                        ),
+                      ],
+                    ),
+                  ),
               ],
             ),
           ),
-          if (isMe) SizedBox(width: 8),
         ],
       ),
-    ),
-  );
-}
-
-
-
+    );
+  }
 
   Widget typingIndicator() {
     return otherTyping
@@ -1087,10 +1145,13 @@ if (isMe) {
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Colors.grey[300],
+                    color: MyColors.surface,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Text('Typing...'),
+                  child: Text(
+                    'Typing...',
+                    style: TextStyle(color: MyColors.textSecondary),
+                  ),
                 ),
               ],
             ),
@@ -1101,49 +1162,55 @@ if (isMe) {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFD9E1F0),
+      backgroundColor: MyColors.background,
+
       appBar: AppBar(
-  backgroundColor:  Color(0xFF0A66C2), // Dark blue
-  elevation: 1,
-  titleSpacing: 0,
-  title: Row(
-    children: [
-      CircleAvatar(
-        radius: 20,
-        backgroundImage: otherAvatar != null ? NetworkImage(otherAvatar!) : null,
-        child: otherAvatar == null ? Icon(Icons.person, color: Colors.white) : null,
-        backgroundColor: Color(0xFF5C74B1), // soft blue if no image
-      ),
-      SizedBox(width: 10),
-      Flexible(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
+        backgroundColor: MyColors.surface,
+
+        elevation: 1,
+        titleSpacing: 0,
+        title: Row(
           children: [
-            Text(
-              otherName,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Colors.white, // white text on dark bar
-              ),
-              overflow: TextOverflow.ellipsis,
+            CircleAvatar(
+              radius: 20,
+              backgroundImage: otherAvatar != null
+                  ? NetworkImage(otherAvatar!)
+                  : null,
+              child: otherAvatar == null
+                  ? Icon(Icons.person, color: Colors.white)
+                  : null,
+              backgroundColor: MyColors.primary, // soft blue if no image
             ),
-            Text(
-              otherOnline ? 'Online' : 'Offline',
-              style: TextStyle(
-                fontSize: 12,
-                color: otherOnline ? Colors.green : Colors.grey[300],
+            SizedBox(width: 10),
+            Flexible(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    otherName,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: MyColors.textPrimary,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    otherOnline ? 'Active' : 'Offline',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: otherOnline
+                          ? MyColors.primary
+                          : MyColors.textSecondary,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
         ),
       ),
-    ],
-  ),
-),
-
-
 
       body: Column(
         children: [
@@ -1158,56 +1225,67 @@ if (isMe) {
             ),
           ),
 
+          SafeArea(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              decoration: BoxDecoration(
+                color: MyColors.surface,
 
-         SafeArea(
-  child: Container(
-    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 3)],
-    ),
-    child: Row(
-      children: [
-        Expanded(
-          child: TextField(
-            controller: _controller,
-            decoration: InputDecoration(
-              hintText: 'Type a message...',
-              hintStyle: TextStyle(color: Color(0xFF5C74B1)),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(25),
-                borderSide: BorderSide.none,
+                boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 3)],
               ),
-              fillColor: Color(0xFFD9E1F0), // soft light blue
-              filled: true,
-              contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _controller,
+                      minLines: 1, // start with one line
+                      maxLines: 5, // expand up to 5 lines as user types
+                      keyboardType:
+                          TextInputType.multiline, // enable multiline typing
+                      textInputAction:
+                          TextInputAction.newline, // Enter adds new line
+                      decoration: InputDecoration(
+                        hintText: 'Type a message...',
+                        hintStyle: TextStyle(color: MyColors.textSecondary),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(25),
+                          borderSide: BorderSide.none,
+                        ),
+                        fillColor: MyColors.inputFill,
+                        filled: true,
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                      ),
+                      style: TextStyle(color: MyColors.textPrimary),
+                      onChanged: (_) {
+                        socket.emit('typing', {
+                          'userId': widget.currentUserId,
+                          'isTyping': _controller.text.trim().isNotEmpty,
+                        });
+                        setState(() {});
+                      },
+                    ),
+                  ),
+
+                  IconButton(
+                    icon: Icon(
+                      Icons.send,
+                      color: _controller.text.trim().isEmpty
+                          ? MyColors.textSecondary
+                          : MyColors.primary,
+                    ),
+                    onPressed: _controller.text.trim().isEmpty
+                        ? null
+                        : () => sendMessage(_controller.text),
+                  ),
+                ],
+              ),
             ),
-            style: TextStyle(color: Color(0xFF2A3A69)),
-            onChanged: (_) {
-              socket.emit('typing', {
-                'userId': widget.currentUserId,
-                'isTyping': _controller.text.trim().isNotEmpty,
-              });
-              setState(() {});
-            },
           ),
-        ),
-        IconButton(
-          icon: Icon(
-            Icons.send,
-            color: _controller.text.trim().isEmpty
-                ? Colors.grey
-                :  Color(0xFF0A66C2), // send button dark blue
-          ),
-          onPressed: _controller.text.trim().isEmpty
-              ? null
-              : () => sendMessage(_controller.text),
-        ),
-      ],
-    ),
-  ),
-         )]
-      )
-         );
+        ],
+      ),
+    );
   }
 }

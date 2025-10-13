@@ -5,7 +5,7 @@ import '../screens/chat_page.dart';
 import '../screens/task_detail_screen.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-
+import '../helpers/my_colors.dart';
 class ActionButtonsWidget extends StatelessWidget {
   final int providerId;               // Provider ka ID (jiske profile par ho)
   final String providerName;          // Provider ka Name
@@ -95,13 +95,13 @@ Widget build(BuildContext context) {
           label: const Text(
             'Message',
             style: TextStyle(
-              color: Colors.white,
+              color: MyColors.textPrimary,
               fontSize: 15,
               fontWeight: FontWeight.bold,
             ),
           ),
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF0A66C2), // LinkedIn Dark Blue
+            backgroundColor: MyColors.primary, // LinkedIn Dark Blue
             padding: const EdgeInsets.symmetric(vertical: 14),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
@@ -119,7 +119,7 @@ Widget build(BuildContext context) {
           onPressed: () => bookNow(context),
           style: OutlinedButton.styleFrom(
             side: const BorderSide(
-              color: Color(0xFF2A3A69), // LinkedIn Dark Blue Border
+              color: MyColors.primary, // LinkedIn Dark Blue Border
               width: 2,
             ),
             padding: const EdgeInsets.symmetric(vertical: 14),
@@ -130,7 +130,7 @@ Widget build(BuildContext context) {
           child: const Text(
             'Book Now',
             style: TextStyle(
-              color: Color(0xFF2A3A69), // LinkedIn Dark Blue Text
+              color: MyColors.primary, // LinkedIn Dark Blue Text
               fontSize: 15,
               fontWeight: FontWeight.bold,
             ),

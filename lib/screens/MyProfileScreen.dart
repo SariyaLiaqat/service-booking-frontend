@@ -1,6 +1,3 @@
-
-
-
 // import 'dart:convert';
 // import 'dart:io';
 // import 'package:flutter/foundation.dart' show kIsWeb;
@@ -10,7 +7,7 @@
 // import '../helpers/backend.dart';
 // import '../models/ExternalProfileWidget.dart';
 // import 'package:url_launcher/url_launcher.dart';
-
+// import '../helpers/colors.dart';
 // class MyProfileScreen extends StatefulWidget {
 //   final Map<String, dynamic> userData;
 //   final VoidCallback? onProfileUpdated;
@@ -368,101 +365,85 @@
 //       setState(() => isLoading = false);
 //     }
 //   }
+// // ✅ Service Add (provider-only, self-only)
+// Future<void> addService() async {
+//   if (widget.readOnly) return;
 
-//   // ✅ Service Add (provider-only, self-only)
-//   Future<void> addService() async {
-//     if (widget.readOnly) return;
+//   final title = serviceTitleController.text.trim();
+//   final desc = serviceDescController.text.trim();
+//   final priceText = servicePriceController.text.trim();
 
-//     final title = serviceTitleController.text.trim();
-//     final desc = serviceDescController.text.trim();
-//     final priceText = servicePriceController.text.trim();
-
-//     if (selectedCategory == null) {
-//       ScaffoldMessenger.of(context).showSnackBar(
-//         const SnackBar(content: Text('Please select a category ❌')),
-//       );
-//       return;
-//     }
-
-//     if (title.isEmpty || desc.isEmpty || priceText.isEmpty) {
-//       ScaffoldMessenger.of(context).showSnackBar(
-//         const SnackBar(content: Text('Please fill all service fields ❌')),
-//       );
-//       return;
-//     }
-
-//     final price = double.tryParse(priceText);
-//     if (price == null) {
-//       ScaffoldMessenger.of(
-//         context,
-//       ).showSnackBar(const SnackBar(content: Text('Price must be a number ❌')));
-//       return;
-//     }
-
-//     setState(() => isLoading = true);
-
-//     try {
-//       final url = Uri.parse('${Backend.baseUrl}/services');
-//       final response = await http.post(
-//         url,
-//         headers: {"Content-Type": "application/json"},
-//         body: jsonEncode({
-//           "provider_id": user['id'],
-//           "title": title,
-//           "description": desc,
-//           "price": price,
-//           "availability_status": true,
-//           "category_id": selectedCategory?['id'],
-//           "category": selectedCategory?['name'],
-//         }),
-//       );
-
-//       if (response.statusCode == 201) {
-//   final data = jsonDecode(response.body);
-
-//   // 🔹 Fetch updated services from backend
-//   final servicesResponse = await http.get(
-//     Uri.parse('${Backend.baseUrl}/provider/${user['id']}/services'),
-//   );
-//   if (servicesResponse.statusCode == 200) {
-//     final fetchedServices = jsonDecode(servicesResponse.body)['services'];
-//     setState(() {
-//       services = List<Map<String, dynamic>>.from(fetchedServices);
-      
-//     });
+//   if (selectedCategory == null) {
+//     ScaffoldMessenger.of(context).showSnackBar(
+//       const SnackBar(content: Text('Please select a category ❌')),
+//     );
+//     return;
 //   }
 
-//         // // 🔹 Sync with user map for UI update
-//         //  user['services'] = services;
-
-        
-//         // Clear inputs
-
-//         serviceTitleController.clear();
-//         serviceDescController.clear();
-//         servicePriceController.clear();
-//         selectedCategory = null;
-
-//         if (widget.onProfileUpdated != null) widget.onProfileUpdated!();
-
-//         ScaffoldMessenger.of(context).showSnackBar(
-//           const SnackBar(content: Text('Service added successfully ✅')),
-//         );
-//       } else {
-//         final error =
-//             jsonDecode(response.body)['message'] ?? 'Failed to add service ❌';
-//         ScaffoldMessenger.of(
-//           context,
-//         ).showSnackBar(SnackBar(content: Text(error)));
-//       }
-//     } catch (e) {
-//       ScaffoldMessenger.of(
-//         context,
-//       ).showSnackBar(SnackBar(content: Text('Error: $e')));
-//     } finally {
-//       setState(() => isLoading = false);
-//     }
+//   if (title.isEmpty || desc.isEmpty || priceText.isEmpty) {
+//     ScaffoldMessenger.of(context).showSnackBar(
+//       const SnackBar(content: Text('Please fill all service fields ❌')),
+//     );
+//     return;
 //   }
+
+//   final price = double.tryParse(priceText);
+//   if (price == null) {
+//     ScaffoldMessenger.of(context).showSnackBar(
+//       const SnackBar(content: Text('Price must be a number ❌')),
+//     );
+//     return;
+//   }
+
+//   setState(() => isLoading = true);
+
+//   try {
+//     final url = Uri.parse('${Backend.baseUrl}/services');
+//     final response = await http.post(
+//       url,
+//       headers: {"Content-Type": "application/json"},
+//       body: jsonEncode({
+//         "provider_id": user['id'],
+//         "title": title,
+//         "description": desc,
+//         "price": price,
+//         "availability_status": true,
+//         "category_id": selectedCategory?['id'],
+//         "category": selectedCategory?['name'],
+//       }),
+//     );
+
+//     if (response.statusCode == 201) {
+//       // ✅ Service successfully added on backend
+//       ScaffoldMessenger.of(context).showSnackBar(
+//         const SnackBar(
+//           content: Text(
+//             'Service added successfully ✅. You can check it in your selected category.',
+//           ),
+//         ),
+//       );
+
+//       // 🔹 Clear inputs
+//       serviceTitleController.clear();
+//       serviceDescController.clear();
+//       servicePriceController.clear();
+//       selectedCategory = null;
+
+//       if (widget.onProfileUpdated != null) widget.onProfileUpdated!();
+
+//     } else {
+//       final error =
+//           jsonDecode(response.body)['message'] ?? 'Failed to add service ❌';
+//       ScaffoldMessenger.of(context)
+//           .showSnackBar(SnackBar(content: Text(error)));
+//     }
+//   } catch (e) {
+//     ScaffoldMessenger.of(context)
+//         .showSnackBar(SnackBar(content: Text('Error: $e')));
+//   } finally {
+//     setState(() => isLoading = false);
+//   }
+// }
 
 //   // ✅ Delete Profile (self-only)
 //   Future<void> deleteProfile() async {
@@ -536,7 +517,7 @@
 //     return Scaffold(
 //       backgroundColor: const Color(0xFFFFFFFF), // White background
 //       appBar: AppBar(
-//         backgroundColor: const Color(0xFF0A66C2), // LinkedIn Blue
+//         backgroundColor: AppColors.darkBlue, // LinkedIn Blue
 //         elevation: 4, // subtle shadow for depth
 //         shape: const RoundedRectangleBorder(
 //           borderRadius: BorderRadius.vertical(
@@ -568,7 +549,7 @@
 //       /////
 //       body: isLoading
 //           ? const Center(
-//               child: CircularProgressIndicator(color: Color(0xFF0A66C2)),
+//               child: CircularProgressIndicator(color: AppColors.darkBlue),
 //             )
 //           : SingleChildScrollView(
 //               padding: const EdgeInsets.all(16),
@@ -820,7 +801,6 @@
 //                     // Skills
 //                     const SizedBox(height: 16),
 
-                   
 //                     const SizedBox(height: 20),
 
 //                     // Provider Section
@@ -875,7 +855,7 @@
 //                                         () => showOnServices = val ?? false,
 //                                       ),
 //                                       activeColor: const Color(
-//                                         0xFF0A66C2,
+//                                         0xFF14213D,
 //                                       ), // LinkedIn Blue
 //                                       checkColor: Colors.white,
 //                                       contentPadding: EdgeInsets.zero,
@@ -906,9 +886,7 @@
 //                       ElevatedButton(
 //                         onPressed: saveProfile,
 //                         style: ElevatedButton.styleFrom(
-//                           backgroundColor: const Color(
-//                             0xFF0A66C2,
-//                           ), // LinkedIn Blue
+//                           backgroundColor:AppColors.darkBlue,
 //                           padding: const EdgeInsets.symmetric(vertical: 14),
 //                           shape: RoundedRectangleBorder(
 //                             borderRadius: BorderRadius.circular(12),
@@ -991,7 +969,7 @@
 //         focusedBorder: OutlineInputBorder(
 //           borderRadius: BorderRadius.circular(8),
 //           borderSide: const BorderSide(
-//             color: Color(0xFF0A66C2), // LinkedIn Blue
+//             color:AppColors.darkBlue, // LinkedIn Blue
 //             width: 1.5,
 //           ),
 //         ),
@@ -1018,7 +996,7 @@
 //   }
 
 //   /////////////////////////////////////////////////////////////
-  
+
 //   ///
 
 //   // ✅ Provider Fields Builder
@@ -1026,7 +1004,7 @@
 //     return [
 //       const SizedBox(height: 20),
 //       const Text(
-//         'Provider Info',
+//         'Service Provider Info',
 //         style: TextStyle(
 //           fontSize: 18,
 //           color: Colors.black,
@@ -1184,7 +1162,7 @@
 //                       }
 //                     },
 //                     style: ElevatedButton.styleFrom(
-//                       backgroundColor: const Color(0xFF0A66C2),
+//                       backgroundColor: AppColors.darkBlue,
 //                       shape: RoundedRectangleBorder(
 //                         borderRadius: BorderRadius.circular(8),
 //                       ),
@@ -1239,7 +1217,7 @@
 //                         .map<Widget>(
 //                           (l) => Chip(
 //                             label: Text(l),
-//                             backgroundColor: const Color(0xFF0A66C2),
+//                             backgroundColor: AppColors.darkBlue,
 //                             labelStyle: const TextStyle(color: Colors.white),
 //                           ),
 //                         )
@@ -1304,89 +1282,84 @@
 //               ),
 //             ),
 
-
-
-
-
 // if (services.isNotEmpty)
 //   ...services.map(
-//     (s) => SizedBox(
-//       width: 350,
-//       height: 200,
-//       child: Card(
-//         color: Colors.white, // clean white background
-//         elevation: 3, // subtle shadow
-//         shape: RoundedRectangleBorder(
-//           borderRadius: BorderRadius.circular(12), // slightly more rounded
-//           side: BorderSide(
-//             color: Colors.grey.shade300, // thin subtle border
-//             width: 1,
+//     (s) => Container(
+//       width: double.infinity,
+//       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 12), // slightly smaller horizontal padding
+//       padding: const EdgeInsets.all(12),
+//       decoration: BoxDecoration(
+//         color: AppColors.backgroundWhite,
+//         borderRadius: BorderRadius.circular(12),
+//         border: Border.all(color: AppColors.lightGrey, width: 1),
+//         boxShadow: [
+//           BoxShadow(
+//             color: Colors.black.withOpacity(0.05),
+//             blurRadius: 6,
+//             offset: const Offset(0, 3),
 //           ),
-//         ),
-//         child: Padding(
-//           padding: const EdgeInsets.all(14),
-//           child: Column(
-//             crossAxisAlignment: CrossAxisAlignment.start,
-//             children: [
-//               Text(
-//                 'Service',
-//                 style: TextStyle(
-//                   fontWeight: FontWeight.bold,
-//                   fontSize: 18,
-//                   color: Colors.grey.shade800, // subtle dark gray
-//                 ),
+//         ],
+//       ),
+//       child: Column(
+//         crossAxisAlignment: CrossAxisAlignment.start,
+//         children: [
+//           // Heading with highlighted background
+//           Container(
+//             padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+//             decoration: BoxDecoration(
+//               color: Color(0xFFD9E1F0),
+//               borderRadius: BorderRadius.circular(6),
+//             ),
+//             child: Text(
+//               s['title'] ?? '-',
+//               style: TextStyle(
+//                 fontSize: 18,
+//                 fontWeight: FontWeight.bold,
+//                 color: AppColors.darkBlue,
 //               ),
-//               const SizedBox(height: 6),
-//               Text(
-//                 s['title'] ?? '-',
-//                 style: TextStyle(
-//                   fontWeight: FontWeight.bold,
-//                   color: Color(0xFF0A66C2), // primary brand color
-//                   fontSize: 16,
-//                 ),
-//               ),
-//               const SizedBox(height: 6),
-//               Expanded(
-//                 child: SingleChildScrollView(
-//                   child: Text(
-//                     s['description'] ?? '-',
-//                     style: TextStyle(
-//                       fontSize: 14,
-//                       color: Colors.grey.shade700, // easy on eyes
-//                       height: 1.3, // better line spacing
-//                     ),
-//                   ),
-//                 ),
-//               ),
-//               const SizedBox(height: 8),
-//               Text(
-//                 'PKR ${s['price'] ?? "-"}',
-//                 style: TextStyle(
-//                   fontWeight: FontWeight.w600,
-//                   color: Color(0xFF0A66C2),
-//                   fontSize: 16,
-//                 ),
-//               ),
-//             ],
+//             ),
 //           ),
-//         ),
+//           const SizedBox(height: 6),
+//           // Price smaller font
+//           Text(
+//             'PKR ${s['price'] ?? "-"}',
+//             style: TextStyle(
+//               fontSize: 14,
+//               fontWeight: FontWeight.w500,
+//               color: AppColors.darkBlue,
+//             ),
+//           ),
+//           const SizedBox(height: 8),
+//           // Description scrollable if longer than container
+//           ConstrainedBox(
+//             constraints: const BoxConstraints(
+//               maxHeight: 200, // max height before scroll
+//             ),
+//             child: SingleChildScrollView(
+//               child: Text(
+//                 s['description'] ?? '-',
+//                 style: TextStyle(
+//                   fontSize: 14,
+//                   color: AppColors.textDark,
+//                   height: 1.4,
+//                 ),
+//               ),
+//             ),
+//           ),
+//         ],
 //       ),
 //     ),
-//   ).toList(),
+//   )
+
+// .toList(),
 // if (services.isEmpty)
 //   const Text("", style: TextStyle(color: Colors.grey)),
 
-
-              
 //           ],
 //         ),
 //     ];
 //   }
 // }
-
-// /////////////////////////////////////////////////////////////////////////////////////
-
-
 
 
 
@@ -1406,7 +1379,8 @@ import 'package:http/http.dart' as http;
 import '../helpers/backend.dart';
 import '../models/ExternalProfileWidget.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../helpers/colors.dart';
+import '../helpers/my_colors.dart';
+
 class MyProfileScreen extends StatefulWidget {
   final Map<String, dynamic> userData;
   final VoidCallback? onProfileUpdated;
@@ -1747,9 +1721,16 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
           isEditing = false;
           showOnServices = user['show_on_services'] ?? false;
         });
+
         if (widget.onProfileUpdated != null) widget.onProfileUpdated!();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Profile updated successfully ✅')),
+          SnackBar(
+            backgroundColor: Color(0xFF262626),
+            content: Text(
+              'Profile updated successfully ✅',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1814,36 +1795,22 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
       );
 
       if (response.statusCode == 201) {
-  final data = jsonDecode(response.body);
+        // ✅ Service successfully added on backend
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Service added successfully ✅. You can check it in your selected category.',
+            ),
+          ),
+        );
 
-  // 🔹 Fetch updated services from backend
-  final servicesResponse = await http.get(
-    Uri.parse('${Backend.baseUrl}/provider/${user['id']}/services'),
-  );
-  if (servicesResponse.statusCode == 200) {
-    final fetchedServices = jsonDecode(servicesResponse.body)['services'];
-    setState(() {
-      services = List<Map<String, dynamic>>.from(fetchedServices);
-      
-    });
-  }
-
-        // // 🔹 Sync with user map for UI update
-        //  user['services'] = services;
-
-        
-        // Clear inputs
-
+        // 🔹 Clear inputs
         serviceTitleController.clear();
         serviceDescController.clear();
         servicePriceController.clear();
         selectedCategory = null;
 
         if (widget.onProfileUpdated != null) widget.onProfileUpdated!();
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Service added successfully ✅')),
-        );
       } else {
         final error =
             jsonDecode(response.body)['message'] ?? 'Failed to add service ❌';
@@ -1925,28 +1892,14 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
     }
   }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   @override
   Widget build(BuildContext context) {
     final isExternalView = widget.readOnly;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFFFFFF), // White background
+      backgroundColor: MyColors.background, // White background
       appBar: AppBar(
-        backgroundColor: AppColors.darkBlue, // LinkedIn Blue
+        backgroundColor: MyColors.surface, // LinkedIn Blue
         elevation: 4, // subtle shadow for depth
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(
@@ -1978,7 +1931,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
       /////
       body: isLoading
           ? const Center(
-              child: CircularProgressIndicator(color: AppColors.darkBlue),
+              child: CircularProgressIndicator(color: MyColors.primary),
             )
           : SingleChildScrollView(
               padding: const EdgeInsets.all(16),
@@ -1997,52 +1950,39 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                               ? () => pickImage(false)
                               : null,
                           child: Container(
-                            height: 220, // taller for premium look
+                            height: 220,
                             width: double.infinity,
                             decoration: BoxDecoration(
-                              color: const Color(0xFFD9E1F0), // fallback color
+                              color: const Color(0xFFD9E1F0),
                               borderRadius: const BorderRadius.vertical(
-                                bottom: Radius.circular(
-                                  16,
-                                ), // rounded bottom corners
+                                bottom: Radius.circular(16),
                               ),
                             ),
-                            child: _getImage(isProfile: false) != null
-                                ? ClipRRect(
-                                    borderRadius: const BorderRadius.vertical(
-                                      bottom: Radius.circular(16),
-                                    ),
-                                    child: Stack(
-                                      fit: StackFit.expand,
-                                      children: [
-                                        Image(
-                                          image: _getImage(isProfile: false)!,
-                                          fit: BoxFit.cover,
-                                        ),
-                                        Container(
-                                          color: Colors.black.withOpacity(
-                                            0.2,
-                                          ), // subtle overlay
-                                        ),
-                                      ],
-                                    ),
-                                  )
-                                : const Center(
-                                    child: Text(
-                                      'Upload Cover Photo',
-                                      style: TextStyle(
-                                        color: Color(0xFF5C74B1),
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
+                            child: (() {
+                              final imageProvider = _getImage(isProfile: false);
+                              if (imageProvider != null) {
+                                return ClipRRect(
+                                  borderRadius: const BorderRadius.vertical(
+                                    bottom: Radius.circular(16),
                                   ),
+                                  child: Image(
+                                    image: imageProvider,
+                                    fit: BoxFit.cover,
+                                    errorBuilder:
+                                        (context, error, stackTrace) =>
+                                            _coverPlaceholder(),
+                                  ),
+                                );
+                              } else {
+                                return _coverPlaceholder();
+                              }
+                            })(),
                           ),
                         ),
 
                         // --- Profile Picture ---
                         Positioned(
-                          bottom: -50, // overlaps cover photo
+                          bottom: -50,
                           left: 0,
                           right: 0,
                           child: Center(
@@ -2051,12 +1991,12 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                                   ? () => pickImage(true)
                                   : null,
                               child: CircleAvatar(
-                                radius: 60, // bigger for premium look
-                                backgroundColor: Colors.white, // border effect
+                                radius: 60,
+                                backgroundColor: Colors.white,
                                 child: CircleAvatar(
-                                  radius: 56, // inner circle for image
-                                  backgroundImage: _getImage(isProfile: true),
+                                  radius: 56,
                                   backgroundColor: const Color(0xFFD9E1F0),
+                                  backgroundImage: _getImage(isProfile: true),
                                   child: _getImage(isProfile: true) == null
                                       ? const Icon(
                                           Icons.person,
@@ -2071,6 +2011,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                         ),
                       ],
                     ),
+
                     const SizedBox(height: 70), // space for overlapping avatar
                     //const SizedBox(height: 60),
 
@@ -2106,8 +2047,8 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                                   style: const TextStyle(
                                     fontSize: 24,
                                     fontWeight: FontWeight.bold,
-                                    color: Colors
-                                        .black, // Black text for premium look
+                                    color: MyColors
+                                        .textPrimary, // Black text for premium look
                                   ),
                                 ),
                                 if (user['username'] != null)
@@ -2117,8 +2058,8 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                                       '@${user['username']}',
                                       style: const TextStyle(
                                         fontSize: 16,
-                                        color: Colors
-                                            .grey, // subtle grey for username
+                                        color: MyColors
+                                            .textSecondary, // subtle grey for username
                                       ),
                                     ),
                                   ),
@@ -2136,7 +2077,8 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                                         fontSize: 15,
                                         fontStyle: FontStyle
                                             .italic, // italic for short bio
-                                        color: Colors.black54, // softer black
+                                        color: MyColors
+                                            .textSecondary, // softer black
                                       ),
                                     ),
                                   ),
@@ -2178,7 +2120,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.black,
+                                  color: MyColors.textPrimary,
                                 ),
                               ),
                               const SizedBox(height: 12),
@@ -2189,14 +2131,14 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                                   const Icon(
                                     Icons.phone,
                                     size: 18,
-                                    color: Colors.black54,
+                                    color: MyColors.textSecondary,
                                   ),
                                   const SizedBox(width: 8),
                                   Text(
                                     user['phone'] ?? '-',
                                     style: const TextStyle(
                                       fontSize: 16,
-                                      color: Colors.black,
+                                      color: MyColors.textPrimary,
                                     ),
                                   ),
                                 ],
@@ -2210,7 +2152,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                                   const Icon(
                                     Icons.location_on,
                                     size: 18,
-                                    color: Colors.black54,
+                                    color: MyColors.textSecondary,
                                   ),
                                   const SizedBox(width: 8),
                                   Expanded(
@@ -2218,7 +2160,8 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                                       user['address'] ?? '-',
                                       style: const TextStyle(
                                         fontSize: 16,
-                                        color: Colors.black,
+                                        color:
+                                            MyColors.textPrimary, // white text
                                       ),
                                     ),
                                   ),
@@ -2230,13 +2173,11 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                     // Skills
                     const SizedBox(height: 16),
 
-                   
-                    const SizedBox(height: 20),
-
                     // Provider Section
                     if (user['role'] == 'provider')
                       Card(
                         elevation: 2,
+                        color: MyColors.surface,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -2246,15 +2187,15 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               const Text(
-                                "Provider Details",
+                                "Details",
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.black,
+                                  color: MyColors.textPrimary,
                                 ),
                               ),
                               const Divider(
-                                color: Colors.grey,
+                                color: MyColors.divider,
                                 thickness: 0.6,
                                 height: 20,
                               ),
@@ -2277,16 +2218,14 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                                         'Show your profile on services page?',
                                         style: TextStyle(
                                           fontSize: 15,
-                                          color: Colors.black,
+                                          color: MyColors.textPrimary,
                                         ),
                                       ),
                                       value: showOnServices,
                                       onChanged: (val) => setState(
                                         () => showOnServices = val ?? false,
                                       ),
-                                      activeColor: const Color(
-                                        0xFF14213D,
-                                      ), // LinkedIn Blue
+                                      activeColor: MyColors.primary,
                                       checkColor: Colors.white,
                                       contentPadding: EdgeInsets.zero,
                                       controlAffinity:
@@ -2298,7 +2237,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                                         "Enabling this makes your profile visible when users browse services.",
                                         style: TextStyle(
                                           fontSize: 13,
-                                          color: Colors.grey,
+                                          color: MyColors.textSecondary,
                                         ),
                                       ),
                                     ),
@@ -2316,20 +2255,25 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                       ElevatedButton(
                         onPressed: saveProfile,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor:AppColors.darkBlue,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          backgroundColor: MyColors.primary, // theme primary
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 16,
+                          ), // slightly taller
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          elevation: 3, // subtle shadow
+                          elevation: 4, // slightly stronger for premium feel
+                          shadowColor: Colors.black.withOpacity(
+                            0.3,
+                          ), // subtle shadow
                         ),
-                        child: const Center(
+                        child: Center(
                           child: Text(
                             'Save Changes',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                              color: MyColors.buttonText, // theme button text
                             ),
                           ),
                         ),
@@ -2342,20 +2286,23 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                       OutlinedButton(
                         onPressed: deleteProfile,
                         style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          side: const BorderSide(color: Colors.red, width: 1.5),
-                          backgroundColor: Colors.white,
+                          side: const BorderSide(
+                            color: MyColors.error,
+                            width: 1.5,
+                          ),
+                          backgroundColor: MyColors.surface, // dark surface
                         ),
-                        child: const Center(
+                        child: Center(
                           child: Text(
                             'Delete Profile',
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              color: Colors.red,
+                              color: MyColors.error, // red text
                             ),
                           ),
                         ),
@@ -2379,17 +2326,17 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
       controller: controller,
       maxLines: maxLines,
       style: const TextStyle(
-        color: Colors.black, // Input text color
+        color: MyColors.textPrimary, // white text
         fontSize: 16,
       ),
       decoration: InputDecoration(
         labelText: label,
         labelStyle: const TextStyle(
-          color: Color(0xFF6C757D), // Medium Gray for label
+          color: MyColors.hintText, // gray label
           fontWeight: FontWeight.w500,
         ),
         filled: true,
-        fillColor: Color(0xFFF5F5F5), // Light Gray background
+        fillColor: MyColors.inputFill, // dark background
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 14,
           vertical: 12,
@@ -2399,24 +2346,24 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
           borderSide: const BorderSide(
-            color:AppColors.darkBlue, // LinkedIn Blue
+            color: MyColors.inputFocusedBorder, // primary color
             width: 1.5,
           ),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
           borderSide: const BorderSide(
-            color: Color(0xFFD6D6D6), // Light Gray border
+            color: MyColors.inputBorder, // divider color
             width: 1.2,
           ),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: Colors.red, width: 1.5),
+          borderSide: const BorderSide(color: MyColors.error, width: 1.5),
         ),
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: Colors.red, width: 1.5),
+          borderSide: const BorderSide(color: MyColors.error, width: 1.5),
         ),
       ),
       validator: isOptional
@@ -2426,7 +2373,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
   }
 
   /////////////////////////////////////////////////////////////
-  
+
   ///
 
   // ✅ Provider Fields Builder
@@ -2434,10 +2381,10 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
     return [
       const SizedBox(height: 20),
       const Text(
-        'Service Provider Info',
+        'Other Information',
         style: TextStyle(
           fontSize: 18,
-          color: Colors.black,
+          color: MyColors.textPrimary,
           fontWeight: FontWeight.w600,
         ),
       ),
@@ -2456,8 +2403,9 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
               value: experienceLevel,
               decoration: InputDecoration(
                 labelText: 'Experience Level',
+                labelStyle: TextStyle(color: MyColors.textSecondary),
                 filled: true,
-                fillColor: const Color(0xFFF5F5F5),
+                fillColor: MyColors.surface,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -2465,7 +2413,9 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
               items: ['Beginner', 'Intermediate', 'Expert']
                   .map(
                     (level) =>
-                        DropdownMenuItem(value: level, child: Text(level)),
+                        DropdownMenuItem(value: level, child: Text(level,style: const TextStyle(
+              color: MyColors.divider, // ✅ Text color changed
+            ),)),
                   )
                   .toList(),
               onChanged: (val) => setState(() => experienceLevel = val),
@@ -2516,7 +2466,9 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                   const Text(
                     'Services',
                     style: TextStyle(
-                      color: Colors.black,
+                      color:
+                          MyColors.textPrimary, // white text on dark background
+
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                     ),
@@ -2530,16 +2482,18 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                           decoration: InputDecoration(
                             labelText: 'Service Category',
                             filled: true,
-                            fillColor: const Color(0xFFF5F5F5),
+                            fillColor: MyColors.inputFill,
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
                           ),
+                           dropdownColor: Colors.black, // Dropdown ka background black
+  style: const TextStyle(color: Colors.white),
                           items: categories
                               .map(
                                 (cat) => DropdownMenuItem<Map<String, dynamic>>(
                                   value: cat,
-                                  child: Text(cat['name']),
+                                  child: Text(cat['name'],style: const TextStyle(color: Colors.white),),
                                 ),
                               )
                               .toList(),
@@ -2561,17 +2515,21 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                     minLines: 3,
                     keyboardType: TextInputType.multiline,
                     textInputAction: TextInputAction.newline,
-                    style: const TextStyle(color: Colors.black, fontSize: 16),
+                    style: TextStyle(color: MyColors.textPrimary, fontSize: 16),
                     decoration: InputDecoration(
                       labelText: 'Service Description',
+                      labelStyle: TextStyle(color: MyColors.textSecondary),
                       filled: true,
-                      fillColor: const Color(0xFFF5F5F5),
+                      fillColor: MyColors.surface,
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 14,
                         vertical: 12,
                       ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(
+                          color: MyColors.inputFocusedBorder,
+                        ),
                       ),
                     ),
                     validator: (val) => val == null || val.isEmpty
@@ -2592,7 +2550,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                       }
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.darkBlue,
+                      backgroundColor: MyColors.primary,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -2602,7 +2560,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                       child: Text(
                         'Add Service',
                         style: TextStyle(
-                          color: Colors.white,
+                          color: MyColors.textPrimary,
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                         ),
@@ -2623,20 +2581,20 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
           children: [
             Text(
               'Experience: ${user['experience_years'] != null ? user['experience_years'].toString() : '-'} years',
-              style: const TextStyle(color: Color(0xFF6C757D)),
+              style: TextStyle(color: MyColors.textSecondary), // #A1A1A1
             ),
 
             Text(
               'Level: ${user['experience_level'] ?? '-'}',
-              style: const TextStyle(color: Color(0xFF6C757D)),
+              style: TextStyle(color: MyColors.textSecondary), // #A1A1A1
             ),
             Text(
               'Gov ID: ${user['gov_id'] ?? '-'}',
-              style: const TextStyle(color: Color(0xFF6C757D)),
+              style: TextStyle(color: MyColors.textSecondary), // #A1A1A1
             ),
             Text(
               'Hourly Rate: PKR ${user['hourly_rate'] ?? '-'}',
-              style: const TextStyle(color: Color(0xFF6C757D)),
+              style: TextStyle(color: MyColors.textSecondary), // #A1A1A1
             ),
 
             const SizedBox(height: 10),
@@ -2647,13 +2605,18 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                         .map<Widget>(
                           (l) => Chip(
                             label: Text(l),
-                            backgroundColor: AppColors.darkBlue,
-                            labelStyle: const TextStyle(color: Colors.white),
+                            backgroundColor: MyColors.primary,
+                            labelStyle: const TextStyle(
+                              color: MyColors.buttonText,
+                            ),
                           ),
                         )
                         .toList()
                   : const [
-                      Text('-', style: TextStyle(color: Color(0xFF6C757D))),
+                      Text(
+                        '-',
+                        style: TextStyle(color: MyColors.textSecondary),
+                      ),
                     ],
             ),
 
@@ -2662,7 +2625,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
               'Portfolio Links:',
               style: TextStyle(
                 fontWeight: FontWeight.w600,
-                color: Colors.black,
+                color: MyColors.textPrimary,
               ),
             ),
             if (user['portfolio_links'] != null &&
@@ -2673,7 +2636,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                   child: Text(
                     link,
                     style: const TextStyle(
-                      color: Colors.blue,
+                      color: MyColors.secondary,
                       decoration: TextDecoration.underline,
                     ),
                   ),
@@ -2685,7 +2648,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
               'Social Links:',
               style: TextStyle(
                 fontWeight: FontWeight.w600,
-                color: Colors.black,
+                color: MyColors.textPrimary,
               ),
             ),
             if (user['social_links'] != null &&
@@ -2696,7 +2659,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                   child: Text(
                     link,
                     style: const TextStyle(
-                      color: Colors.blue,
+                      color: MyColors.secondary,
                       decoration: TextDecoration.underline,
                     ),
                   ),
@@ -2712,84 +2675,115 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
               ),
             ),
 
-
-
-
-
-if (services.isNotEmpty)
-  ...services.map(
-    (s) => SizedBox(
-      width: 350,
-      height: 200,
-      child: Card(
-        color: Colors.white, // clean white background
-        elevation: 3, // subtle shadow
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12), // slightly more rounded
-          side: BorderSide(
-            color: Colors.grey.shade300, // thin subtle border
-            width: 1,
-          ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Service',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                  color: Colors.grey.shade800, // subtle dark gray
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                s['title'] ?? '-',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF0A66C2), // primary brand color
-                  fontSize: 16,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Text(
-                    s['description'] ?? '-',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey.shade700, // easy on eyes
-                      height: 1.3, // better line spacing
+            if (services.isNotEmpty)
+              ...services
+                  .map(
+                    (s) => Container(
+                      width: double.infinity, // parent width ke hisaab se
+                      margin: const EdgeInsets.symmetric(
+                        vertical: 8,
+                        horizontal: 12,
+                      ),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: MyColors.divider, // dark surface background
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: MyColors.secondary, width: 1),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(
+                              0.1,
+                            ), // subtle shadow
+                            blurRadius: 6,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Heading with subtle highlighted background
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 6,
+                              horizontal: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: MyColors.primary.withOpacity(
+                                0.15,
+                              ), // soft highlight
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              s['title'] ?? '-',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color:
+                                    MyColors.textPrimary, // premium primary color
+                              ),
+                            ),
+                          ),
+                        //  const SizedBox(height: 3),
+                          // Price
+                          Text(
+                            'PKR ${s['price'] ?? "-"}',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              color:
+                                  MyColors.secondary, // golden accent for price
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          // Description scrollable
+                          ConstrainedBox(
+                            constraints: const BoxConstraints(maxHeight: 200),
+                            child: SingleChildScrollView(
+                              child: Text(
+                                s['description'] ?? '-',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: MyColors
+                                      .textSecondary, // white text for description
+                                  height: 1.4,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'PKR ${s['price'] ?? "-"}',
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF0A66C2),
-                  fontSize: 16,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    ),
-  ).toList(),
-if (services.isEmpty)
-  const Text("", style: TextStyle(color: Colors.grey)),
 
 
-              
+
+                  )
+                  .toList(),
+            if (services.isEmpty)
+              const Text("", style: TextStyle(color: Colors.grey)),
           ],
         ),
     ];
   }
 }
 
+// --- Cover Placeholder Widget ---
+Widget _coverPlaceholder() {
+  return Container(
+    decoration: BoxDecoration(
+      color: const Color(0xFFD9E1F0),
+      borderRadius: const BorderRadius.vertical(bottom: Radius.circular(16)),
+    ),
+    child: const Center(
+      child: Text(
+        'Upload Cover Photo',
+        style: TextStyle(
+          color: Color(0xFF5C74B1),
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    ),
+  );
+}
 

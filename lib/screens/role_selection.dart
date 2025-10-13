@@ -1,42 +1,81 @@
-// 📋 Roadmap for Payment System
+// Stepwise Changes / Improvements Needed
 
-// Backend Preparation
+// Caption Upload Fix
 
-// Create API endpoints: createPaymentIntent, verifyPayment
+// Right now, captions aren’t saving properly.
 
-// Store payment status in database (pending, completed, failed)
+// DB is missing caption insertion when uploading.
 
-// Frontend (Flutter)
+// Also, status.uploaderName shows "Unknown" — need to fix this to fetch from DB correctly.
 
-// Add Razorpay plugin integration for task booking/payment
+// SP-only Upload Button
 
-// Display amount, task details, user wallet/credit info
+// Already partly done (if (widget.isProvider)), but check logic:
 
-// Handle callbacks: success, failure, external cancellation
+// Only Service Providers see the Add button.
 
-// Task-Payment Flow
+// Users should only view, not upload.
 
-// User books a task → amount calculated → payment initiated
+// Vertical Reel PageView
 
-// On payment success → mark task as “paid”
+// Already set PageView.builder with scrollDirection: Axis.vertical.
 
-// Optionally, send notifications to provider & user
+// Enhance it with full-screen display, auto-fit video/image like Instagram.
 
-// Security & Verification
+// Optional: Add swipe animation/indicator if needed.
 
-// Always verify payment from backend (not only frontend)
+// Message/Chat Button
 
-// Store payment ID, signature, and status in DB
+// Add a button linked to the Service Provider’s chat.
 
-// Future Upgrade
+// Ensure the button appears only for users, not providers on their own reels.
 
-// Add Stripe for international users
+// Like / Comment Functionality
 
-// Handle multi-currency
+// Right now, placeholder exists.
 
-// Optional PayPal integration
+// Need backend + UI integration:
 
+// Like: toggle + count
 
+// Comment: open a small modal/input area
 
+// Optional: Persist likes/comments in DB.
 
+// HLS Video Support
 
+// Already using VideoStatusViewer, need to make sure .m3u8 videos load smoothly.
+
+// Ensure auto-play, loop, mute/unmute works like Instagram Reels.
+
+// Uploader Name / Avatar
+
+// Currently shows "Unknown" if null.
+
+// Fetch uploader name + avatar correctly from backend when displaying public reels.
+
+// Progress & Upload Feedback
+
+// Already partially implemented (uploadProgress).
+
+// Improve UI: overlay spinner with percentage + completion message.
+
+// Public/Private Option
+
+// Currently removed, but in future may want private stories.
+
+// For now, make sure all uploads are public.
+
+// Error Handling
+
+// Image/video loading errors should show retry / error icon.
+
+// Also for upload failures, provide toast/snackbar messages.
+
+// Polish Reel UI
+
+// Add subtle gradient overlay at bottom for caption.
+
+// Possibly like/comment/share buttons overlayed like Instagram.
+
+// 💡 Approach:

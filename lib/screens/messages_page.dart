@@ -1,977 +1,584 @@
 
-// // ////////////////////
-
-// // import 'dart:convert';
-// // import 'package:flutter/material.dart';
-// // import 'package:flutter/services.dart';
-// // import 'package:http/http.dart' as http;
-// // import 'package:socket_io_client/socket_io_client.dart' as IO;
-// // import '../helpers/backend.dart';
-// // import 'chat_page.dart';
-
-// // class MessagesPage extends StatefulWidget {
-// //   final int currentUserId;
-
-// //   const MessagesPage({Key? key, required this.currentUserId}) : super(key: key);
-
-// //   @override
-// //   _MessagesPageState createState() => _MessagesPageState();
-// // }
-
-// // class _MessagesPageState extends State<MessagesPage> {
-// //   bool isLoading = true;
-// //   List<dynamic> conversations = [];
-// //   List<dynamic> filteredConversations = [];
-// //   late IO.Socket socket;
-// //   TextEditingController _searchController = TextEditingController();
-
-// //   // Track currently open chat
-// //   int? _currentOpenConversationId;
-
-// //   @override
-// //   void initState() {
-// //     super.initState();
-// //     filteredConversations = conversations;
-// //     _searchController.addListener(_filterChats);
-
-// //     initSocket();
-// //     fetchConversations();
-// //   }
-
-// //   @override
-// //   void dispose() {
-// //     socket.dispose();
-// //     _searchController.dispose();
-// //     super.dispose();
-// //   }
-
-// //   // ------------------- SOCKET.IO -------------------
-// //   void initSocket() {
-// //     socket = IO.io(Backend.baseUrl, <String, dynamic>{
-// //       'transports': ['websocket'],
-// //       'autoConnect': true,
-// //     });
-// //     socket.on('update_conversation_list', (data) {
-// //       final convoId = data['conversation_id'];
-// //       final index = conversations.indexWhere(
-// //         (c) => c['conversation_id'] == convoId,
-// //       );
-// //       if (index != -1) {
-// //         setState(() {
-// //           conversations[index]['last_message'] =
-// //               data['last_message'] ?? conversations[index]['last_message'];
-// //           conversations[index]['last_message_time'] =
-// //               data['last_message_time'] ??
-// //               conversations[index]['last_message_time'];
-// //           conversations[index]['unread_count'] =
-// //               data['unread_count'] ?? conversations[index]['unread_count'];
-// //         });
-// //         _filterChats(); // important for filteredConversations
-// //       }
-// //     });
-
-// //     socket.connect();
-
-// //     socket.onConnect((_) {
-// //       socket.emit('user_online', widget.currentUserId);
-// //     });
-
-// //     // ------------------- NEW MESSAGE -------------------
-// //     socket.on('new_message_notification', (data) {
-// //       final convoId = data['conversationId'];
-// //       final msg = data['message'];
-
-// //       setState(() {
-// //         final index = conversations.indexWhere(
-// //           (c) => c['conversation_id'] == convoId,
-// //         );
-// //         if (index != -1) {
-// //           conversations[index]['last_message'] = msg;
-// //           conversations[index]['last_message_time'] = DateTime.now()
-// //               .toIso8601String();
-
-// //           // Increment only if this chat is NOT currently open
-// //           if (_currentOpenConversationId != convoId) {
-// //             final currentUnread = conversations[index]['unread_count'] ?? 0;
-// //             conversations[index]['unread_count'] = currentUnread + 1;
-// //           }
-// //         } else {
-// //           fetchConversations();
-// //         }
-// //       });
-// //       _filterChats();
-// //     });
-
-// //     // ------------------- NEW CONVERSATION -------------------
-// //     socket.on('new_conversation', (data) {
-// //       setState(() {
-// //         conversations.insert(0, data);
-// //       });
-// //       _filterChats();
-// //     });
-
-// //     // ------------------- RESET UNREAD COUNT -------------------
-// //     socket.on('unread_count_reset', (data) {
-// //       final convoId = data['conversationId'];
-// //       setState(() {
-// //         final index = conversations.indexWhere(
-// //           (c) => c['conversation_id'] == convoId,
-// //         );
-// //         if (index != -1) conversations[index]['unread_count'] = 0;
-// //       });
-// //       _filterChats();
-// //     });
-// //   }
-
-// //   // ------------------- FETCH CONVERSATIONS -------------------
-// //   Future<void> fetchConversations() async {
-// //     setState(() => isLoading = true);
-// //     try {
-// //       final url = Uri.parse(
-// //         "${Backend.baseUrl}/conversations?user_id=${widget.currentUserId}&reset_seen=true",
-// //       );
-
-// //       final response = await http.get(url);
-
-// //       if (response.statusCode == 200) {
-// //         final data = jsonDecode(response.body);
-// //         setState(() {
-// //           conversations = (data['conversations'] as List<dynamic>? ?? [])
-// //               .where((c) => c != null)
-// //               .map((c) {
-// //                 c['unread_count'] = (c['unread_count'] ?? 0);
-// //                 return c;
-// //               })
-// //               .toList();
-// //         });
-// //         _filterChats();
-// //       } else {
-// //         ScaffoldMessenger.of(
-// //           context,
-// //         ).showSnackBar(SnackBar(content: Text('Failed to load conversations')));
-// //       }
-// //     } catch (e) {
-// //       ScaffoldMessenger.of(
-// //         context,
-// //       ).showSnackBar(SnackBar(content: Text('Error: $e')));
-// //     } finally {
-// //       setState(() => isLoading = false);
-// //     }
-// //   }
-
-// //   // ------------------- DELETE CONVERSATION -------------------
-// //   Future<void> deleteConversation(int convoId) async {
-// //     try {
-// //       final url = Uri.parse("${Backend.baseUrl}/conversations/$convoId");
-// //       final response = await http.delete(url);
-
-// //       if (response.statusCode == 200) {
-// //         setState(() {
-// //           conversations.removeWhere((c) => c['conversation_id'] == convoId);
-// //         });
-// //         _filterChats();
-// //       } else {
-// //         ScaffoldMessenger.of(
-// //           context,
-// //         ).showSnackBar(SnackBar(content: Text('Failed to delete chat')));
-// //       }
-// //     } catch (e) {
-// //       ScaffoldMessenger.of(
-// //         context,
-// //       ).showSnackBar(SnackBar(content: Text('Error: $e')));
-// //     }
-// //   }
-
-// //   // ------------------- SEARCH FILTER -------------------
-// //   void _filterChats() {
-// //     final query = _searchController.text.toLowerCase();
-// //     setState(() {
-// //       if (query.isEmpty) {
-// //         filteredConversations = List.from(conversations);
-// //       } else {
-// //         filteredConversations = conversations
-// //             .where(
-// //               (c) => (c['other_user_name'] ?? '').toLowerCase().contains(query),
-// //             )
-// //             .toList();
-// //       }
-// //     });
-// //   }
-
-// //   // ------------------- BUILD CONVERSATION CARD -------------------
-// //   Widget buildConversationCard(dynamic convo) {
-// //     final convoId = convo['conversation_id'] ?? -1;
-// //     final otherUserId = convo['other_user_id'] ?? -1;
-// //     final otherName = convo['other_user_name'] ?? 'Unknown';
-// //     final avatarUrl =
-// //         (convo['other_user_avatar'] != null &&
-// //             convo['other_user_avatar'].toString().isNotEmpty)
-// //         ? "${Backend.baseUrl}/uploads/${convo['other_user_avatar']}"
-// //         : null;
-// //     final isOnline = convo['is_online'] as bool? ?? false;
-// //     final lastSeen = convo['last_seen'] != null
-// //         ? DateTime.tryParse(convo['last_seen'])?.toLocal()
-// //         : null;
-// //     final lastMessage = convo['last_message'] ?? '';
-// //     final createdAt = convo['last_message_time'] != null
-// //         ? DateTime.tryParse(convo['last_message_time'])?.toLocal()
-// //         : null;
-// //     final unreadCount = convo['unread_count'] ?? 0;
-
-// //     return Card(
-// //       margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-// //       child: ListTile(
-// //         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-// //         leading: Stack(
-// //           children: [
-// //             CircleAvatar(
-// //               radius: 25,
-// //               backgroundImage: avatarUrl != null
-// //                   ? NetworkImage(avatarUrl)
-// //                   : null,
-// //               child: avatarUrl == null ? Icon(Icons.person, size: 30) : null,
-// //             ),
-// //             if (isOnline)
-// //               Positioned(
-// //                 bottom: 0,
-// //                 right: 0,
-// //                 child: Container(
-// //                   width: 12,
-// //                   height: 12,
-// //                   decoration: BoxDecoration(
-// //                     color: Colors.green,
-// //                     shape: BoxShape.circle,
-// //                     border: Border.all(color: Colors.white, width: 2),
-// //                   ),
-// //                 ),
-// //               ),
-// //           ],
-// //         ),
-// //         title: Text(
-// //           otherName,
-// //           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-// //         ),
-// //         subtitle: Column(
-// //           crossAxisAlignment: CrossAxisAlignment.start,
-// //           children: [
-// //             if (!isOnline && lastSeen != null)
-// //               Text(
-// //                 'Last seen: ${lastSeen.hour.toString().padLeft(2, '0')}:${lastSeen.minute.toString().padLeft(2, '0')}',
-// //                 style: TextStyle(fontSize: 12, color: Colors.grey),
-// //               ),
-// //             Text(lastMessage, maxLines: 1, overflow: TextOverflow.ellipsis),
-// //           ],
-// //         ),
-// //         trailing: Column(
-// //           mainAxisAlignment: MainAxisAlignment.center,
-// //           children: [
-// //             if (unreadCount > 0)
-// //               Container(
-// //                 padding: EdgeInsets.all(6),
-// //                 decoration: BoxDecoration(
-// //                   color: Colors.red,
-// //                   shape: BoxShape.circle,
-// //                 ),
-// //                 child: Text(
-// //                   '$unreadCount',
-// //                   style: TextStyle(color: Colors.white, fontSize: 12),
-// //                 ),
-// //               ),
-// //             if (createdAt != null) SizedBox(height: 4),
-// //             if (createdAt != null)
-// //               Text(
-// //                 "${createdAt.hour.toString().padLeft(2, '0')}:${createdAt.minute.toString().padLeft(2, '0')}",
-// //                 style: TextStyle(fontSize: 12, color: Colors.grey),
-// //               ),
-// //           ],
-// //         ),
-// //         onTap: () {
-// //           if (convoId == -1 || otherUserId == -1) return;
-
-// //           // Set currently open chat
-// //           _currentOpenConversationId = convoId;
-
-// //           Navigator.push(
-// //             context,
-// //             MaterialPageRoute(
-// //               builder: (_) => ChatPage(
-// //                 conversationId: convoId,
-// //                 currentUserId: widget.currentUserId,
-// //                 otherUserId: otherUserId,
-// //               ),
-// //             ),
-// //           ).then((_) {
-// //             // Clear current open chat
-// //             _currentOpenConversationId = null;
-
-// //             // Join conversation
-// //             socket.emit('join_conversation', [convoId, widget.currentUserId]);
-
-// //             // Mark as read
-// //             // Mark messages as seen (correct backend event)
-// //             socket.emit('mark_messages_seen', {
-// //               'conversationId': convoId,
-// //               'userId': widget.currentUserId,
-// //             });
-
-// //             // Locally reset unread count
-// //             final index = conversations.indexWhere(
-// //               (c) => c['conversation_id'] == convoId,
-// //             );
-// //             if (index != -1) {
-// //               setState(() {
-// //                 conversations[index]['unread_count'] = 0;
-// //               });
-// //               _filterChats();
-// //             }
-// //           });
-// //         },
-// //         onLongPress: () {
-// //           showModalBottomSheet(
-// //             context: context,
-// //             builder: (_) => Wrap(
-// //               children: [
-// //                 ListTile(
-// //                   leading: Icon(Icons.delete),
-// //                   title: Text('Delete Chat'),
-// //                   onTap: () {
-// //                     deleteConversation(convoId);
-// //                     Navigator.pop(context);
-// //                   },
-// //                 ),
-// //                 ListTile(
-// //                   leading: Icon(Icons.copy),
-// //                   title: Text('Copy Last Message'),
-// //                   onTap: () {
-// //                     Clipboard.setData(ClipboardData(text: lastMessage));
-// //                     Navigator.pop(context);
-// //                     ScaffoldMessenger.of(
-// //                       context,
-// //                     ).showSnackBar(SnackBar(content: Text('Message copied')));
-// //                   },
-// //                 ),
-// //               ],
-// //             ),
-// //           );
-// //         },
-// //       ),
-// //     );
-// //   }
-
-// //   // ------------------- BUILD -------------------
-// //   @override
-// //   Widget build(BuildContext context) {
-// //     return Scaffold(
-// //       resizeToAvoidBottomInset: true,
-// //       appBar: AppBar(
-// //         backgroundColor: Colors.white,
-// //         elevation: 1,
-// //         leading: IconButton(
-// //           icon: Icon(Icons.menu, color: Colors.black),
-// //           onPressed: () {},
-// //         ),
-// //         title: Text(
-// //           'Chat_List',
-// //           style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
-// //         ),
-// //         actions: [
-// //           IconButton(
-// //             icon: Icon(Icons.message, color: Colors.teal),
-// //             onPressed: () {},
-// //           ),
-// //           IconButton(
-// //             icon: Icon(Icons.notifications, color: Colors.teal),
-// //             onPressed: () {},
-// //           ),
-// //         ],
-// //       ),
-// //       body: isLoading
-// //           ? Center(child: CircularProgressIndicator())
-// //           : Column(
-// //               children: [
-// //                 // ------------------- SEARCH BAR -------------------
-// //                 Padding(
-// //                   padding: const EdgeInsets.symmetric(
-// //                     horizontal: 12,
-// //                     vertical: 12,
-// //                   ),
-// //                   child: SizedBox(
-// //                     height: 50,
-// //                     child: TextField(
-// //                       controller: _searchController,
-// //                       decoration: InputDecoration(
-// //                         hintText: 'Search chats...',
-// //                         prefixIcon: Icon(Icons.search, color: Colors.grey[700]),
-// //                         filled: true,
-// //                         fillColor: Colors.grey[200],
-// //                         contentPadding: EdgeInsets.symmetric(
-// //                           vertical: 0,
-// //                           horizontal: 16,
-// //                         ),
-// //                         border: OutlineInputBorder(
-// //                           borderRadius: BorderRadius.circular(25),
-// //                           borderSide: BorderSide.none,
-// //                         ),
-// //                       ),
-// //                     ),
-// //                   ),
-// //                 ),
-// //                 // ------------------- CHAT LIST -------------------
-// //                 Expanded(
-// //                   child: filteredConversations.isEmpty
-// //                       ? Center(
-// //                           child: Text(
-// //                             _searchController.text.isEmpty
-// //                                 ? 'No conversations yet'
-// //                                 : 'No conversations found',
-// //                             style: TextStyle(
-// //                               fontSize: 16,
-// //                               color: Colors.grey,
-// //                               fontWeight: FontWeight.w500,
-// //                             ),
-// //                           ),
-// //                         )
-// //                       : RefreshIndicator(
-// //                           onRefresh: fetchConversations,
-// //                           child: ListView.builder(
-// //                             itemCount: filteredConversations.length,
-// //                             itemBuilder: (context, index) =>
-// //                                 buildConversationCard(
-// //                                   filteredConversations[index],
-// //                                 ),
-// //                           ),
-// //                         ),
-// //                 ),
-// //               ],
-// //             ),
-// //     );
-// //   }
-// // }
-
-
-
-// //////////////////////
-// ///
-
-
-
-// ////////////////////
-
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:socket_io_client/socket_io_client.dart' as IO;
-import '../helpers/backend.dart';
+import '../helpers/my_colors.dart';
+import 'notifications_page.dart';
 import 'chat_page.dart';
-import '../widgets/status_widget.dart';
-import 'package:image_picker/image_picker.dart';
-class MessagesPage extends StatefulWidget {
-  final int currentUserId;
 
-  const MessagesPage({Key? key, required this.currentUserId}) : super(key: key);
+import '../helpers/backend.dart';
+import 'status_screen.dart';
+import '../helpers/colors.dart';
+// ---------------- MessagesTab ----------------
+class MessagesTab extends StatefulWidget {
+  final List<dynamic> conversations;
+  final int currentUserId;
+  final Future<void> Function() onRefresh;
+  final IO.Socket socket;
+  final String role;
+  final int unseenNotificationsCount;
+  // add this in MessagesTab
+final void Function(int conversationId)? onConversationSeen;  // 🔹 add this
+
+  MessagesTab({
+    Key? key,
+    required this.conversations,
+    required this.currentUserId,
+    required this.onRefresh,
+    required this.socket,
+    required this.role,
+    this.onConversationSeen, // 🔹 add this
+    required this.unseenNotificationsCount,
+  }) : super(key: key);
 
   @override
-  _MessagesPageState createState() => _MessagesPageState();
+  _MessagesTabState createState() => _MessagesTabState();
 }
 
-class _MessagesPageState extends State<MessagesPage> {
-  bool isLoading = true;
-  List<dynamic> conversations = [];
+
+
+
+
+
+
+String formatChatTime(BuildContext context, String? dateTimeStr) {
+  if (dateTimeStr == null) return '';
+
+  final dateTime = DateTime.parse(dateTimeStr).toLocal(); // convert to local
+  final now = DateTime.now();
+
+  final today = DateTime(now.year, now.month, now.day);
+  final yesterday = today.subtract(Duration(days: 1));
+  final msgDate = DateTime(dateTime.year, dateTime.month, dateTime.day);
+
+  if (msgDate == today) {
+    // Today → show time
+    return TimeOfDay.fromDateTime(dateTime).format(context);
+  } else if (msgDate == yesterday) {
+    return 'Yesterday';
+  } else {
+    // Older → show date
+    return '${dateTime.day.toString().padLeft(2, '0')}/${dateTime.month.toString().padLeft(2, '0')}/${dateTime.year}';
+  }
+}
+
+class _MessagesTabState extends State<MessagesTab> {
   List<dynamic> filteredConversations = [];
-  late IO.Socket socket;
-  TextEditingController _searchController = TextEditingController();
-//bool isProvider = true;
-  // Track currently open chat
-  int? _currentOpenConversationId;
-late StatusController statusController;
+  final TextEditingController _searchController = TextEditingController();
+  bool _isChatsSelected = true;
+  int _localUnseenNotificationsCount = 0;
   @override
   void initState() {
     super.initState();
-    filteredConversations = conversations;
+    filteredConversations = widget.conversations;
     _searchController.addListener(_filterChats);
+     _localUnseenNotificationsCount = widget.unseenNotificationsCount;
+    widget.socket.on('messages_seen', (data) {
+  final seenConversationId = data['conversationId'];
+  setState(() {
+    for (var conv in filteredConversations) {
+      if (conv['conversation_id'] == seenConversationId) {
+        conv['has_been_seen'] = true; // mark green
+      }
+    }
+  });
+});
+///////////////////
 
-    initSocket();
-    fetchConversations();
-    filteredConversations = conversations;
-  _searchController.addListener(_filterChats);
 
-  // Existing socket + fetch logic
-  // initSocket();
-  // fetchConversations();
 
-  // 🔹 Initialize status controller
-  statusController = StatusController(currentUserId: widget.currentUserId);
+// 🔹 Add new_message listener here
+  widget.socket.on('new_message', (data) {
+  final convId = data['conversationId'];
+  final message = data['message'];
+  final createdAt = data['created_at'];
+  final otherUserId = data['other_user_id'];
+  final otherUserName = data['other_user_name'];
+  final otherUserAvatar = data['other_user_avatar'];
+
+  setState(() {
+    // Find conversation
+    final index = filteredConversations.indexWhere(
+      (conv) => conv['conversation_id'] == convId
+    );
+
+    if (index != -1) {
+      // Update existing conversation
+      filteredConversations[index]['last_message'] = message;
+      filteredConversations[index]['last_message_time'] = createdAt;
+      filteredConversations[index]['unread_count'] =
+          (filteredConversations[index]['unread_count'] ?? 0) + 1;
+    } else {
+      // Add new conversation
+      filteredConversations.insert(0, {
+        'conversation_id': convId,
+        'other_user_id': otherUserId,
+        'other_user_name': otherUserName,
+        'other_user_avatar': otherUserAvatar,
+        'last_message': message,
+        'last_message_time': createdAt,
+        'unread_count': 1,
+        'has_been_seen': false,
+      });
+    }
+
+    // Sort so latest message always on top
+    filteredConversations.sort((a, b) {
+      final aTime = a['last_message_time'] != null
+          ? DateTime.parse(a['last_message_time'])
+          : DateTime(2000);
+      final bTime = b['last_message_time'] != null
+          ? DateTime.parse(b['last_message_time'])
+          : DateTime(2000);
+      return bTime.compareTo(aTime);
+    });
+  });
+});
+
+
+
+  }
+
+@override
+  void dispose() {
+    _searchController.dispose();
+    widget.socket.off('messages_seen'); // remove listener
+    super.dispose();
   }
 
   @override
-  void dispose() {
-    socket.dispose();
-    _searchController.dispose();
-    super.dispose();
-  }
-//--------------//
+void didUpdateWidget(covariant MessagesTab oldWidget) {
+  super.didUpdateWidget(oldWidget);
 
-
-  // ------------------- SOCKET.IO -------------------
-  void initSocket() {
-    socket = IO.io(Backend.baseUrl, <String, dynamic>{
-      'transports': ['websocket'],
-      'autoConnect': true,
-    });
-    socket.on('update_conversation_list', (data) {
-      final convoId = data['conversation_id'];
-      final index = conversations.indexWhere(
-        (c) => c['conversation_id'] == convoId,
-      );
-      if (index != -1) {
-        setState(() {
-          conversations[index]['last_message'] =
-              data['last_message'] ?? conversations[index]['last_message'];
-          conversations[index]['last_message_time'] =
-              data['last_message_time'] ??
-              conversations[index]['last_message_time'];
-          conversations[index]['unread_count'] =
-              data['unread_count'] ?? conversations[index]['unread_count'];
-        });
-        _filterChats(); // important for filteredConversations
-      }
-    });
-
-    socket.connect();
-
-    socket.onConnect((_) {
-      socket.emit('user_online', widget.currentUserId);
-    });
-
-    // ------------------- NEW MESSAGE -------------------
-    socket.on('new_message_notification', (data) {
-      final convoId = data['conversationId'];
-      final msg = data['message'];
-
-      setState(() {
-        final index = conversations.indexWhere(
-          (c) => c['conversation_id'] == convoId,
-        );
-        if (index != -1) {
-          conversations[index]['last_message'] = msg;
-          conversations[index]['last_message_time'] = DateTime.now()
-              .toIso8601String();
-
-          // Increment only if this chat is NOT currently open
-          if (_currentOpenConversationId != convoId) {
-            final currentUnread = conversations[index]['unread_count'] ?? 0;
-            conversations[index]['unread_count'] = currentUnread + 1;
-          }
-        } else {
-          fetchConversations();
-        }
-      });
-      _filterChats();
-    });
-
-    // ------------------- NEW CONVERSATION -------------------
-    socket.on('new_conversation', (data) {
-      setState(() {
-        conversations.insert(0, data);
-      });
-      _filterChats();
-    });
-
-    // ------------------- RESET UNREAD COUNT -------------------
-    socket.on('unread_count_reset', (data) {
-      final convoId = data['conversationId'];
-      setState(() {
-        final index = conversations.indexWhere(
-          (c) => c['conversation_id'] == convoId,
-        );
-        if (index != -1) conversations[index]['unread_count'] = 0;
-      });
-      _filterChats();
-    });
-  }
-
-  // ------------------- FETCH CONVERSATIONS -------------------
-  Future<void> fetchConversations() async {
-    setState(() => isLoading = true);
-    try {
-      final url = Uri.parse(
-        "${Backend.baseUrl}/conversations?user_id=${widget.currentUserId}&reset_seen=true",
-      );
-
-      final response = await http.get(url);
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        setState(() {
-          conversations = (data['conversations'] as List<dynamic>? ?? [])
-              .where((c) => c != null)
-              .map((c) {
-                c['unread_count'] = (c['unread_count'] ?? 0);
-                return c;
-              })
-              .toList();
-        });
-        _filterChats();
-      } else {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to load conversations')));
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error: $e')));
-    } finally {
-      setState(() => isLoading = false);
-    }
-  }
-
-  // ------------------- DELETE CONVERSATION -------------------
-  Future<void> deleteConversation(int convoId) async {
-    try {
-      final url = Uri.parse("${Backend.baseUrl}/conversations/$convoId");
-      final response = await http.delete(url);
-
-      if (response.statusCode == 200) {
-        setState(() {
-          conversations.removeWhere((c) => c['conversation_id'] == convoId);
-        });
-        _filterChats();
-      } else {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to delete chat')));
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error: $e')));
-    }
-  }
-
-  // ------------------- SEARCH FILTER -------------------
-  void _filterChats() {
-    final query = _searchController.text.toLowerCase();
+  // ✅ check if unseenNotificationsCount changed
+  if (oldWidget.unseenNotificationsCount != widget.unseenNotificationsCount) {
     setState(() {
-      if (query.isEmpty) {
-        filteredConversations = List.from(conversations);
-      } else {
-        filteredConversations = conversations
-            .where(
-              (c) => (c['other_user_name'] ?? '').toLowerCase().contains(query),
-            )
-            .toList();
-      }
+      _localUnseenNotificationsCount = widget.unseenNotificationsCount;
+    }); // rebuild badge
+  }
+
+  filteredConversations = widget.conversations;
+  _filterChats();
+}
+
+
+  void _filterChats() {
+  final query = _searchController.text.toLowerCase();
+  setState(() {
+    if (query.isEmpty) {
+      filteredConversations = List.from(widget.conversations);
+    } else {
+      filteredConversations = widget.conversations
+          .where((c) => (c['other_user_name'] ?? '').toLowerCase().contains(query))
+          .toList();
+    }
+
+    // 🔹 SORT BY LAST MESSAGE TIME
+    filteredConversations.sort((a, b) {
+      final aTime = a['last_message_time'] != null
+          ? DateTime.parse(a['last_message_time'])
+          : DateTime(2000);
+      final bTime = b['last_message_time'] != null
+          ? DateTime.parse(b['last_message_time'])
+          : DateTime(2000);
+      return bTime.compareTo(aTime);
     });
-  }
+  });
+}
 
-  // ------------------- BUILD CONVERSATION CARD -------------------
-  Widget buildConversationCard(dynamic convo) {
-    final convoId = convo['conversation_id'] ?? -1;
-    final otherUserId = convo['other_user_id'] ?? -1;
-    final otherName = convo['other_user_name'] ?? 'Unknown';
-    final avatarUrl =
-        (convo['other_user_avatar'] != null &&
-            convo['other_user_avatar'].toString().isNotEmpty)
-        ? "${Backend.baseUrl}/uploads/${convo['other_user_avatar']}"
-        : null;
-    final isOnline = convo['is_online'] as bool? ?? false;
-    final lastSeen = convo['last_seen'] != null
-        ? DateTime.tryParse(convo['last_seen'])?.toLocal()
-        : null;
-    final lastMessage = convo['last_message'] ?? '';
-    final createdAt = convo['last_message_time'] != null
-        ? DateTime.tryParse(convo['last_message_time'])?.toLocal()
-        : null;
-    final unreadCount = convo['unread_count'] ?? 0;
-
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        leading: Stack(
-          children: [
-            CircleAvatar(
-              radius: 25,
-              backgroundImage: avatarUrl != null
-                  ? NetworkImage(avatarUrl)
-                  : null,
-              child: avatarUrl == null ? Icon(Icons.person, size: 30) : null,
-            ),
-            if (isOnline)
-              Positioned(
-                bottom: 0,
-                right: 0,
-                child: Container(
-                  width: 12,
-                  height: 12,
-                  decoration: BoxDecoration(
-                    color: Colors.green,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 2),
-                  ),
-                ),
-              ),
-          ],
-        ),
-        title: Text(
-          otherName,
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (!isOnline && lastSeen != null)
-              Text(
-                'Last seen: ${lastSeen.hour.toString().padLeft(2, '0')}:${lastSeen.minute.toString().padLeft(2, '0')}',
-                style: TextStyle(fontSize: 12, color: Colors.grey),
-              ),
-            Text(lastMessage, maxLines: 1, overflow: TextOverflow.ellipsis),
-          ],
-        ),
-        trailing: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (unreadCount > 0)
-              Container(
-                padding: EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: Colors.red,
-                  shape: BoxShape.circle,
-                ),
-                child: Text(
-                  '$unreadCount',
-                  style: TextStyle(color: Colors.white, fontSize: 12),
-                ),
-              ),
-            if (createdAt != null) SizedBox(height: 4),
-            if (createdAt != null)
-              Text(
-                "${createdAt.hour.toString().padLeft(2, '0')}:${createdAt.minute.toString().padLeft(2, '0')}",
-                style: TextStyle(fontSize: 12, color: Colors.grey),
-              ),
-          ],
-        ),
-        onTap: () {
-          if (convoId == -1 || otherUserId == -1) return;
-
-          // Set currently open chat
-          _currentOpenConversationId = convoId;
-
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => ChatPage(
-                conversationId: convoId,
-                currentUserId: widget.currentUserId,
-                otherUserId: otherUserId,
-              ),
-            ),
-          ).then((_) {
-            // Clear current open chat
-            _currentOpenConversationId = null;
-
-            // Join conversation
-            socket.emit('join_conversation', [convoId, widget.currentUserId]);
-
-            // Mark as read
-            // Mark messages as seen (correct backend event)
-            socket.emit('mark_messages_seen', {
-              'conversationId': convoId,
-              'userId': widget.currentUserId,
-            });
-
-            // Locally reset unread count
-            final index = conversations.indexWhere(
-              (c) => c['conversation_id'] == convoId,
-            );
-            if (index != -1) {
-              setState(() {
-                conversations[index]['unread_count'] = 0;
-              });
-              _filterChats();
-            }
-          });
-        },
-        onLongPress: () {
-          showModalBottomSheet(
-            context: context,
-            builder: (_) => Wrap(
-              children: [
-                ListTile(
-                  leading: Icon(Icons.delete),
-                  title: Text('Delete Chat'),
-                  onTap: () {
-                    deleteConversation(convoId);
-                    Navigator.pop(context);
-                  },
-                ),
-                ListTile(
-                  leading: Icon(Icons.copy),
-                  title: Text('Copy Last Message'),
-                  onTap: () {
-                    Clipboard.setData(ClipboardData(text: lastMessage));
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(
-                      context,
-                    ).showSnackBar(SnackBar(content: Text('Message copied')));
-                  },
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  // ------------------- BUILD -------------------
+int unseenNotificationsCount = 0;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      resizeToAvoidBottomInset: true,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 1,
-        leading: IconButton(
-          icon: Icon(Icons.menu, color: Colors.black),
-          onPressed: () {},
-        ),
-        title: Text(
-          'Chat_List',
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
-        ),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.message, color: Colors.teal),
-            onPressed: () {},
+      backgroundColor: MyColors.background,
+
+    appBar: PreferredSize(
+  preferredSize: const Size.fromHeight(70),
+  child: AppBar(
+    backgroundColor: MyColors.surface,
+
+    elevation: 6,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
+    ),
+    titleSpacing: 16,
+    title: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween, // left + right
+      children: [
+        // Left: My Chats
+        GestureDetector(
+          onTap: () => setState(() => _isChatsSelected = true),
+          child: Text(
+            "My Chats",
+            style: TextStyle(
+              color: _isChatsSelected ? Colors.white : Colors.white70,
+              fontWeight: FontWeight.bold,
+              fontSize: 20,
+            ),
           ),
-          IconButton(
-            icon: Icon(Icons.notifications, color: Colors.teal),
-            onPressed: () {},
+        ),
+
+        // Right: Notifications icon with badge
+        Stack(
+          children: [
+           IconButton(
+  icon: Icon(Icons.notifications_none, color: Colors.white, size: 28),
+  onPressed: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => NotificationsPage(
+          userId: widget.currentUserId,
+          role: widget.role,
+        ),
+      ),
+    ).then((_) {
+      // Reset local count when user comes back
+      setState(() {
+        _localUnseenNotificationsCount = 0;
+      });
+    });
+  },
+),
+
+
+            if (_localUnseenNotificationsCount > 0)
+  Positioned(
+    right: 6,
+    top: 6,
+    child: Container(
+      width: 14,
+      height: 14,
+      decoration: BoxDecoration(
+        color: Colors.red,
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.white, width: 2),
+      ),
+      child: Center(
+        child: Text(
+          '$_localUnseenNotificationsCount',
+          style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
+        ),
+      ),
+    ),
+  ),
+
+          ],
+        ),
+      ],
+    ),
+  ),
+),
+      body: Column(
+  children: [
+    // Search Bar
+    Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      child: TextField(
+        controller: _searchController,
+        style: const TextStyle(
+          color: MyColors.textPrimary,
+          fontWeight: FontWeight.w500,
+        ),
+        decoration: InputDecoration(
+          hintText: 'Search chats...',
+          hintStyle: const TextStyle(color: MyColors.textSecondary),
+         prefixIcon: const Icon(Icons.search, color: MyColors.textSecondary),
+          filled: true,
+          fillColor: MyColors.inputFill,
+          contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
+         border: OutlineInputBorder(
+    borderRadius: BorderRadius.circular(25),
+    borderSide: BorderSide.none,
+  ),
+  focusedBorder: OutlineInputBorder(
+    borderRadius: BorderRadius.circular(25),
+    borderSide: const BorderSide(color: MyColors.inputFocusedBorder, width: 2),
+  ),
+        ),
+      ),
+    ),
+
+    // Chat List / Status
+    Expanded(
+      child: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 300),
+        transitionBuilder: (child, animation) {
+          return SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(1, 0),
+              end: Offset.zero,
+            ).animate(animation),
+            child: child,
+          );
+        },
+        child: _isChatsSelected
+            ? RefreshIndicator(
+                key: const ValueKey('chats'),
+                onRefresh: widget.onRefresh,
+                color: MyColors.primary,
+                child: filteredConversations.isEmpty
+                    ? ListView(
+                        children: [
+                          Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(20),
+                              child: Text(
+                                widget.conversations.isEmpty
+                                    ? 'No conversations yet'
+                                    : 'No results found',
+                                style: TextStyle(fontSize: 16, color: MyColors.textSecondary),
+
+                              ),
+                            ),
+                          )
+                        ],
+                      )
+                    :ListView.builder(
+  itemCount: filteredConversations.length,
+  itemBuilder: (context, index) {
+    final conv = filteredConversations[index];
+    final convoId = conv['conversation_id'];
+    if (convoId == null) return SizedBox();
+
+    final otherName = conv['other_user_name'] ?? 'Unknown';
+    final otherAvatar = conv['other_user_avatar'];
+    final lastMessage = conv['last_message'] ?? '';
+    final unreadCount = conv['unread_count'] ?? 0;
+
+    // 🔹 Example: color logic for last message text
+    // 🔹 Message color logic
+//final unreadCount = conv['unread_count'] ?? 0;
+final hasBeenSeen = conv['has_been_seen'] ?? false; // backend/socket
+Color messageColor;
+
+if (unreadCount > 0) {
+  messageColor = Colors.red; // unread by you
+} else if (hasBeenSeen) {
+  messageColor = Colors.green; // receiver has seen
+} else {
+  messageColor = MyColors.textSecondary; // dark blue = new chat
+}
+
+
+
+                        return GestureDetector(
+  onTap: () async {
+    final otherUserId = conv['other_user_id'] ?? conv['provider_id'] ?? -1;
+    if (otherUserId == -1) return;
+
+    // Open Chat Page
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ChatPage(
+          conversationId: convoId,
+          currentUserId: widget.currentUserId,
+          otherUserId: otherUserId,
+        ),
+      ),
+    );
+setState(() {
+  conv['unread_count'] = 0;
+});
+
+// 2️⃣ Emit socket event
+try {
+  widget.socket.emit('mark_messages_seen', {
+    'conversationId': convoId,
+    'userId': widget.currentUserId,
+  });
+} catch (e) {
+  debugPrint("Socket error: $e");
+}
+
+// 3️⃣ Backend API call
+try {
+  await http.post(
+    Uri.parse("${Backend.baseUrl}/conversations/$convoId/seen"),
+    body: jsonEncode({'user_id': widget.currentUserId}),
+    headers: {"Content-Type": "application/json"},
+  );
+} catch (e) {
+  debugPrint("Error marking conversation seen: $e");
+}
+
+// 4️⃣ Update badge
+widget.onConversationSeen?.call(convoId);
+
+  },
+
+
+
+
+  child: Container(
+    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+    color: Colors.transparent,
+   child: Row(
+  children: [
+    // 🟢 Premium Avatar with Initial + Glow Ring
+// 🟢 Premium Avatar with Initial + Glow Ring
+Container(
+  padding: const EdgeInsets.all(2.5), // glowing border thickness
+  decoration: BoxDecoration(
+    shape: BoxShape.circle,
+    gradient: LinearGradient(
+      colors: [
+        Colors.blueAccent.withOpacity(0.9),
+        Colors.purpleAccent.withOpacity(0.9),
+      ],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    ),
+  ),
+  child: ClipOval(
+    child: Container(
+      color: _getColorFromName(otherName),
+      child: (otherAvatar != null && otherAvatar.toString().isNotEmpty)
+          ? Image.network(
+              "${Backend.baseUrl}/$otherAvatar",
+              fit: BoxFit.cover,
+              width: 56,
+              height: 56,
+              errorBuilder: (context, error, stackTrace) => _buildInitialAvatar(otherName),
+            )
+          : _buildInitialAvatar(otherName),
+    ),
+  ),
+),
+
+    SizedBox(width: 12),
+    Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            otherName,
+            style: TextStyle(
+              color: MyColors.textPrimary,
+
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+            ),
+          ),
+          SizedBox(height: 4),
+          Text(
+            lastMessage,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: messageColor,
+              fontSize: 14,
+            ),
           ),
         ],
       ),
-      body: isLoading
-          ? Center(child: CircularProgressIndicator())
-          : Column(
-              children: [
-                // ------------------- SEARCH BAR -------------------
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 12,
-                  ),
-                  child: SizedBox(
-                    height: 50,
-                    child: TextField(
-                      controller: _searchController,
-                      decoration: InputDecoration(
-                        hintText: 'Search chats...',
-                        prefixIcon: Icon(Icons.search, color: Colors.grey[700]),
-                        filled: true,
-                        fillColor: Colors.grey[200],
-                        contentPadding: EdgeInsets.symmetric(
-                          vertical: 0,
-                          horizontal: 16,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(25),
-                          borderSide: BorderSide.none,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
+    ),
+    SizedBox(width: 8),
+    // 🔹 Add formatted time here
+   Text(
+  formatChatTime(context, conv['last_message_time']),
+  style: TextStyle(
+    color: MyColors.textSecondary,
 
-                // ------------------- STATUS CIRCLES -------------------
-Container(
-  height: 80,
-  child: AnimatedBuilder(
-    animation: statusController,
-    builder: (context, _) {
-      if (statusController.statuses.isEmpty) {
-        return Center(child: Text('No statuses yet'));
-      }
-      return ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: statusController.statuses.length,
-        itemBuilder: (context, index) {
-          final status = statusController.statuses[index];
-          return Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: StatusCircle(
-              status: status,
-             onTap: () => showStatusViewer(context, status, statusController),
-
-            ),
-          );
-        },
-      );
-    },
+    fontSize: 12,
   ),
+),
+
+    if (unreadCount > 0) ...[
+      SizedBox(width: 8),
+      Container(
+        padding: EdgeInsets.all(6),
+        decoration: BoxDecoration(
+          color: MyColors.error,
+
+          shape: BoxShape.circle,
+        ),
+        child: Text(
+          '$unreadCount',
+          style: TextStyle(color: Colors.white, fontSize: 12),
+        ),
+      ),
+    ],
+  ],
 ),
 
 
 
-                // ------------------- CHAT LIST -------------------
-                Expanded(
-                  child: filteredConversations.isEmpty
-                      ? Center(
-                          child: Text(
-                            _searchController.text.isEmpty
-                                ? 'No conversations yet'
-                                : 'No conversations found',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.grey,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        )
-                      : RefreshIndicator(
-                          onRefresh: fetchConversations,
-                          child: ListView.builder(
-                            itemCount: filteredConversations.length,
-                            itemBuilder: (context, index) =>
-                                buildConversationCard(
-                                  filteredConversations[index],
-                                ),
-                          ),
-                        ),
-                ),
-              ],
-            ),
-    //         floatingActionButton: isProvider
-    // ? FloatingActionButton(
-    //     child: Icon(Icons.add_a_photo),
-    //     onPressed: () async {
-    //       final filePath = await pickFile();
-    //       if (filePath != null) {
-    //         await statusController.uploadStatus(filePath, 'image');
-    //       }
-    //     },
-    //   )
-    // : null,
 
+  ),
+);                     
+                        },
+                      ),
+              )
+
+            : StatusPage(
+                key: const ValueKey('status'),
+                currentUserId: widget.currentUserId,
+                isProvider: widget.role == "provider",
+              ),
+      ),
+    ),
+  ],
+    
+      )
 
     );
   }
+
+
+
+
+
+  // 🔹 Generate consistent random color from name
+Color _getColorFromName(String name) {
+  final colors = [
+    Colors.deepPurple,
+    Colors.teal,
+    Colors.indigo,
+    Colors.orange,
+    Colors.pinkAccent,
+    Colors.cyan,
+    Colors.blueGrey,
+    Colors.deepOrangeAccent,
+    Colors.green,
+    Colors.redAccent,
+  ];
+
+  if (name.isEmpty) return Colors.grey;
+  int hash = name.codeUnits.fold(0, (prev, elem) => prev + elem);
+  return colors[hash % colors.length];
 }
 
-Future<String?> pickFile() async {
-  // image_picker package use karenge
-  try {
-    final ImagePicker picker = ImagePicker();
-    final XFile? pickedFile = await picker.pickImage(
-      source: ImageSource.gallery,
-    );
-    if (pickedFile != null) {
-      return pickedFile.path;
-    }
-  } catch (e) {
-    print("Error picking file: $e");
-  }
-  return null;
+
+
+
+Widget _buildInitialAvatar(String name) {
+  final initial = name.isNotEmpty ? name.trim()[0].toUpperCase() : '?';
+  final letterColor = _getColorFromName(name); // random stylish color per user
+  
+  return Container(
+    width: 56,
+    height: 56,
+    alignment: Alignment.center,
+    decoration: BoxDecoration(
+      color: MyColors.surface, // ✅ background fixed
+      shape: BoxShape.circle,
+    ),
+    child: Text(
+      initial,
+      style: TextStyle(
+        color: letterColor, // ✅ first letter color changes dynamically
+        fontWeight: FontWeight.bold,
+        fontSize: 22,
+      ),
+    ),
+  );
 }
+
+
+}
+
+

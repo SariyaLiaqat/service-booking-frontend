@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../helpers/backend.dart';
+import '../helpers/my_colors.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
   final String token; // Token from email link
@@ -23,7 +24,10 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       labelText: label,
       filled: true,
       fillColor: const Color(0xFFE6F0FA),
-      labelStyle: const TextStyle(color: Color(0xFF0A66C2), fontWeight: FontWeight.w600),
+      labelStyle: const TextStyle(
+        color: Color(0xFF0A66C2),
+        fontWeight: FontWeight.w600,
+      ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
@@ -53,7 +57,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({
           "token": widget.token,
-          "password": passwordController.text.trim(),
+          "newPassword": passwordController.text.trim(), // <-- changed key
         }),
       );
 
@@ -76,9 +80,9 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: ${e.toString()} ❌")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Error: ${e.toString()} ❌")));
     } finally {
       setState(() => isLoading = false);
     }
@@ -88,8 +92,8 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Reset Password"),
-        backgroundColor: const Color(0xFF0A66C2),
+        title: const Text("Reset Password",style: TextStyle(color: MyColors.textPrimary),),
+        backgroundColor: MyColors.background,
       ),
       body: Center(
         child: SingleChildScrollView(
@@ -109,9 +113,13 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                   decoration: _inputDecoration("New Password"),
                   obscureText: true,
                   validator: (val) {
-                    if (val == null || val.isEmpty) return "Please enter a password";
-                    if (val.length < 8) return "Password must be at least 8 characters";
-                    if (!RegExp(r'^(?=.*[A-Z])(?=.*\d)(?=.*[!@#\$&*~]).{8,}$').hasMatch(val)) {
+                    if (val == null || val.isEmpty)
+                      return "Please enter a password";
+                    if (val.length < 8)
+                      return "Password must be at least 8 characters";
+                    if (!RegExp(
+                      r'^(?=.*[A-Z])(?=.*\d)(?=.*[!@#\$&*~]).{8,}$',
+                    ).hasMatch(val)) {
                       return "Include 1 uppercase, 1 number & 1 special character";
                     }
                     return null;
@@ -123,22 +131,26 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                   decoration: _inputDecoration("Confirm Password"),
                   obscureText: true,
                   validator: (val) {
-                    if (val == null || val.isEmpty) return "Please confirm your password";
-                    if (val != passwordController.text) return "Passwords do not match";
+                    if (val == null || val.isEmpty)
+                      return "Please confirm your password";
+                    if (val != passwordController.text)
+                      return "Passwords do not match";
                     return null;
                   },
                 ),
                 const SizedBox(height: 24),
                 isLoading
                     ? const CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF0A66C2)),
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          MyColors.primary,
+                        ),
                       )
                     : SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
                           onPressed: resetPassword,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF0A66C2),
+                            backgroundColor: MyColors.background,
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -146,7 +158,11 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                           ),
                           child: const Text(
                             "Reset Password",
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: MyColors.buttonText
+                            ),
                           ),
                         ),
                       ),

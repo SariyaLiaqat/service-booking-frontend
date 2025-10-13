@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../helpers/backend.dart';
-
+import '../helpers/my_colors.dart';
 class ForgotPasswordScreen extends StatefulWidget {
   @override
   _ForgotPasswordScreenState createState() => _ForgotPasswordScreenState();
@@ -84,8 +84,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Forgot Password"),
-        backgroundColor: const Color(0xFF0A66C2),
+        title: const Text("Forgot Password",style: TextStyle(color: MyColors.buttonText),),
+        backgroundColor: MyColors.background
       ),
       body: Center(
         child: SingleChildScrollView(
@@ -115,14 +115,14 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 const SizedBox(height: 24),
                 isLoading
                     ? const CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF0A66C2)),
+                        valueColor: AlwaysStoppedAnimation<Color>(MyColors.primary),
                       )
                     : SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
                           onPressed: sendResetLink,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF0A66C2),
+                            backgroundColor: MyColors.background,
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -130,7 +130,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                           ),
                           child: const Text(
                             "Send Reset Link",
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold,color: MyColors.buttonText),
                           ),
                         ),
                       ),

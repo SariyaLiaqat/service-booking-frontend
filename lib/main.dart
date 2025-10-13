@@ -78,13 +78,54 @@ import 'package:app_links/app_links.dart';
 import 'dart:async';
 import 'dart:core';
 // Import your screens
-import 'screens/signup.dart';
+//import 'screens/signup.dart';
 import 'screens/reset-password.dart';
 import 'helpers/backend.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'screens/splashScreen.dart';
+
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp();
+
+  final notification = message.notification;
+  if (notification != null) {
+    const AndroidNotificationDetails androidDetails =
+        AndroidNotificationDetails(
+          'default_channel', // same channel as in Node.js & manifest
+          'Default Notifications',
+          importance: Importance.high,
+          priority: Priority.high,
+        );
+
+    const NotificationDetails platformDetails = NotificationDetails(
+      android: androidDetails,
+    );
+
+    // 🔹 Show notification even if app is in background/terminated
+    await FlutterLocalNotificationsPlugin().show(
+      notification.hashCode,
+      notification.title,
+      notification.body,
+      platformDetails,
+    );
+  }
+
+  print("💬 Background message received: ${message.notification?.title}");
+}
+
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+    FlutterLocalNotificationsPlugin();
+
+const AndroidNotificationChannel defaultChannel = AndroidNotificationChannel(
+  'default_channel', // 👈 must match AndroidManifest & Node.js
+  'Default Notifications',
+  description: 'Used for general notifications.',
+  importance: Importance.high,
+);
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   // Firebase initialization
   if (kIsWeb) {
     await Firebase.initializeApp(
@@ -102,9 +143,48 @@ Future<void> main() async {
     await Firebase.initializeApp();
   }
 
-  // FCM token handling
+  // 💥 CREATE Notification Channel for Android
+  await flutterLocalNotificationsPlugin
+      .resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin
+      >()
+      ?.createNotificationChannel(defaultChannel);
+
+  // 💥 Initialize local notifications
+  const AndroidInitializationSettings initializationSettingsAndroid =
+      AndroidInitializationSettings('@mipmap/ic_launcher');
+  const InitializationSettings initializationSettings = InitializationSettings(
+    android: initializationSettingsAndroid,
+  );
+  await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+
+  // 💥 Ask for notification permission
   FirebaseMessaging messaging = FirebaseMessaging.instance;
   await messaging.requestPermission();
+
+  // 💥 Handle foreground messages (so they appear while app is open)
+  FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+    final notification = message.notification;
+    if (notification != null) {
+      flutterLocalNotificationsPlugin.show(
+        notification.hashCode,
+        notification.title,
+        notification.body,
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'default_channel', // same id everywhere
+            'Default Notifications',
+            importance: Importance.high,
+            priority: Priority.high,
+            icon: '@mipmap/ic_launcher',
+          ),
+        ),
+      );
+    }
+  });
+  // FCM token handling
+  // FirebaseMessaging messaging = FirebaseMessaging.instance;
+  //await messaging.requestPermission();
   String? token = await messaging.getToken();
   print("FCM Token: $token");
 
@@ -137,6 +217,7 @@ class _MyAppState extends State<MyApp> {
   // Declaration is fine: late AppLinks _appLinks;
   late AppLinks _appLinks;
   StreamSubscription? _sub;
+  final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
   @override
   void initState() {
@@ -146,30 +227,29 @@ class _MyAppState extends State<MyApp> {
     initDeepLinkListener();
   }
 
- void initDeepLinkListener() async {
-  _appLinks = AppLinks(); // Initialize the AppLinks object
+  void initDeepLinkListener() async {
+    // _appLinks = AppLinks(); // Initialize the AppLinks object
 
-  // Handle app opened from terminated state
-  try {
-    final initialUri = await _appLinks.getInitialLink(); // returns Uri?
-    if (initialUri != null) {
-      handleDeepLink(initialUri);
+    // Handle app opened from terminated state
+    try {
+      final initialUri = await _appLinks.getInitialLink(); // returns Uri?
+      if (initialUri != null) {
+        handleDeepLink(initialUri);
+      }
+    } catch (e) {
+      print("Error getting initial link: $e");
     }
-  } catch (e) {
-    print("Error getting initial link: $e");
+
+    // Handle app opened while in background or foreground
+    _sub = _appLinks.uriLinkStream.listen(
+      (Uri? uri) {
+        if (uri != null) handleDeepLink(uri);
+      },
+      onError: (err) {
+        print("Deep link error: $err");
+      },
+    );
   }
-
-  // Handle app opened while in background or foreground
-  _sub = _appLinks.uriLinkStream.listen(
-    (Uri? uri) {
-      if (uri != null) handleDeepLink(uri);
-    },
-    onError: (err) {
-      print("Deep link error: $err");
-    },
-  );
-}
-
 
   // ... rest of the class remains the same ...
 
@@ -177,8 +257,7 @@ class _MyAppState extends State<MyApp> {
     if (uri.host == 'resetpassword') {
       final token = uri.queryParameters['token'];
       if (token != null) {
-        Navigator.push(
-          context,
+        navigatorKey.currentState?.push(
           MaterialPageRoute(builder: (_) => ResetPasswordScreen(token: token)),
         );
       }
@@ -194,11 +273,12 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: navigatorKey,
       title: 'Service Provider App',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: SignupScreen(),
+      home: SplashScreen(),
       debugShowCheckedModeBanner: false,
     );
   }

@@ -11,7 +11,7 @@ import 'forgot_password.dart';
 import 'home_screen.dart';
 import 'signup.dart';
 import '../helpers/backend.dart';
-
+import '../helpers/my_colors.dart';
 class LoginScreen extends StatefulWidget {
   @override
   _LoginScreenState createState() => _LoginScreenState();
@@ -98,33 +98,43 @@ bool _obscurePassword = true; // add this at top of your _LoginScreenState
   return InputDecoration(
     labelText: label,
     filled: true,
-    fillColor: const Color(0xFFE6F0FA), // Soft light LinkedIn-ish background
+    fillColor: MyColors.surface, // same as signup
+
     labelStyle: const TextStyle(
-      color: Color(0xFF0A66C2), // Dark LinkedIn blue for label
-      fontWeight: FontWeight.w600,
+      color: Colors.white70,
+      fontWeight: FontWeight.w500,
+      fontSize: 13,
     ),
-    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+
+    // Rounded soft look
     border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(16),
       borderSide: BorderSide.none,
-    ),
-    focusedBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(16),
-      borderSide: const BorderSide(color: Color(0xFF0A66C2), width: 2),
+      borderRadius: BorderRadius.circular(14),
     ),
     enabledBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(16),
-      borderSide: const BorderSide(color: Color(0xFFB0C4DE), width: 1), // subtle border
+      borderSide: BorderSide.none,
+      borderRadius: BorderRadius.circular(14),
     ),
-    floatingLabelBehavior: FloatingLabelBehavior.always,
+    focusedBorder: OutlineInputBorder(
+      borderSide: BorderSide.none,
+      borderRadius: BorderRadius.circular(14),
+    ),
+
+    contentPadding: const EdgeInsets.symmetric(
+      horizontal: 16,
+      vertical: 14,
+    ),
   );
 }
+
+
 
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFFFFFF), // White background
+      backgroundColor: MyColors.background,
+ // White background
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
@@ -133,16 +143,23 @@ bool _obscurePassword = true; // add this at top of your _LoginScreenState
             child: Column(
               children: [
                 // Top SVG Image
-                SvgPicture.asset('assets/svg/login.svg', height: 150),
-                const SizedBox(height: 20),
-                const Text(
-                  "Welcome Back",
-                  style: TextStyle(
-                    color: Color(0xFF0A66C2),
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                // SvgPicture.asset('assets/svg/login.svg', height: 150),
+                // const SizedBox(height: 20),
+               ShaderMask(
+  shaderCallback: (bounds) => const LinearGradient(
+    colors: [MyColors.primary, Colors.purpleAccent],
+  ).createShader(bounds),
+  child: const Text(
+    "Welcome Back",
+    style: TextStyle(
+      color: Colors.white,
+      fontSize: 28,
+      fontWeight: FontWeight.bold,
+      letterSpacing: 0.8,
+    ),
+  ),
+),
+
                 const SizedBox(height: 25),
 
                 // Email Field
@@ -150,7 +167,8 @@ bool _obscurePassword = true; // add this at top of your _LoginScreenState
   controller: emailController,
   decoration: _inputDecoration("Email"),
   keyboardType: TextInputType.emailAddress,
-  style: const TextStyle(color: Color(0xFF0A66C2)),
+ style: const TextStyle(color: Colors.white),
+
   validator: (val) {
     if (val == null || val.isEmpty) {
       return "Enter email";
@@ -177,7 +195,8 @@ bool _obscurePassword = true; // add this at top of your _LoginScreenState
     suffixIcon: IconButton(
       icon: Icon(
         _obscurePassword ? Icons.visibility_off : Icons.visibility,
-        color: const Color(0xFF0A66C2),
+        color: MyColors.primary,
+
       ),
       onPressed: () {
         setState(() {
@@ -187,7 +206,8 @@ bool _obscurePassword = true; // add this at top of your _LoginScreenState
     ),
   ),
   obscureText: _obscurePassword,
-  style: const TextStyle(color: Color(0xFF0A66C2)),
+  style: const TextStyle(color: MyColors.textPrimary),
+
   validator: (val) {
     if (val == null || val.isEmpty) {
       return "Enter password";
@@ -210,12 +230,13 @@ Align(
       );
     },
     child: const Text(
-      "Forgot Password?",
-      style: TextStyle(
-        color: Color(0xFF0A66C2),
-        fontWeight: FontWeight.w600,
-      ),
-    ),
+  "Forgot Password?",
+  style: TextStyle(
+    color: MyColors.primary,
+    fontWeight: FontWeight.w600,
+  ),
+),
+
   ),
 ),
 const SizedBox(height: 16),
@@ -227,31 +248,37 @@ const SizedBox(height: 16),
                 isLoading
                     ? const CircularProgressIndicator(
                         valueColor: AlwaysStoppedAnimation<Color>(
-                          Color(0xFF0A66C2),
+                          MyColors.primary,
                         ),
                       )
                     : SizedBox(
-  width: double.infinity,
+ width: double.infinity,
   child: ElevatedButton(
-    onPressed: login,
-    style: ElevatedButton.styleFrom(
-      padding: const EdgeInsets.symmetric(vertical: 16),
-      backgroundColor: const Color(0xFF0A66C2), // LinkedIn premium blue
-      foregroundColor: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-      elevation: 4, // Slight shadow for premium feel
-    ),
-    child: const Text(
-      "Login",
-      style: TextStyle(
-        fontSize: 18,
-        fontWeight: FontWeight.bold,
-        letterSpacing: 0.5, // Premium subtle touch
+  onPressed: login,
+  style: ElevatedButton.styleFrom(
+    padding: const EdgeInsets.symmetric(vertical: 16),
+    backgroundColor: MyColors.buttonBackground,
+    foregroundColor: Colors.white,
+    elevation: 8,
+    shadowColor: MyColors.primary.withOpacity(0.3),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(22), // 👈 smoother round corners
+      side: const BorderSide(
+        color: MyColors.secondary, // 👈 thin subtle border
+        width: 1.2,
       ),
     ),
   ),
+  child: const Text(
+    "Login",
+    style: TextStyle(
+      fontSize: 18,
+      fontWeight: FontWeight.bold,
+      letterSpacing: 0.6,
+    ),
+  ),
+),
+
 ),
 
                 const SizedBox(height: 20),
@@ -263,7 +290,7 @@ const SizedBox(height: 16),
     const Text(
       "Don't have an account? ",
       style: TextStyle(
-        color: Color(0xFF5C74B1), // Soft light LinkedIn blue
+        color: MyColors.textSecondary, // Soft light LinkedIn blue
         fontWeight: FontWeight.w500,
         fontSize: 16,
       ),
@@ -278,11 +305,11 @@ const SizedBox(height: 16),
       child: const Text(
         "Sign Up",
         style: TextStyle(
-          color: Color(0xFF0A66C2), // Dark LinkedIn premium blue
+          color: MyColors.primary, // Dark LinkedIn premium blue
           fontWeight: FontWeight.bold,
           fontSize: 16,
           decoration: TextDecoration.underline,
-          decorationColor: Color(0xFF0A66C2),
+          decorationColor:MyColors.primary,
           decorationThickness: 2,
         ),
       ),
