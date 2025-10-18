@@ -568,12 +568,11 @@ void fetchUnseenCount() async {
       ),
       MessagesTab(
         //   key: ValueKey(unseenNotificationsCount), // 🔹 add this
-        conversations: conversations,
-        currentUserId: widget.userData['id'] ?? -1,
-        onRefresh: fetchConversations,
-        socket: socket,
-        role: widget.role,
-        unseenNotificationsCount: unseenNotificationsCount,
+         conversations: conversations,
+  currentUserId: widget.userData['id'] ?? -1,
+  onRefresh: fetchConversations,
+  role: widget.role,
+  unseenNotificationsCount: unseenNotificationsCount,
         onConversationSeen: (conversationId) {
           // 🔹 Add this
           setState(() {

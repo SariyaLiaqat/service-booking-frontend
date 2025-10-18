@@ -34,6 +34,31 @@
                 <category android:name="android.intent.category.BROWSABLE"/>
                 <data android:scheme="myapp" android:host="resetpassword"/>
             </intent-filter>
+
+            <!-- Deep link for provider payment -->
+<intent-filter>
+    <action android:name="android.intent.action.VIEW" />
+    <category android:name="android.intent.category.DEFAULT" />
+    <category android:name="android.intent.category.BROWSABLE" />
+    <data android:scheme="myapp" android:host="payment" />
+</intent-filter>
+
+<!-- Deep link for document upload -->
+<intent-filter>
+    <action android:name="android.intent.action.VIEW" />
+    <category android:name="android.intent.category.DEFAULT" />
+    <category android:name="android.intent.category.BROWSABLE" />
+    <data android:scheme="myapp" android:host="documents" />
+</intent-filter>
+
+<!-- Deep link for provider status -->
+<intent-filter>
+    <action android:name="android.intent.action.VIEW" />
+    <category android:name="android.intent.category.DEFAULT" />
+    <category android:name="android.intent.category.BROWSABLE" />
+    <data android:scheme="myapp" android:host="status" />
+</intent-filter>
+
            
         </activity>
                 
