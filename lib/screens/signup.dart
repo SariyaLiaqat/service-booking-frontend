@@ -1,5 +1,13 @@
+
+
+
+
+
+
+
+
+
 // import 'package:flutter/material.dart';
-// import 'package:flutter_svg/flutter_svg.dart';
 // import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 // import 'package:http/http.dart' as http;
 // import 'dart:convert';
@@ -7,7 +15,8 @@
 // import '../helpers/backend.dart';
 // import 'package:geolocator/geolocator.dart';
 // import 'package:app_settings/app_settings.dart';
-// import '../helpers/my_colors.dart';
+// import 'provider_next_steps_screen.dart';
+// import '../helpers/coolors.dart';
 
 // class SignupScreen extends StatefulWidget {
 //   @override
@@ -213,10 +222,23 @@
 //           ),
 //         );
 
-//         Navigator.pushReplacement(
-//           context,
-//           MaterialPageRoute(builder: (_) => LoginScreen()),
-//         );
+//         if (response.statusCode == 201) {
+//           final int? newUserId = data['user']?['id']; // get ID from backend
+
+//           if (body["role"] == "provider" && newUserId != null) {
+//             Navigator.pushReplacement(
+//               context,
+//               MaterialPageRoute(
+//                 builder: (_) => ProviderNextStepsScreen(userId: newUserId),
+//               ),
+//             );
+//           } else {
+//             Navigator.pushReplacement(
+//               context,
+//               MaterialPageRoute(builder: (_) => LoginScreen()),
+//             );
+//           }
+//         }
 //       } else {
 //         print('Signup failed: ${response.statusCode} - ${data}');
 
@@ -259,43 +281,40 @@
 //     }
 //   }
 
-//  InputDecoration _inputDecoration(String label) {
-//   return InputDecoration(
-//     labelText: label,
-//     filled: true,
-//     fillColor: MyColors.surface, // background inside the field
+//   InputDecoration _inputDecoration(String label) {
+//     return InputDecoration(
+//       labelText: label,
+//       filled: true,
+//       fillColor: kCardColor, // soft white background
 
-//     labelStyle: const TextStyle(
-//       color: Colors.white70,
-//       fontWeight: FontWeight.w500,
-//       fontSize: 13,
-//     ),
+//       labelStyle: const TextStyle(
+//         color: kTextSecondary,
+//         fontWeight: FontWeight.w500,
+//         fontSize: 13,
+//       ),
 
-//     // ✅ Remove borders completely
-//     border: OutlineInputBorder(
-//       borderSide: BorderSide.none,
-//       borderRadius: BorderRadius.circular(14), // 👈 Rounded corners here
-//     ),
-//     enabledBorder: OutlineInputBorder(
-//       borderSide: BorderSide.none,
-//       borderRadius: BorderRadius.circular(14),
-//     ),
-//     focusedBorder: OutlineInputBorder(
-//       borderSide: BorderSide.none,
-//       borderRadius: BorderRadius.circular(14),
-//     ),
+//       // ✅ Soft border for light theme
+//       border: OutlineInputBorder(
+//         borderSide: BorderSide(color: kDividerColor),
+//         borderRadius: BorderRadius.circular(14),
+//       ),
+//       enabledBorder: OutlineInputBorder(
+//         borderSide: BorderSide(color: kDividerColor),
+//         borderRadius: BorderRadius.circular(14),
+//       ),
+//       focusedBorder: OutlineInputBorder(
+//         borderSide: BorderSide(color: kDividerColor, width: 1.5),
+//         borderRadius: BorderRadius.circular(14),
+//       ),
 
-//     contentPadding: const EdgeInsets.symmetric(
-//       horizontal: 16,
-//       vertical: 14,
-//     ),
-//   );
-// }
+//       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+//     );
+//   }
 
 //   @override
 //   Widget build(BuildContext context) {
 //     return Scaffold(
-//       backgroundColor: MyColors.background,
+//       backgroundColor: kBackgroundColor,
 
 //       body: Center(
 //         child: SingleChildScrollView(
@@ -304,28 +323,31 @@
 //             key: _formKey,
 //             child: Column(
 //               children: [
-//                 // SvgPicture.asset('assets/svg/signup.svg', height: 150),
-//                 // const SizedBox(height: 20),
-//                 ShaderMask(
-//                   shaderCallback: (bounds) => const LinearGradient(
-//                     colors: [MyColors.primary, Colors.purpleAccent],
-//                   ).createShader(bounds),
-//                   child: const Text(
-//                     "Create Account",
-//                     style: TextStyle(
-//                       color: Colors.white,
-//                       fontSize: 28,
-//                       fontWeight: FontWeight.bold,
-//                       letterSpacing: 0.8,
+//                 Container(
+//                   height: 70,
+//                   width: 70,
+//                   decoration: const BoxDecoration(
+//                     shape: BoxShape.circle,
+//                     gradient: LinearGradient(
+//                       colors: [kPrimaryColor, kSecondaryColor],
+//                       begin: Alignment.topLeft,
+//                       end: Alignment.bottomRight,
 //                     ),
 //                   ),
+//                   child: const Icon(
+//                     Icons.person_add_alt_1_rounded,
+//                     color: Colors.white,
+//                     size: 38,
+//                   ),
 //                 ),
+//                 const SizedBox(height: 14),
+//                 const GradientTitle(text: "Create Account"),
 
 //                 const SizedBox(height: 25),
 //                 TextFormField(
 //                   controller: nameController,
 //                   decoration: _inputDecoration("Full Name"),
-//                   style: const TextStyle(color: Colors.white),
+//                   style: const TextStyle(color: kTextPrimary),
 //                   validator: (val) {
 //                     if (val == null || val.isEmpty) {
 //                       return "Enter full name";
@@ -345,7 +367,7 @@
 //                 TextFormField(
 //                   controller: usernameController,
 //                   decoration: _inputDecoration("Username / Display Name"),
-//                   style: const TextStyle(color: Colors.white),
+//                   style: const TextStyle(color: kTextPrimary),
 //                   validator: (val) {
 //                     if (val == null || val.isEmpty) return "Enter name";
 //                     if (val.length < 3)
@@ -364,7 +386,7 @@
 //                 TextFormField(
 //                   controller: emailController,
 //                   decoration: _inputDecoration("Email"),
-//                   style: const TextStyle(color: Colors.white),
+//                   style: const TextStyle(color: kTextPrimary),
 //                   keyboardType: TextInputType.emailAddress,
 //                   validator: (val) {
 //                     if (val == null || val.isEmpty) return "Enter email";
@@ -385,14 +407,14 @@
 
 //                 TextFormField(
 //                   controller: passwordController,
-//                   style: const TextStyle(color: Colors.white),
+//                   style: const TextStyle(color: kTextPrimary),
 //                   decoration: _inputDecoration("Password").copyWith(
 //                     suffixIcon: IconButton(
 //                       icon: Icon(
 //                         _obscurePassword
 //                             ? Icons.visibility_off
 //                             : Icons.visibility,
-//                         color: MyColors.primary,
+//                         color: kTextPrimary,
 //                       ),
 //                       onPressed: () =>
 //                           setState(() => _obscurePassword = !_obscurePassword),
@@ -413,6 +435,7 @@
 //                 ),
 
 //                 const SizedBox(height: 12),
+
 //                 DropdownButtonFormField<String>(
 //                   value: selectedRole,
 //                   decoration: _inputDecoration("Select Role"),
@@ -422,28 +445,28 @@
 //                       value: "I need a service",
 //                       child: Text(
 //                         "I need a service",
-//                         style: TextStyle(color: MyColors.textSecondary),
+//                         style: TextStyle(color: kTextSecondary),
 //                       ),
 //                     ),
 //                     DropdownMenuItem(
 //                       value: "I am a service provider",
 //                       child: Text(
 //                         "I am a service provider",
-//                         style: TextStyle(color: MyColors.textSecondary),
+//                         style: TextStyle(color: kTextSecondary),
 //                       ),
 //                     ),
 //                   ],
-//                   dropdownColor: MyColors.surface,
+//                   dropdownColor: kCardColor,
 //                   onChanged: (val) => setState(() => selectedRole = val),
 //                   validator: (val) => val == null ? "Select a role" : null,
-//                   style: const TextStyle(color: MyColors.textPrimary),
+//                   style: const TextStyle(color: kTextPrimary),
 //                 ),
 //                 const SizedBox(height: 12),
 //                 if (selectedRole == "I am a service provider") ...[
 //                   TextFormField(
 //                     controller: phoneController,
 //                     decoration: _inputDecoration("Phone"),
-//                     style: const TextStyle(color: Colors.white),
+//                     style: const TextStyle(color: kTextPrimary),
 //                     keyboardType: TextInputType.phone,
 //                     validator: (val) {
 //                       if (val == null || val.isEmpty)
@@ -464,7 +487,7 @@
 //                   TextFormField(
 //                     controller: addressController,
 //                     decoration: _inputDecoration("Address"),
-//                     style: const TextStyle(color: Colors.white),
+//                     style: const TextStyle(color: kTextPrimary),
 //                     validator: (val) {
 //                       if (val == null || val.isEmpty) return "Enter address";
 //                       if (val.length < 5) return "Address too short";
@@ -473,69 +496,69 @@
 //                   ),
 
 //                   const SizedBox(height: 12),
-//                  DropdownButtonFormField<String>(
-//   value: experienceLevel,
-//   decoration: InputDecoration(
-//     labelText: "Experience Level",
-//     filled: true,
-//     fillColor: MyColors.surface,
-//     labelStyle: const TextStyle(
-//       color: Colors.white70,
-//       fontWeight: FontWeight.w500,
-//       fontSize: 13,
-//     ),
-//     // ✅ Remove all visible borders
-//     border: OutlineInputBorder(
-//       borderRadius: BorderRadius.circular(14),
-//       borderSide: BorderSide.none,
-//     ),
-//     enabledBorder: OutlineInputBorder(
-//       borderRadius: BorderRadius.circular(14),
-//       borderSide: BorderSide.none,
-//     ),
-//     focusedBorder: OutlineInputBorder(
-//       borderRadius: BorderRadius.circular(14),
-//       borderSide: BorderSide.none,
-//     ),
-//     contentPadding: const EdgeInsets.symmetric(
-//       horizontal: 16,
-//       vertical: 14,
-//     ),
-//   ),
-//   items: ["Beginner", "Intermediate", "Expert"]
-//       .map(
-//         (e) => DropdownMenuItem(
-//           value: e,
-//           child: Text(
-//             e,
-//             style: const TextStyle(
-//               color: MyColors.textPrimary,
-//               fontWeight: FontWeight.w500,
-//             ),
-//           ),
-//         ),
-//       )
-//       .toList(),
-//   onChanged: (val) => setState(() => experienceLevel = val),
-//   validator: (val) =>
-//       val == null ? "Select experience level" : null,
-//   dropdownColor: MyColors.surface,
-//   style: const TextStyle(
-//     color: MyColors.textPrimary,
-//     fontWeight: FontWeight.w500,
-//   ),
-//   icon: const Icon(
-//     Icons.keyboard_arrow_down_rounded,
-//     color: MyColors.primary,
-//   ),
-// ),
+//                   DropdownButtonFormField<String>(
+//                     value: experienceLevel,
+//                     decoration: InputDecoration(
+//                       labelText: "Experience Level",
+//                       filled: true,
+//                       fillColor: kCardColor,
+//                       labelStyle: const TextStyle(
+//                         color: kTextPrimary,
+//                         fontWeight: FontWeight.w500,
+//                         fontSize: 13,
+//                       ),
+//                       // ✅ Remove all visible borders
+//                       border: OutlineInputBorder(
+//                         borderRadius: BorderRadius.circular(14),
+//                         borderSide: BorderSide.none,
+//                       ),
+//                       enabledBorder: OutlineInputBorder(
+//                         borderRadius: BorderRadius.circular(14),
+//                         borderSide: BorderSide.none,
+//                       ),
+//                       focusedBorder: OutlineInputBorder(
+//                         borderRadius: BorderRadius.circular(14),
+//                         borderSide: BorderSide.none,
+//                       ),
+//                       contentPadding: const EdgeInsets.symmetric(
+//                         horizontal: 16,
+//                         vertical: 14,
+//                       ),
+//                     ),
+//                     items: ["Beginner", "Intermediate", "Expert"]
+//                         .map(
+//                           (e) => DropdownMenuItem(
+//                             value: e,
+//                             child: Text(
+//                               e,
+//                               style: const TextStyle(
+//                                 color: kTextSecondary,
+//                                 fontWeight: FontWeight.w500,
+//                               ),
+//                             ),
+//                           ),
+//                         )
+//                         .toList(),
+//                     onChanged: (val) => setState(() => experienceLevel = val),
+//                     validator: (val) =>
+//                         val == null ? "Select experience level" : null,
+//                     dropdownColor: kCardColor,
+//                     style: const TextStyle(
+//                       color: kTextPrimary,
+//                       fontWeight: FontWeight.w500,
+//                     ),
+//                     icon: const Icon(
+//                       Icons.keyboard_arrow_down_rounded,
+//                       color: kTextPrimary,
+//                     ),
+//                   ),
 
 //                   const SizedBox(height: 12),
 //                   // Optional fields
 //                   TextFormField(
 //                     controller: bioController,
 //                     decoration: _inputDecoration("Short Bio"),
-//                     style: const TextStyle(color: Colors.white),
+//                     style: const TextStyle(color: kTextPrimary),
 //                     validator: (val) {
 //                       if (val != null && val.isNotEmpty) {
 //                         if (val.length < 20)
@@ -551,7 +574,7 @@
 //                   TextFormField(
 //                     controller: govIdController,
 //                     decoration: _inputDecoration("Gov ID (CNIC/Passport)"),
-//                     style: const TextStyle(color: Colors.white),
+//                     style: const TextStyle(color: kTextPrimary),
 //                     validator: (val) {
 //                       if (val == null || val.isEmpty)
 //                         return "Enter CNIC/Passport number";
@@ -570,7 +593,7 @@
 //                   TextFormField(
 //                     controller: hourlyRateController,
 //                     decoration: _inputDecoration("Hourly Rate (Optional)"),
-//                     style: const TextStyle(color: Colors.white),
+//                     style: const TextStyle(color: kTextPrimary),
 //                     keyboardType: TextInputType.number,
 //                     validator: (val) {
 //                       if (val != null && val.isNotEmpty) {
@@ -589,7 +612,7 @@
 //                     decoration: _inputDecoration(
 //                       "Portfolio Links (comma separated)",
 //                     ),
-//                     style: const TextStyle(color: Colors.white),
+//                     style: const TextStyle(color: kTextPrimary),
 //                     validator: (val) {
 //                       if (val != null && val.isNotEmpty) {
 //                         final urls = val
@@ -611,7 +634,7 @@
 //                   TextFormField(
 //                     controller: languagesController,
 //                     decoration: _inputDecoration("Languages (comma separated)"),
-//                     style: const TextStyle(color: Colors.white),
+//                     style: const TextStyle(color: kTextPrimary),
 //                     validator: (val) {
 //                       if (val != null && val.isNotEmpty) {
 //                         final langs = val
@@ -642,7 +665,7 @@
 //                     decoration: _inputDecoration(
 //                       "Education / Certifications (comma separated)",
 //                     ),
-//                     style: const TextStyle(color: Colors.white),
+//                     style: const TextStyle(color: kTextPrimary),
 //                     validator: (val) {
 //                       if (val != null && val.isNotEmpty) {
 //                         final items = val
@@ -673,7 +696,7 @@
 //                     decoration: _inputDecoration(
 //                       "Social / Website Links (comma separated)",
 //                     ),
-//                     style: const TextStyle(color: Colors.white),
+//                     style: const TextStyle(color: kTextPrimary),
 //                     validator: (val) {
 //                       if (val != null && val.isNotEmpty) {
 //                         final links = val
@@ -703,50 +726,58 @@
 //                 const SizedBox(height: 20),
 //                 isLoading
 //                     ? const CircularProgressIndicator(
-//                         valueColor: AlwaysStoppedAnimation<Color>(
-//                           MyColors.primary,
-//                         ),
+//                         valueColor: AlwaysStoppedAnimation<Color>(kTextPrimary),
 //                       )
 //                     : SizedBox(
 //                         width: double.infinity,
-//                         child:ElevatedButton(
-//   onPressed: signup,
-//   style: ElevatedButton.styleFrom(
-//     backgroundColor: MyColors.surface, // slightly darker bg for contrast
-//     foregroundColor: Colors.white,
-//     elevation: 8,
-//     shadowColor: MyColors.primary.withOpacity(0.3),
-//     padding: const EdgeInsets.symmetric(vertical: 16),
-//     shape: RoundedRectangleBorder(
-//       borderRadius: BorderRadius.circular(22), // 👈 more rounded
-//       side: const BorderSide(
-//         color: MyColors.secondary, // 👈 thin border
-//         width: 1.2,
-//       ),
-//     ),
-//   ).copyWith(
-//     // 👇 subtle gradient effect on hover/press
-//     backgroundColor: WidgetStateProperty.resolveWith<Color>(
-//       (states) {
-//         if (states.contains(WidgetState.pressed)) {
-//           return MyColors.primary.withOpacity(0.9);
-//         } else if (states.contains(WidgetState.hovered)) {
-//           return MyColors.primary.withOpacity(0.8);
-//         }
-//         return MyColors.buttonBackground; // default color
-//       },
-//     ),
-//   ),
-//   child: const Text(
-//     "Sign Up",
-//     style: TextStyle(
-//       fontSize: 18,
-//       fontWeight: FontWeight.bold,
-//       letterSpacing: 0.6,
-//     ),
-//   ),
-// ),
-
+//                         child: ElevatedButton(
+//                           onPressed: signup,
+//                           style:
+//                               ElevatedButton.styleFrom(
+//                                 backgroundColor:
+//                                     kPrimaryColor, // slightly darker bg for contrast
+//                                 foregroundColor: Colors.white,
+//                                 elevation: 8,
+//                                 shadowColor: kPrimaryColor.withOpacity(0.3),
+//                                 padding: const EdgeInsets.symmetric(
+//                                   vertical: 16,
+//                                 ),
+//                                 shape: RoundedRectangleBorder(
+//                                   borderRadius: BorderRadius.circular(
+//                                     22,
+//                                   ), // 👈 more rounded
+//                                   // side: const BorderSide(
+//                                   //   color: MyColors.secondary, // 👈 thin border
+//                                   //   width: 1.2,
+//                                   // ),
+//                                 ),
+//                               ).copyWith(
+//                                 // 👇 subtle gradient effect on hover/press
+//                                 backgroundColor:
+//                                     WidgetStateProperty.resolveWith<Color>((
+//                                       states,
+//                                     ) {
+//                                       if (states.contains(
+//                                         WidgetState.pressed,
+//                                       )) {
+//                                         return kPrimaryColor.withOpacity(0.9);
+//                                       } else if (states.contains(
+//                                         WidgetState.hovered,
+//                                       )) {
+//                                         return kPrimaryColor.withOpacity(0.8);
+//                                       }
+//                                       return kPrimaryColor; // default color
+//                                     }),
+//                               ),
+//                           child: const Text(
+//                             "Sign Up",
+//                             style: TextStyle(
+//                               fontSize: 18,
+//                               fontWeight: FontWeight.bold,
+//                               letterSpacing: 0.6,
+//                             ),
+//                           ),
+//                         ),
 //                       ),
 //                 const SizedBox(height: 20),
 //                 Row(
@@ -755,7 +786,7 @@
 //                     const Text(
 //                       "Already have an account? ",
 //                       style: TextStyle(
-//                         color: MyColors.textSecondary, // Light LinkedIn blue
+//                         color: kTextSecondary, // Light LinkedIn blue
 //                         fontWeight: FontWeight.w500,
 //                         fontSize: 16,
 //                       ),
@@ -770,11 +801,11 @@
 //                       child: const Text(
 //                         "Login",
 //                         style: TextStyle(
-//                           color: MyColors.primary, // Dark LinkedIn blue
+//                           color: kPrimaryColor, // Dark LinkedIn blue
 //                           fontWeight: FontWeight.bold,
 //                           fontSize: 16,
 //                           decoration: TextDecoration.underline,
-//                           decorationColor: MyColors.primary,
+//                           decorationColor: kPrimaryColor,
 //                           decorationThickness: 2,
 //                         ),
 //                       ),
@@ -790,6 +821,60 @@
 //   }
 // }
 
+// class GradientTitle extends StatelessWidget {
+//   final String text;
+//   final double fontSize;
+
+//   const GradientTitle({super.key, required this.text, this.fontSize = 28});
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return ShaderMask(
+//       shaderCallback: (bounds) => const LinearGradient(
+//         colors: [heaidng, heaidng],
+//         begin: Alignment.topLeft,
+//         end: Alignment.bottomRight,
+//       ).createShader(bounds),
+//       child: Text(
+//         text,
+//         style: TextStyle(
+//           color: Colors.white, // required for shader to blend properly
+//           fontSize: fontSize,
+//           fontWeight: FontWeight.bold,
+//           letterSpacing: 0.8,
+//         ),
+//       ),
+//     );
+//   }
+// }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
@@ -798,8 +883,11 @@ import 'login.dart';
 import '../helpers/backend.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:app_settings/app_settings.dart';
-import '../helpers/my_colors.dart';
 import 'provider_next_steps_screen.dart';
+import '../helpers/coolors.dart';
+import 'package:shared_preferences/shared_preferences.dart'; 
+
+
 
 class SignupScreen extends StatefulWidget {
   @override
@@ -1005,23 +1093,45 @@ class _SignupScreenState extends State<SignupScreen> {
           ),
         );
 
-        if (response.statusCode == 201) {
-          final int? newUserId = data['user']?['id']; // get ID from backend
 
-          if (body["role"] == "provider" && newUserId != null) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (_) => ProviderNextStepsScreen(userId: newUserId),
-              ),
-            );
-          } else {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (_) => LoginScreen()),
-            );
-          }
-        }
+
+
+       if (response.statusCode == 201) {
+  final int? newUserId = data['user']?['id']; // get ID from backend
+  final String role = body["role"]; // provider or user
+
+  // 👇 Save to SharedPreferences so SplashScreen can detect it later
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setInt('userId', newUserId ?? 0);
+  await prefs.setString('role', role);
+
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(
+      content: Text(
+        'Signup successful! ✅ Check your email to verify your account before login.',
+      ),
+      backgroundColor: Color(0xFF0A66C2),
+    ),
+  );
+
+  if (role == "provider" && newUserId != null) {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ProviderNextStepsScreen(userId: newUserId),
+      ),
+    );
+  } else {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => LoginScreen()),
+    );
+  }
+}
+
+
+
+
       } else {
         print('Signup failed: ${response.statusCode} - ${data}');
 
@@ -1068,25 +1178,25 @@ class _SignupScreenState extends State<SignupScreen> {
     return InputDecoration(
       labelText: label,
       filled: true,
-      fillColor: MyColors.surface, // background inside the field
+      fillColor: kCardColor, // soft white background
 
       labelStyle: const TextStyle(
-        color: Colors.white70,
+        color: kTextSecondary,
         fontWeight: FontWeight.w500,
         fontSize: 13,
       ),
 
-      // ✅ Remove borders completely
+      // ✅ Soft border for light theme
       border: OutlineInputBorder(
-        borderSide: BorderSide.none,
-        borderRadius: BorderRadius.circular(14), // 👈 Rounded corners here
+        borderSide: BorderSide(color: kDividerColor),
+        borderRadius: BorderRadius.circular(14),
       ),
       enabledBorder: OutlineInputBorder(
-        borderSide: BorderSide.none,
+        borderSide: BorderSide(color: kDividerColor),
         borderRadius: BorderRadius.circular(14),
       ),
       focusedBorder: OutlineInputBorder(
-        borderSide: BorderSide.none,
+        borderSide: BorderSide(color: kDividerColor, width: 1.5),
         borderRadius: BorderRadius.circular(14),
       ),
 
@@ -1097,7 +1207,7 @@ class _SignupScreenState extends State<SignupScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: MyColors.background,
+      backgroundColor: kBackgroundColor,
 
       body: Center(
         child: SingleChildScrollView(
@@ -1106,28 +1216,31 @@ class _SignupScreenState extends State<SignupScreen> {
             key: _formKey,
             child: Column(
               children: [
-                // SvgPicture.asset('assets/svg/signup.svg', height: 150),
-                // const SizedBox(height: 20),
-                ShaderMask(
-                  shaderCallback: (bounds) => const LinearGradient(
-                    colors: [MyColors.primary, Colors.purpleAccent],
-                  ).createShader(bounds),
-                  child: const Text(
-                    "Create Account",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 0.8,
+                Container(
+                  height: 70,
+                  width: 70,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      colors: [kPrimaryColor, kSecondaryColor],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
                   ),
+                  child: const Icon(
+                    Icons.person_add_alt_1_rounded,
+                    color: Colors.white,
+                    size: 38,
+                  ),
                 ),
+                const SizedBox(height: 14),
+                const GradientTitle(text: "Create Account"),
 
                 const SizedBox(height: 25),
                 TextFormField(
                   controller: nameController,
                   decoration: _inputDecoration("Full Name"),
-                  style: const TextStyle(color: Colors.white),
+                  style: const TextStyle(color: kTextPrimary),
                   validator: (val) {
                     if (val == null || val.isEmpty) {
                       return "Enter full name";
@@ -1147,7 +1260,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 TextFormField(
                   controller: usernameController,
                   decoration: _inputDecoration("Username / Display Name"),
-                  style: const TextStyle(color: Colors.white),
+                  style: const TextStyle(color: kTextPrimary),
                   validator: (val) {
                     if (val == null || val.isEmpty) return "Enter name";
                     if (val.length < 3)
@@ -1166,7 +1279,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 TextFormField(
                   controller: emailController,
                   decoration: _inputDecoration("Email"),
-                  style: const TextStyle(color: Colors.white),
+                  style: const TextStyle(color: kTextPrimary),
                   keyboardType: TextInputType.emailAddress,
                   validator: (val) {
                     if (val == null || val.isEmpty) return "Enter email";
@@ -1187,14 +1300,14 @@ class _SignupScreenState extends State<SignupScreen> {
 
                 TextFormField(
                   controller: passwordController,
-                  style: const TextStyle(color: Colors.white),
+                  style: const TextStyle(color: kTextPrimary),
                   decoration: _inputDecoration("Password").copyWith(
                     suffixIcon: IconButton(
                       icon: Icon(
                         _obscurePassword
                             ? Icons.visibility_off
                             : Icons.visibility,
-                        color: MyColors.primary,
+                        color: kTextPrimary,
                       ),
                       onPressed: () =>
                           setState(() => _obscurePassword = !_obscurePassword),
@@ -1215,6 +1328,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
 
                 const SizedBox(height: 12),
+
                 DropdownButtonFormField<String>(
                   value: selectedRole,
                   decoration: _inputDecoration("Select Role"),
@@ -1224,28 +1338,28 @@ class _SignupScreenState extends State<SignupScreen> {
                       value: "I need a service",
                       child: Text(
                         "I need a service",
-                        style: TextStyle(color: MyColors.textSecondary),
+                        style: TextStyle(color: kTextSecondary),
                       ),
                     ),
                     DropdownMenuItem(
                       value: "I am a service provider",
                       child: Text(
                         "I am a service provider",
-                        style: TextStyle(color: MyColors.textSecondary),
+                        style: TextStyle(color: kTextSecondary),
                       ),
                     ),
                   ],
-                  dropdownColor: MyColors.surface,
+                  dropdownColor: kCardColor,
                   onChanged: (val) => setState(() => selectedRole = val),
                   validator: (val) => val == null ? "Select a role" : null,
-                  style: const TextStyle(color: MyColors.textPrimary),
+                  style: const TextStyle(color: kTextPrimary),
                 ),
                 const SizedBox(height: 12),
                 if (selectedRole == "I am a service provider") ...[
                   TextFormField(
                     controller: phoneController,
                     decoration: _inputDecoration("Phone"),
-                    style: const TextStyle(color: Colors.white),
+                    style: const TextStyle(color: kTextPrimary),
                     keyboardType: TextInputType.phone,
                     validator: (val) {
                       if (val == null || val.isEmpty)
@@ -1266,7 +1380,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   TextFormField(
                     controller: addressController,
                     decoration: _inputDecoration("Address"),
-                    style: const TextStyle(color: Colors.white),
+                    style: const TextStyle(color: kTextPrimary),
                     validator: (val) {
                       if (val == null || val.isEmpty) return "Enter address";
                       if (val.length < 5) return "Address too short";
@@ -1280,9 +1394,9 @@ class _SignupScreenState extends State<SignupScreen> {
                     decoration: InputDecoration(
                       labelText: "Experience Level",
                       filled: true,
-                      fillColor: MyColors.surface,
+                      fillColor: kCardColor,
                       labelStyle: const TextStyle(
-                        color: Colors.white70,
+                        color: kTextPrimary,
                         fontWeight: FontWeight.w500,
                         fontSize: 13,
                       ),
@@ -1311,7 +1425,7 @@ class _SignupScreenState extends State<SignupScreen> {
                             child: Text(
                               e,
                               style: const TextStyle(
-                                color: MyColors.textPrimary,
+                                color: kTextSecondary,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -1321,14 +1435,14 @@ class _SignupScreenState extends State<SignupScreen> {
                     onChanged: (val) => setState(() => experienceLevel = val),
                     validator: (val) =>
                         val == null ? "Select experience level" : null,
-                    dropdownColor: MyColors.surface,
+                    dropdownColor: kCardColor,
                     style: const TextStyle(
-                      color: MyColors.textPrimary,
+                      color: kTextPrimary,
                       fontWeight: FontWeight.w500,
                     ),
                     icon: const Icon(
                       Icons.keyboard_arrow_down_rounded,
-                      color: MyColors.primary,
+                      color: kTextPrimary,
                     ),
                   ),
 
@@ -1337,7 +1451,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   TextFormField(
                     controller: bioController,
                     decoration: _inputDecoration("Short Bio"),
-                    style: const TextStyle(color: Colors.white),
+                    style: const TextStyle(color: kTextPrimary),
                     validator: (val) {
                       if (val != null && val.isNotEmpty) {
                         if (val.length < 20)
@@ -1353,7 +1467,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   TextFormField(
                     controller: govIdController,
                     decoration: _inputDecoration("Gov ID (CNIC/Passport)"),
-                    style: const TextStyle(color: Colors.white),
+                    style: const TextStyle(color: kTextPrimary),
                     validator: (val) {
                       if (val == null || val.isEmpty)
                         return "Enter CNIC/Passport number";
@@ -1372,7 +1486,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   TextFormField(
                     controller: hourlyRateController,
                     decoration: _inputDecoration("Hourly Rate (Optional)"),
-                    style: const TextStyle(color: Colors.white),
+                    style: const TextStyle(color: kTextPrimary),
                     keyboardType: TextInputType.number,
                     validator: (val) {
                       if (val != null && val.isNotEmpty) {
@@ -1391,7 +1505,7 @@ class _SignupScreenState extends State<SignupScreen> {
                     decoration: _inputDecoration(
                       "Portfolio Links (comma separated)",
                     ),
-                    style: const TextStyle(color: Colors.white),
+                    style: const TextStyle(color: kTextPrimary),
                     validator: (val) {
                       if (val != null && val.isNotEmpty) {
                         final urls = val
@@ -1413,7 +1527,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   TextFormField(
                     controller: languagesController,
                     decoration: _inputDecoration("Languages (comma separated)"),
-                    style: const TextStyle(color: Colors.white),
+                    style: const TextStyle(color: kTextPrimary),
                     validator: (val) {
                       if (val != null && val.isNotEmpty) {
                         final langs = val
@@ -1444,7 +1558,7 @@ class _SignupScreenState extends State<SignupScreen> {
                     decoration: _inputDecoration(
                       "Education / Certifications (comma separated)",
                     ),
-                    style: const TextStyle(color: Colors.white),
+                    style: const TextStyle(color: kTextPrimary),
                     validator: (val) {
                       if (val != null && val.isNotEmpty) {
                         final items = val
@@ -1475,7 +1589,7 @@ class _SignupScreenState extends State<SignupScreen> {
                     decoration: _inputDecoration(
                       "Social / Website Links (comma separated)",
                     ),
-                    style: const TextStyle(color: Colors.white),
+                    style: const TextStyle(color: kTextPrimary),
                     validator: (val) {
                       if (val != null && val.isNotEmpty) {
                         final links = val
@@ -1505,9 +1619,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 const SizedBox(height: 20),
                 isLoading
                     ? const CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          MyColors.primary,
-                        ),
+                        valueColor: AlwaysStoppedAnimation<Color>(kTextPrimary),
                       )
                     : SizedBox(
                         width: double.infinity,
@@ -1515,11 +1627,11 @@ class _SignupScreenState extends State<SignupScreen> {
                           onPressed: signup,
                           style:
                               ElevatedButton.styleFrom(
-                                backgroundColor: MyColors
-                                    .surface, // slightly darker bg for contrast
+                                backgroundColor:
+                                    kPrimaryColor, // slightly darker bg for contrast
                                 foregroundColor: Colors.white,
                                 elevation: 8,
-                                shadowColor: MyColors.primary.withOpacity(0.3),
+                                shadowColor: kPrimaryColor.withOpacity(0.3),
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 16,
                                 ),
@@ -1527,10 +1639,10 @@ class _SignupScreenState extends State<SignupScreen> {
                                   borderRadius: BorderRadius.circular(
                                     22,
                                   ), // 👈 more rounded
-                                  side: const BorderSide(
-                                    color: MyColors.secondary, // 👈 thin border
-                                    width: 1.2,
-                                  ),
+                                  // side: const BorderSide(
+                                  //   color: MyColors.secondary, // 👈 thin border
+                                  //   width: 1.2,
+                                  // ),
                                 ),
                               ).copyWith(
                                 // 👇 subtle gradient effect on hover/press
@@ -1541,18 +1653,13 @@ class _SignupScreenState extends State<SignupScreen> {
                                       if (states.contains(
                                         WidgetState.pressed,
                                       )) {
-                                        return MyColors.primary.withOpacity(
-                                          0.9,
-                                        );
+                                        return kPrimaryColor.withOpacity(0.9);
                                       } else if (states.contains(
                                         WidgetState.hovered,
                                       )) {
-                                        return MyColors.primary.withOpacity(
-                                          0.8,
-                                        );
+                                        return kPrimaryColor.withOpacity(0.8);
                                       }
-                                      return MyColors
-                                          .buttonBackground; // default color
+                                      return kPrimaryColor; // default color
                                     }),
                               ),
                           child: const Text(
@@ -1572,7 +1679,7 @@ class _SignupScreenState extends State<SignupScreen> {
                     const Text(
                       "Already have an account? ",
                       style: TextStyle(
-                        color: MyColors.textSecondary, // Light LinkedIn blue
+                        color: kTextSecondary, // Light LinkedIn blue
                         fontWeight: FontWeight.w500,
                         fontSize: 16,
                       ),
@@ -1587,11 +1694,11 @@ class _SignupScreenState extends State<SignupScreen> {
                       child: const Text(
                         "Login",
                         style: TextStyle(
-                          color: MyColors.primary, // Dark LinkedIn blue
+                          color: kPrimaryColor, // Dark LinkedIn blue
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
                           decoration: TextDecoration.underline,
-                          decorationColor: MyColors.primary,
+                          decorationColor: kPrimaryColor,
                           decorationThickness: 2,
                         ),
                       ),
@@ -1601,6 +1708,33 @@ class _SignupScreenState extends State<SignupScreen> {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class GradientTitle extends StatelessWidget {
+  final String text;
+  final double fontSize;
+
+  const GradientTitle({super.key, required this.text, this.fontSize = 28});
+
+  @override
+  Widget build(BuildContext context) {
+    return ShaderMask(
+      shaderCallback: (bounds) => const LinearGradient(
+        colors: [heaidng, heaidng],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ).createShader(bounds),
+      child: Text(
+        text,
+        style: TextStyle(
+          color: Colors.white, // required for shader to blend properly
+          fontSize: fontSize,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 0.8,
         ),
       ),
     );

@@ -1,6 +1,3 @@
-// /////
-// ///
-// ///
 // import 'package:flutter/material.dart';
 // import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 // import 'package:http/http.dart' as http;
@@ -10,6 +7,7 @@
 // import 'signup.dart';
 // import '../helpers/backend.dart';
 // import '../helpers/my_colors.dart';
+
 // class LoginScreen extends StatefulWidget {
 //   @override
 //   _LoginScreenState createState() => _LoginScreenState();
@@ -23,7 +21,7 @@
 //   final TextEditingController passwordController = TextEditingController();
 
 //   bool isLoading = false;
-// bool _obscurePassword = true; // add this at top of your _LoginScreenState
+//   bool _obscurePassword = true; // add this at top of your _LoginScreenState
 
 //   Future<void> login() async {
 //     if (!_formKey.currentState!.validate()) return;
@@ -47,6 +45,29 @@
 
 //       if (response.statusCode == 200) {
 //         final user = data['user'];
+
+//         // 🔹 Step 52: Deny login if provider not approved
+//         if (user['role'] == 'provider' && user['status'] != 'approved') {
+//           String message;
+//           switch (user['status']) {
+//             case 'pending':
+//               message = "Your account is pending approval. Please wait.";
+//               break;
+//             case 'rejected':
+//               message = "Your account has been rejected. Contact support.";
+//               break;
+//             default:
+//               message = "Your account is not approved yet.";
+//           }
+
+//           ScaffoldMessenger.of(context).showSnackBar(
+//             SnackBar(content: Text(message), backgroundColor: Colors.orange),
+//           );
+//           setState(() => isLoading = false);
+//           return; // stop login
+//         }
+
+//         // 🔹 Check if email is verified
 //         if (user['is_verified'] != true) {
 //           ScaffoldMessenger.of(context).showSnackBar(
 //             SnackBar(
@@ -56,32 +77,36 @@
 //               backgroundColor: Color(0xFF0A66C2),
 //             ),
 //           );
-//         } else if (data['token'] != null) {
-//   // 🔐 Save token and user details securely
-//   await storage.write(key: 'jwt', value: data['token']);
-//   await storage.write(key: 'user_id', value: user['id'].toString());
-//   await storage.write(key: 'user_name', value: user['name'] ?? '');
-//   await storage.write(key: 'user_role', value: user['role'] ?? '');
 
-//   ScaffoldMessenger.of(context).showSnackBar(
-//     const SnackBar(
-//       content: Text('Login successful ✅'),
-//       backgroundColor: Color(0xFF0A66C2),
-//     ),
-//   );
+//           setState(() => isLoading = false);
+//           return;
+//         }
 
-//   // 🔁 Navigate to home screen
-//   Navigator.pushReplacement(
-//     context,
-//     MaterialPageRoute(
-//       builder: (context) => HomeScreen(
-//         role: user['role'],
-//         userData: Map<String, dynamic>.from(user),
-//       ),
-//     ),
-//   );
-// }
+//         // 🔐 Save token and user details securely
+//         if (data['token'] != null) {
+//           await storage.write(key: 'jwt', value: data['token']);
+//           await storage.write(key: 'user_id', value: user['id'].toString());
+//           await storage.write(key: 'user_name', value: user['name'] ?? '');
+//           await storage.write(key: 'user_role', value: user['role'] ?? '');
+//         }
 
+//         // 🔁 Navigate to home screen
+//         ScaffoldMessenger.of(context).showSnackBar(
+//           const SnackBar(
+//             content: Text('Login successful ✅'),
+//             backgroundColor: Color(0xFF0A66C2),
+//           ),
+//         );
+
+//         Navigator.pushReplacement(
+//           context,
+//           MaterialPageRoute(
+//             builder: (context) => HomeScreen(
+//               role: user['role'],
+//               userData: Map<String, dynamic>.from(user),
+//             ),
+//           ),
+//         );
 //       } else {
 //         ScaffoldMessenger.of(context).showSnackBar(
 //           SnackBar(
@@ -100,43 +125,40 @@
 //   }
 
 //   InputDecoration _inputDecoration(String label) {
-//   return InputDecoration(
-//     labelText: label,
-//     filled: true,
-//     fillColor: MyColors.surface, // same as signup
+//     return InputDecoration(
+//       labelText: label,
+//       filled: true,
+//       fillColor: MyColors.surface, // same as signup
 
-//     labelStyle: const TextStyle(
-//       color: Colors.white70,
-//       fontWeight: FontWeight.w500,
-//       fontSize: 13,
-//     ),
+//       labelStyle: const TextStyle(
+//         color: Colors.white70,
+//         fontWeight: FontWeight.w500,
+//         fontSize: 13,
+//       ),
 
-//     // Rounded soft look
-//     border: OutlineInputBorder(
-//       borderSide: BorderSide.none,
-//       borderRadius: BorderRadius.circular(14),
-//     ),
-//     enabledBorder: OutlineInputBorder(
-//       borderSide: BorderSide.none,
-//       borderRadius: BorderRadius.circular(14),
-//     ),
-//     focusedBorder: OutlineInputBorder(
-//       borderSide: BorderSide.none,
-//       borderRadius: BorderRadius.circular(14),
-//     ),
+//       // Rounded soft look
+//       border: OutlineInputBorder(
+//         borderSide: BorderSide.none,
+//         borderRadius: BorderRadius.circular(14),
+//       ),
+//       enabledBorder: OutlineInputBorder(
+//         borderSide: BorderSide.none,
+//         borderRadius: BorderRadius.circular(14),
+//       ),
+//       focusedBorder: OutlineInputBorder(
+//         borderSide: BorderSide.none,
+//         borderRadius: BorderRadius.circular(14),
+//       ),
 
-//     contentPadding: const EdgeInsets.symmetric(
-//       horizontal: 16,
-//       vertical: 14,
-//     ),
-//   );
-// }
+//       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+//     );
+//   }
 
 //   @override
 //   Widget build(BuildContext context) {
 //     return Scaffold(
 //       backgroundColor: MyColors.background,
-//  // White background
+//       // White background
 //       body: Center(
 //         child: SingleChildScrollView(
 //           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
@@ -147,97 +169,102 @@
 //                 // Top SVG Image
 //                 // SvgPicture.asset('assets/svg/login.svg', height: 150),
 //                 // const SizedBox(height: 20),
-//                ShaderMask(
-//   shaderCallback: (bounds) => const LinearGradient(
-//     colors: [MyColors.primary, Colors.purpleAccent],
-//   ).createShader(bounds),
-//   child: const Text(
-//     "Welcome Back",
-//     style: TextStyle(
-//       color: Colors.white,
-//       fontSize: 28,
-//       fontWeight: FontWeight.bold,
-//       letterSpacing: 0.8,
-//     ),
-//   ),
-// ),
+//                 ShaderMask(
+//                   shaderCallback: (bounds) => const LinearGradient(
+//                     colors: [MyColors.primary, Colors.purpleAccent],
+//                   ).createShader(bounds),
+//                   child: const Text(
+//                     "Welcome Back",
+//                     style: TextStyle(
+//                       color: Colors.white,
+//                       fontSize: 28,
+//                       fontWeight: FontWeight.bold,
+//                       letterSpacing: 0.8,
+//                     ),
+//                   ),
+//                 ),
 
 //                 const SizedBox(height: 25),
 
 //                 // Email Field
-//                TextFormField(
-//   controller: emailController,
-//   decoration: _inputDecoration("Email"),
-//   keyboardType: TextInputType.emailAddress,
-//  style: const TextStyle(color: Colors.white),
+//                 TextFormField(
+//                   controller: emailController,
+//                   decoration: _inputDecoration("Email"),
+//                   keyboardType: TextInputType.emailAddress,
+//                   style: const TextStyle(color: Colors.white),
 
-//   validator: (val) {
-//     if (val == null || val.isEmpty) {
-//       return "Enter email";
-//     }
-//     final emailRegex =
-//         RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$");
-//     if (!emailRegex.hasMatch(val)) {
-//       return "Enter a valid email address";
-//     }
-//     return null;
-//   },
-// ),
+//                   validator: (val) {
+//                     if (val == null || val.isEmpty) {
+//                       return "Enter email";
+//                     }
+//                     final emailRegex = RegExp(
+//                       r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$",
+//                     );
+//                     if (!emailRegex.hasMatch(val)) {
+//                       return "Enter a valid email address";
+//                     }
+//                     return null;
+//                   },
+//                 ),
 
 //                 const SizedBox(height: 16),
 
 //                 // Password Field
-//                TextFormField(
-//   controller: passwordController,
-//   decoration: _inputDecoration("Password").copyWith(
-//     suffixIcon: IconButton(
-//       icon: Icon(
-//         _obscurePassword ? Icons.visibility_off : Icons.visibility,
-//         color: MyColors.primary,
+//                 TextFormField(
+//                   controller: passwordController,
+//                   decoration: _inputDecoration("Password").copyWith(
+//                     suffixIcon: IconButton(
+//                       icon: Icon(
+//                         _obscurePassword
+//                             ? Icons.visibility_off
+//                             : Icons.visibility,
+//                         color: MyColors.primary,
+//                       ),
+//                       onPressed: () {
+//                         setState(() {
+//                           _obscurePassword = !_obscurePassword;
+//                         });
+//                       },
+//                     ),
+//                   ),
+//                   obscureText: _obscurePassword,
+//                   style: const TextStyle(color: MyColors.textPrimary),
 
-//       ),
-//       onPressed: () {
-//         setState(() {
-//           _obscurePassword = !_obscurePassword;
-//         });
-//       },
-//     ),
-//   ),
-//   obscureText: _obscurePassword,
-//   style: const TextStyle(color: MyColors.textPrimary),
-
-//   validator: (val) {
-//     if (val == null || val.isEmpty) {
-//       return "Enter password";
-//     }
-//     final regex = RegExp(r'^(?=.*[A-Z])(?=.*\d)(?=.*[!@#\$&*~]).{8,}$');
-//     if (!regex.hasMatch(val)) {
-//       return "Password must be 8+ chars, include 1 uppercase, 1 number, and 1 special char";
-//     }
-//     return null;
-//   },
-// ),
-// // Forgot Password link
-// Align(
-//   alignment: Alignment.centerRight,
-//   child: TextButton(
-//     onPressed: () {
-//       Navigator.push(
-//         context,
-//         MaterialPageRoute(builder: (_) => ForgotPasswordScreen()),
-//       );
-//     },
-//     child: const Text(
-//   "Forgot Password?",
-//   style: TextStyle(
-//     color: MyColors.primary,
-//     fontWeight: FontWeight.w600,
-//   ),
-// ),
-
-//   ),
-// ),
-// const SizedBox(height: 16),
+//                   validator: (val) {
+//                     if (val == null || val.isEmpty) {
+//                       return "Enter password";
+//                     }
+//                     final regex = RegExp(
+//                       r'^(?=.*[A-Z])(?=.*\d)(?=.*[!@#\$&*~]).{8,}$',
+//                     );
+//                     if (!regex.hasMatch(val)) {
+//                       return "Password must be 8+ chars, include 1 uppercase, 1 number, and 1 special char";
+//                     }
+//                     return null;
+//                   },
+//                 ),
+//                 // Forgot Password link
+//                 Align(
+//                   alignment: Alignment.centerRight,
+//                   child: TextButton(
+//                     onPressed: () {
+//                       Navigator.push(
+//                         context,
+//                         MaterialPageRoute(
+//                           builder: (_) => ForgotPasswordScreen(),
+//                         ),
+//                       );
+//                     },
+//                     child: const Text(
+//                       "Forgot Password?",
+//                       style: TextStyle(
+//                         color: MyColors.primary,
+//                         fontWeight: FontWeight.w600,
+//                       ),
+//                     ),
+//                   ),
+//                 ),
+//                 const SizedBox(height: 16),
 
 //                 const SizedBox(height: 24),
 
@@ -249,71 +276,73 @@
 //                         ),
 //                       )
 //                     : SizedBox(
-//  width: double.infinity,
-//   child: ElevatedButton(
-//   onPressed: login,
-//   style: ElevatedButton.styleFrom(
-//     padding: const EdgeInsets.symmetric(vertical: 16),
-//     backgroundColor: MyColors.buttonBackground,
-//     foregroundColor: Colors.white,
-//     elevation: 8,
-//     shadowColor: MyColors.primary.withOpacity(0.3),
-//     shape: RoundedRectangleBorder(
-//       borderRadius: BorderRadius.circular(22), // 👈 smoother round corners
-//       side: const BorderSide(
-//         color: MyColors.secondary, // 👈 thin subtle border
-//         width: 1.2,
-//       ),
-//     ),
-//   ),
-//   child: const Text(
-//     "Login",
-//     style: TextStyle(
-//       fontSize: 18,
-//       fontWeight: FontWeight.bold,
-//       letterSpacing: 0.6,
-//     ),
-//   ),
-// ),
-
-// ),
+//                         width: double.infinity,
+//                         child: ElevatedButton(
+//                           onPressed: login,
+//                           style: ElevatedButton.styleFrom(
+//                             padding: const EdgeInsets.symmetric(vertical: 16),
+//                             backgroundColor: MyColors.buttonBackground,
+//                             foregroundColor: Colors.white,
+//                             elevation: 8,
+//                             shadowColor: MyColors.primary.withOpacity(0.3),
+//                             shape: RoundedRectangleBorder(
+//                               borderRadius: BorderRadius.circular(
+//                                 22,
+//                               ), // 👈 smoother round corners
+//                               side: const BorderSide(
+//                                 color:
+//                                     MyColors.secondary, // 👈 thin subtle border
+//                                 width: 1.2,
+//                               ),
+//                             ),
+//                           ),
+//                           child: const Text(
+//                             "Login",
+//                             style: TextStyle(
+//                               fontSize: 18,
+//                               fontWeight: FontWeight.bold,
+//                               letterSpacing: 0.6,
+//                             ),
+//                           ),
+//                         ),
+//                       ),
 
 //                 const SizedBox(height: 20),
 
 //                 // Signup navigation
-//                Row(
-//   mainAxisAlignment: MainAxisAlignment.center,
-//   children: [
-//     const Text(
-//       "Don't have an account? ",
-//       style: TextStyle(
-//         color: MyColors.textSecondary, // Soft light LinkedIn blue
-//         fontWeight: FontWeight.w500,
-//         fontSize: 16,
-//       ),
-//     ),
-//     GestureDetector(
-//       onTap: () {
-//         Navigator.pushReplacement(
-//           context,
-//           MaterialPageRoute(builder: (_) => SignupScreen()),
-//         );
-//       },
-//       child: const Text(
-//         "Sign Up",
-//         style: TextStyle(
-//           color: MyColors.primary, // Dark LinkedIn premium blue
-//           fontWeight: FontWeight.bold,
-//           fontSize: 16,
-//           decoration: TextDecoration.underline,
-//           decorationColor:MyColors.primary,
-//           decorationThickness: 2,
-//         ),
-//       ),
-//     ),
-//   ],
-// )
-
+//                 Row(
+//                   mainAxisAlignment: MainAxisAlignment.center,
+//                   children: [
+//                     const Text(
+//                       "Don't have an account? ",
+//                       style: TextStyle(
+//                         color:
+//                             MyColors.textSecondary, // Soft light LinkedIn blue
+//                         fontWeight: FontWeight.w500,
+//                         fontSize: 16,
+//                       ),
+//                     ),
+//                     GestureDetector(
+//                       onTap: () {
+//                         Navigator.pushReplacement(
+//                           context,
+//                           MaterialPageRoute(builder: (_) => SignupScreen()),
+//                         );
+//                       },
+//                       child: const Text(
+//                         "Sign Up",
+//                         style: TextStyle(
+//                           color: MyColors.primary, // Dark LinkedIn premium blue
+//                           fontWeight: FontWeight.bold,
+//                           fontSize: 16,
+//                           decoration: TextDecoration.underline,
+//                           decorationColor: MyColors.primary,
+//                           decorationThickness: 2,
+//                         ),
+//                       ),
+//                     ),
+//                   ],
+//                 ),
 //               ],
 //             ),
 //           ),
@@ -323,16 +352,6 @@
 //   }
 // }
 
-/////
-///
-///
-
-
-
-
-
-
-
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
@@ -341,7 +360,7 @@ import 'forgot_password.dart';
 import 'home_screen.dart';
 import 'signup.dart';
 import '../helpers/backend.dart';
-import '../helpers/my_colors.dart';
+import '../helpers/coolors.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -412,7 +431,7 @@ class _LoginScreenState extends State<LoginScreen> {
               backgroundColor: Color(0xFF0A66C2),
             ),
           );
-          
+
           setState(() => isLoading = false);
           return;
         }
@@ -463,25 +482,25 @@ class _LoginScreenState extends State<LoginScreen> {
     return InputDecoration(
       labelText: label,
       filled: true,
-      fillColor: MyColors.surface, // same as signup
+      fillColor: kCardColor, // same surface color as signup
 
       labelStyle: const TextStyle(
-        color: Colors.white70,
+        color: kTextSecondary,
         fontWeight: FontWeight.w500,
         fontSize: 13,
       ),
 
-      // Rounded soft look
+      // ✅ Soft border for light theme
       border: OutlineInputBorder(
-        borderSide: BorderSide.none,
+        borderSide: BorderSide(color: kDividerColor),
         borderRadius: BorderRadius.circular(14),
       ),
       enabledBorder: OutlineInputBorder(
-        borderSide: BorderSide.none,
+        borderSide: BorderSide(color: kDividerColor),
         borderRadius: BorderRadius.circular(14),
       ),
       focusedBorder: OutlineInputBorder(
-        borderSide: BorderSide.none,
+        borderSide: BorderSide(color: kDividerColor, width: 1.5),
         borderRadius: BorderRadius.circular(14),
       ),
 
@@ -492,7 +511,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: MyColors.background,
+      backgroundColor: kBackgroundColor,
       // White background
       body: Center(
         child: SingleChildScrollView(
@@ -501,12 +520,35 @@ class _LoginScreenState extends State<LoginScreen> {
             key: _formKey,
             child: Column(
               children: [
-                // Top SVG Image
-                // SvgPicture.asset('assets/svg/login.svg', height: 150),
-                // const SizedBox(height: 20),
+                Container(
+                  height: 70,
+                  width: 70,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      colors: [kSecondaryColor, kPrimaryColor],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black12,
+                        blurRadius: 8,
+                        offset: Offset(2, 3),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.lock_open_rounded,
+                    color: Colors.white,
+                    size: 38,
+                  ),
+                ),
+                const SizedBox(height: 14),
+
                 ShaderMask(
                   shaderCallback: (bounds) => const LinearGradient(
-                    colors: [MyColors.primary, Colors.purpleAccent],
+                    colors: [heaidng, heaidng],
                   ).createShader(bounds),
                   child: const Text(
                     "Welcome Back",
@@ -526,7 +568,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   controller: emailController,
                   decoration: _inputDecoration("Email"),
                   keyboardType: TextInputType.emailAddress,
-                  style: const TextStyle(color: Colors.white),
+                  style: const TextStyle(color: kTextPrimary),
 
                   validator: (val) {
                     if (val == null || val.isEmpty) {
@@ -553,7 +595,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         _obscurePassword
                             ? Icons.visibility_off
                             : Icons.visibility,
-                        color: MyColors.primary,
+                        color: kTextPrimary,
                       ),
                       onPressed: () {
                         setState(() {
@@ -563,7 +605,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   obscureText: _obscurePassword,
-                  style: const TextStyle(color: MyColors.textPrimary),
+                  style: const TextStyle(color: kTextPrimary),
 
                   validator: (val) {
                     if (val == null || val.isEmpty) {
@@ -593,21 +635,20 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: const Text(
                       "Forgot Password?",
                       style: TextStyle(
-                        color: MyColors.primary,
+                        color: heaidng,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(height: 16),
 
-                const SizedBox(height: 24),
+                const SizedBox(height: 40),
 
                 // Login Button
                 isLoading
                     ? const CircularProgressIndicator(
                         valueColor: AlwaysStoppedAnimation<Color>(
-                          MyColors.primary,
+                          kPrimaryColor,
                         ),
                       )
                     : SizedBox(
@@ -616,19 +657,19 @@ class _LoginScreenState extends State<LoginScreen> {
                           onPressed: login,
                           style: ElevatedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 16),
-                            backgroundColor: MyColors.buttonBackground,
+                            backgroundColor: kPrimaryColor,
                             foregroundColor: Colors.white,
                             elevation: 8,
-                            shadowColor: MyColors.primary.withOpacity(0.3),
+                            shadowColor: kPrimaryColor.withOpacity(0.3),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(
                                 22,
                               ), // 👈 smoother round corners
-                              side: const BorderSide(
-                                color:
-                                    MyColors.secondary, // 👈 thin subtle border
-                                width: 1.2,
-                              ),
+                              // side: const BorderSide(
+                              //   color:
+                              //       MyColors.secondary, // 👈 thin subtle border
+                              //   width: 1.2,
+                              // ),
                             ),
                           ),
                           child: const Text(
@@ -651,8 +692,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     const Text(
                       "Don't have an account? ",
                       style: TextStyle(
-                        color:
-                            MyColors.textSecondary, // Soft light LinkedIn blue
+                        color: kTextSecondary, // Soft light LinkedIn blue
                         fontWeight: FontWeight.w500,
                         fontSize: 16,
                       ),
@@ -667,11 +707,11 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: const Text(
                         "Sign Up",
                         style: TextStyle(
-                          color: MyColors.primary, // Dark LinkedIn premium blue
+                          color: kPrimaryColor, // Dark LinkedIn premium blue
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
                           decoration: TextDecoration.underline,
-                          decorationColor: MyColors.primary,
+                          decorationColor: kPrimaryColor,
                           decorationThickness: 2,
                         ),
                       ),

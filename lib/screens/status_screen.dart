@@ -1,5 +1,3 @@
-
-
 // /////////////////////////////////
 
 // import 'package:flutter/material.dart';
@@ -38,6 +36,9 @@
 //     super.initState();
 //     statusController = StatusController(currentUserId: widget.currentUserId);
 //     statusController.fetchPublicStatuses();
+//    WidgetsBinding.instance.addPostFrameCallback((_) {
+//   widget.onViewed?.call();
+// });
 //   }
 
 //   Future<void> _openAddStatusDialog() async {
@@ -402,6 +403,15 @@
 //                   controller: _pageController,
 //                   scrollDirection: Axis.vertical,
 //                   itemCount: controller.publicStatuses.length,
+//                  onPageChanged: (index) {
+//   final status = controller.publicStatuses[index];
+//   if (!status.isViewed) {
+//     controller.markStatusAsViewed(status.id); // DB update
+//     status.isViewed = true;                   // ✅ immediate client update
+//     widget.onViewed?.call();                  // badge update
+//   }
+// },
+
 //                   itemBuilder: (context, index) {
 //                     final status = controller.publicStatuses[index];
 //                     final mediaUrl = Backend.buildMediaUrl(status.url);
@@ -617,45 +627,60 @@
 //                               const SizedBox(height: 18),
 
 //                               // 👤 Profile Icon (Middle)
-//                               Container(
-//                                 decoration: const BoxDecoration(
-//                                   color: Colors.black45,
-//                                   shape: BoxShape.circle,
-//                                 ),
-//                                 child: IconButton(
-//                                   icon: const Icon(
-//                                     Icons.person,
-//                                     color: Colors.white,
-//                                     size: 28,
-//                                   ),
-//                                   onPressed: () async {
-//                                     try {
-//                                       final uploaderId = status.uploaderUserId;
-//                                       if (uploaderId == null) return;
-//                                       final url = Uri.parse(
-//                                         '${Backend.baseUrl}/provider/services/providers/$uploaderId',
-//                                       );
-//                                       final response = await http.get(url);
-//                                       if (response.statusCode != 200) return;
-//                                       final data = jsonDecode(response.body);
-//                                       final providerDetails =
-//                                           data['provider'] ?? {};
-//                                       final bool readOnly =
-//                                           widget.currentUserId != uploaderId;
-//                                       Navigator.push(
-//                                         context,
-//                                         MaterialPageRoute(
-//                                           builder: (_) => MyProfileScreen(
-//                                             userData: providerDetails,
-//                                             readOnly: readOnly,
-//                                             currentUserId: widget.currentUserId,
-//                                           ),
-//                                         ),
-//                                       );
-//                                     } catch (_) {}
-//                                   },
-//                                 ),
-//                               ),
+//                             Container(
+//   padding: const EdgeInsets.all(2), // circle ke liye thodi space
+//   decoration: BoxDecoration(
+//     shape: BoxShape.circle,
+//     border: Border.all(
+//       color: status.isViewed ? Colors.grey : Colors.green, // ✅ color logic
+//       width: 3, // thickness of outer circle
+//     ),
+//   ),
+//   child: CircleAvatar(
+//     radius: 28,
+//     backgroundColor: Colors.black45,
+//     child: IconButton(
+//       icon: const Icon(
+//         Icons.person,
+//         color: Colors.white,
+//         size: 28,
+//       ),
+//       onPressed: () async {
+//         try {
+//           final uploaderId = status.uploaderUserId;
+//           if (uploaderId == null) return;
+//           // ✅ Mark status as viewed
+//     if (!status.isViewed) {
+//       setState(() {
+//         status.isViewed = true;
+//       });
+//       // 🔹 Update unseen status count
+//       widget.onViewed?.call();
+//     }
+//           final url = Uri.parse(
+//             '${Backend.baseUrl}/provider/services/providers/$uploaderId',
+//           );
+//           final response = await http.get(url);
+//           if (response.statusCode != 200) return;
+//           final data = jsonDecode(response.body);
+//           final providerDetails = data['provider'] ?? {};
+//           final bool readOnly = widget.currentUserId != uploaderId;
+//           Navigator.push(
+//             context,
+//             MaterialPageRoute(
+//               builder: (_) => MyProfileScreen(
+//                 userData: providerDetails,
+//                 readOnly: readOnly,
+//                 currentUserId: widget.currentUserId,
+//               ),
+//             ),
+//           );
+
+//         } catch (_) {}
+//       },
+//     ),
+//   ),
+// ),
 
 //                               const SizedBox(height: 18),
 
@@ -725,25 +750,6 @@
 //   }
 // }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /////////////////////////////////
 
 import 'package:flutter/material.dart';
@@ -756,17 +762,17 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/status_comments_widget.dart';
-import '../helpers/my_colors.dart';
+import '../helpers/coolors.dart';
 
 class StatusPage extends StatefulWidget {
   final int currentUserId;
   final bool isProvider;
-final VoidCallback? onViewed;
+  final VoidCallback? onViewed;
   const StatusPage({
     Key? key,
     required this.currentUserId,
     required this.isProvider,
-     this.onViewed,
+    this.onViewed,
   }) : super(key: key);
 
   @override
@@ -782,9 +788,9 @@ class _StatusPageState extends State<StatusPage> {
     super.initState();
     statusController = StatusController(currentUserId: widget.currentUserId);
     statusController.fetchPublicStatuses();
-   WidgetsBinding.instance.addPostFrameCallback((_) {
-  widget.onViewed?.call();
-});
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      widget.onViewed?.call();
+    });
   }
 
   Future<void> _openAddStatusDialog() async {
@@ -801,7 +807,7 @@ class _StatusPageState extends State<StatusPage> {
         insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
         child: Container(
           decoration: BoxDecoration(
-            color: MyColors.surface,
+            color: kCardColor,
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
@@ -819,14 +825,14 @@ class _StatusPageState extends State<StatusPage> {
                 "Add Status",
                 style: TextStyle(
                   fontSize: 20,
-                  color: MyColors.textPrimary,
+                  color: kTextPrimary,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               const SizedBox(height: 16),
               Text(
                 "Choose what you want to share:",
-                style: TextStyle(color: MyColors.textSecondary),
+                style: TextStyle(color: kTextSecondary),
               ),
               const SizedBox(height: 20),
               Row(
@@ -834,8 +840,8 @@ class _StatusPageState extends State<StatusPage> {
                 children: [
                   ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: MyColors.secondary,
-                      foregroundColor: MyColors.textPrimary,
+                      backgroundColor: kSecondaryColor,
+                      foregroundColor: kBackgroundColor,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14),
                       ),
@@ -857,8 +863,8 @@ class _StatusPageState extends State<StatusPage> {
                   ),
                   ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: MyColors.secondary.withOpacity(0.9),
-                      foregroundColor: MyColors.textPrimary,
+                      backgroundColor: kSecondaryColor.withOpacity(0.9),
+                      foregroundColor: kTextPrimary,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14),
                       ),
@@ -901,7 +907,7 @@ class _StatusPageState extends State<StatusPage> {
           ),
           child: Container(
             decoration: BoxDecoration(
-              color: MyColors.surface,
+              color: kCardColor,
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
@@ -918,12 +924,12 @@ class _StatusPageState extends State<StatusPage> {
               children: [
                 Row(
                   children: [
-                    Icon(Icons.edit_note, color: MyColors.secondary, size: 26),
+                    Icon(Icons.edit_note, color: kSecondaryColor, size: 26),
                     const SizedBox(width: 8),
                     Text(
                       "Add Caption",
                       style: TextStyle(
-                        color: MyColors.textPrimary,
+                        color: kTextPrimary,
                         fontSize: 20,
                         fontWeight: FontWeight.w700,
                       ),
@@ -933,7 +939,7 @@ class _StatusPageState extends State<StatusPage> {
                 const SizedBox(height: 8),
                 Text(
                   "You are going to upload a public story.",
-                  style: TextStyle(color: MyColors.textSecondary, fontSize: 14),
+                  style: TextStyle(color: kTextSecondary, fontSize: 14),
                 ),
                 const SizedBox(height: 16),
                 TextField(
@@ -941,12 +947,12 @@ class _StatusPageState extends State<StatusPage> {
                   maxLines: 3,
 
                   textInputAction: TextInputAction.newline,
-                  style: TextStyle(color: MyColors.textPrimary),
+                  style: TextStyle(color: kTextPrimary),
                   decoration: InputDecoration(
                     hintText: "Write your caption...",
-                    hintStyle: TextStyle(color: MyColors.textSecondary),
+                    hintStyle: TextStyle(color: kTextSecondary),
                     filled: true,
-                    fillColor: MyColors.surface.withOpacity(0.9),
+                    fillColor: kCardColor.withOpacity(0.9),
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 16,
                       vertical: 12,
@@ -954,13 +960,13 @@ class _StatusPageState extends State<StatusPage> {
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
                       borderSide: BorderSide(
-                        color: MyColors.secondary.withOpacity(0.4),
+                        color: kSecondaryColor.withOpacity(0.4),
                       ),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
                       borderSide: BorderSide(
-                        color: MyColors.secondary,
+                        color: kSecondaryColor,
                         width: 1.5,
                       ),
                     ),
@@ -974,14 +980,14 @@ class _StatusPageState extends State<StatusPage> {
                       onPressed: () => Navigator.of(context).pop(),
                       child: Text(
                         "Cancel",
-                        style: TextStyle(color: MyColors.textSecondary),
+                        style: TextStyle(color: kTextSecondary),
                       ),
                     ),
                     const SizedBox(width: 8),
                     ElevatedButton.icon(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: MyColors.secondary,
-                        foregroundColor: MyColors.textPrimary,
+                        backgroundColor: kSecondaryColor,
+                        foregroundColor: kTextPrimary,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -993,7 +999,10 @@ class _StatusPageState extends State<StatusPage> {
                       icon: const Icon(Icons.cloud_upload, size: 20),
                       label: const Text(
                         "Upload",
-                        style: TextStyle(fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: kTextPrimary,
+                        ),
                       ),
                       onPressed: () async {
                         Navigator.of(context).pop(); // Close caption dialog
@@ -1032,7 +1041,7 @@ class _StatusPageState extends State<StatusPage> {
                                     return Container(
                                       padding: const EdgeInsets.all(20),
                                       decoration: BoxDecoration(
-                                        color: MyColors.surface,
+                                        color: kTextPrimary,
                                         borderRadius: BorderRadius.circular(16),
                                       ),
                                       child: Column(
@@ -1040,7 +1049,7 @@ class _StatusPageState extends State<StatusPage> {
                                         children: [
                                           CircularProgressIndicator(
                                             value: progress.clamp(0.0, 1.0),
-                                            color: MyColors.secondary,
+                                            color: kPrimaryColor,
                                           ),
                                           const SizedBox(height: 12),
                                           Text(
@@ -1048,7 +1057,7 @@ class _StatusPageState extends State<StatusPage> {
                                                 ? "Uploading... ${(progress * 100).toStringAsFixed(0)}%"
                                                 : "Upload Complete",
                                             style: TextStyle(
-                                              color: MyColors.textPrimary,
+                                              color: kTextPrimary,
                                               fontWeight: FontWeight.w500,
                                             ),
                                           ),
@@ -1095,7 +1104,7 @@ class _StatusPageState extends State<StatusPage> {
     return ChangeNotifierProvider.value(
       value: statusController,
       child: Scaffold(
-        backgroundColor: Colors.black,
+        backgroundColor: kTextPrimary,
         body: Stack(
           children: [
             Consumer<StatusController>(
@@ -1103,7 +1112,7 @@ class _StatusPageState extends State<StatusPage> {
                 if (controller.isLoading) {
                   // Agar abhi load ho raha hai
                   return const Center(
-                    child: CircularProgressIndicator(color: Colors.white),
+                    child: CircularProgressIndicator(color: kPrimaryColor),
                   );
                 }
 
@@ -1115,13 +1124,13 @@ class _StatusPageState extends State<StatusPage> {
                       children: [
                         const Text(
                           "No status is uploaded yet",
-                          style: TextStyle(color: Colors.white, fontSize: 18),
+                          style: TextStyle(color: kTextSecondary, fontSize: 18),
                         ),
                         const SizedBox(height: 20),
                         if (widget.isProvider)
                           Container(
                             decoration: BoxDecoration(
-                              color: MyColors.secondary,
+                              color: kPrimaryColor,
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
@@ -1134,7 +1143,7 @@ class _StatusPageState extends State<StatusPage> {
                             child: IconButton(
                               icon: const Icon(
                                 Icons.add,
-                                color: MyColors.textPrimary,
+                                color: kCardColor,
                                 size: 32,
                               ),
                               onPressed: _openAddStatusDialog,
@@ -1149,14 +1158,14 @@ class _StatusPageState extends State<StatusPage> {
                   controller: _pageController,
                   scrollDirection: Axis.vertical,
                   itemCount: controller.publicStatuses.length,
-                 onPageChanged: (index) {
-  final status = controller.publicStatuses[index];
-  if (!status.isViewed) {
-    controller.markStatusAsViewed(status.id); // DB update
-    status.isViewed = true;                   // ✅ immediate client update
-    widget.onViewed?.call();                  // badge update
-  }
-},
+                  onPageChanged: (index) {
+                    final status = controller.publicStatuses[index];
+                    if (!status.isViewed) {
+                      controller.markStatusAsViewed(status.id); // DB update
+                      status.isViewed = true; // ✅ immediate client update
+                      widget.onViewed?.call(); // badge update
+                    }
+                  },
 
                   itemBuilder: (context, index) {
                     final status = controller.publicStatuses[index];
@@ -1304,7 +1313,9 @@ class _StatusPageState extends State<StatusPage> {
                               GestureDetector(
                                 onTap: () async {
                                   if (status.isLikingInProgress) return;
-  await context.read<StatusController>().toggleLike(status);
+                                  await context
+                                      .read<StatusController>()
+                                      .toggleLike(status);
 
                                   final prevLiked = status.isLikedByCurrentUser;
                                   final prevCount = status.likeCount;
@@ -1373,61 +1384,67 @@ class _StatusPageState extends State<StatusPage> {
                               const SizedBox(height: 18),
 
                               // 👤 Profile Icon (Middle)
-                            Container(
-  padding: const EdgeInsets.all(2), // circle ke liye thodi space
-  decoration: BoxDecoration(
-    shape: BoxShape.circle,
-    border: Border.all(
-      color: status.isViewed ? Colors.grey : Colors.green, // ✅ color logic
-      width: 3, // thickness of outer circle
-    ),
-  ),
-  child: CircleAvatar(
-    radius: 28,
-    backgroundColor: Colors.black45,
-    child: IconButton(
-      icon: const Icon(
-        Icons.person,
-        color: Colors.white,
-        size: 28,
-      ),
-      onPressed: () async {
-        try {
-          final uploaderId = status.uploaderUserId;
-          if (uploaderId == null) return;
-          // ✅ Mark status as viewed
-    if (!status.isViewed) {
-      setState(() {
-        status.isViewed = true;
-      });
-      // 🔹 Update unseen status count
-      widget.onViewed?.call();
-    }
-          final url = Uri.parse(
-            '${Backend.baseUrl}/provider/services/providers/$uploaderId',
-          );
-          final response = await http.get(url);
-          if (response.statusCode != 200) return;
-          final data = jsonDecode(response.body);
-          final providerDetails = data['provider'] ?? {};
-          final bool readOnly = widget.currentUserId != uploaderId;
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => MyProfileScreen(
-                userData: providerDetails,
-                readOnly: readOnly,
-                currentUserId: widget.currentUserId,
-              ),
-            ),
-          );
-
-        } catch (_) {}
-      },
-    ),
-  ),
-),
-
+                              Container(
+                                padding: const EdgeInsets.all(
+                                  2,
+                                ), // circle ke liye thodi space
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: status.isViewed
+                                        ? Colors.grey
+                                        : Colors.green, // ✅ color logic
+                                    width: 3, // thickness of outer circle
+                                  ),
+                                ),
+                                child: CircleAvatar(
+                                  radius: 28,
+                                  backgroundColor: Colors.black45,
+                                  child: IconButton(
+                                    icon: const Icon(
+                                      Icons.person,
+                                      color: Colors.white,
+                                      size: 28,
+                                    ),
+                                    onPressed: () async {
+                                      try {
+                                        final uploaderId =
+                                            status.uploaderUserId;
+                                        if (uploaderId == null) return;
+                                        // ✅ Mark status as viewed
+                                        if (!status.isViewed) {
+                                          setState(() {
+                                            status.isViewed = true;
+                                          });
+                                          // 🔹 Update unseen status count
+                                          widget.onViewed?.call();
+                                        }
+                                        final url = Uri.parse(
+                                          '${Backend.baseUrl}/provider/services/providers/$uploaderId',
+                                        );
+                                        final response = await http.get(url);
+                                        if (response.statusCode != 200) return;
+                                        final data = jsonDecode(response.body);
+                                        final providerDetails =
+                                            data['provider'] ?? {};
+                                        final bool readOnly =
+                                            widget.currentUserId != uploaderId;
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) => MyProfileScreen(
+                                              userData: providerDetails,
+                                              readOnly: readOnly,
+                                              currentUserId:
+                                                  widget.currentUserId,
+                                            ),
+                                          ),
+                                        );
+                                      } catch (_) {}
+                                    },
+                                  ),
+                                ),
+                              ),
 
                               const SizedBox(height: 18),
 
@@ -1462,7 +1479,7 @@ class _StatusPageState extends State<StatusPage> {
                               if (widget.isProvider)
                                 Container(
                                   decoration: BoxDecoration(
-                                    color: MyColors.secondary,
+                                    color: kPrimaryColor,
                                     shape: BoxShape.circle,
                                     boxShadow: [
                                       BoxShadow(
@@ -1475,7 +1492,7 @@ class _StatusPageState extends State<StatusPage> {
                                   child: IconButton(
                                     icon: const Icon(
                                       Icons.add,
-                                      color: MyColors.textPrimary,
+                                      color: kTextPrimary,
                                       size: 32,
                                     ),
                                     onPressed: _openAddStatusDialog,

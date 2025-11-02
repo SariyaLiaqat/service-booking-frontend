@@ -30,6 +30,10 @@ class SideMenu extends StatelessWidget {
   Widget build(BuildContext context) {
     final menuItems = [
       MenuItemModel(
+          title: 'Dashboard',
+          icon: Icons.info_outline,
+          onTap: () => onMenuSelected('Dashboard')),
+      MenuItemModel(
           title: 'About Us',
           icon: Icons.info_outline,
           onTap: () => onMenuSelected('About Us')),

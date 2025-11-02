@@ -33,6 +33,8 @@
 //   }
 // }
 
+
+
 ///////////////////////////////////////////////////
 ///
 
@@ -137,11 +139,9 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-
-
 class Backend {
-  static String get baseUrl =>"http://192.168.1.193:5000";
-  static String get socketUrl =>"http://192.168.1.193:5000";
+  static String get baseUrl =>"https://306688a73b1f.ngrok-free.app";
+  static String get socketUrl =>"https://306688a73b1f.ngrok-free.app";
 
   // GET request
   static Future<Map<String, dynamic>?> get(String endpoint) async {
@@ -157,17 +157,9 @@ class Backend {
       debugPrint('GET error: $e');
       return null;
     }
-
-
-
-
-
-
   }
 //------------------------
 
-
-// Backend.dart ke andar add karo
 
 // 🔹 Parse payment URL from backend response
 static String? parsePaymentUrl(Map<String, dynamic>? response) {
@@ -177,9 +169,6 @@ static String? parsePaymentUrl(Map<String, dynamic>? response) {
   }
   return null;
 }
-
-
-
 static String buildMediaUrl(String path) {
   if (path.startsWith("http")) return path; // already full URL
 
@@ -188,10 +177,6 @@ static String buildMediaUrl(String path) {
       ? "$baseUrl${path.startsWith('/') ? path.substring(1) : path}"
       : "$baseUrl${path.startsWith('/') ? path : '/$path'}";
 }
-
-
-
-
   // POST request with optional body
   static Future<Map<String, dynamic>?> post(String endpoint, Map<String, dynamic> body) async {
     try {
@@ -212,8 +197,6 @@ static String buildMediaUrl(String path) {
     }
   }
 }
-
-
 class NotificationsApi {
   static Future<void> sendNotification({
     required int userId,
@@ -238,7 +221,3 @@ class NotificationsApi {
     }
   }
 }
-
-
-
-

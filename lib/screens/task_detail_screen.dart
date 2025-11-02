@@ -1,3 +1,4 @@
+
 // import 'dart:io';
 // import 'dart:convert';
 // import 'package:flutter/foundation.dart';
@@ -54,6 +55,8 @@
 //   TextEditingController addressController = TextEditingController();
 //   double? selectedLat;
 //   double? selectedLng;
+//   bool _isCreatingTask = false;
+
 //   @override
 //   void initState() {
 //     super.initState();
@@ -62,10 +65,7 @@
 //         ? List<Map<String, dynamic>>.from(widget.providerServices!)
 //         : [];
 
-//     headingController.text = widget.taskData?['title'] ?? "Enter task title";
-
-//     // Provider view (readOnly)
-//     // Provider view (readOnly)
+//     headingController.text = widget.taskData?['title'] ?? "";
 //     if (widget.readOnly && widget.taskData != null) {
 //       final t = widget.taskData!;
 //       headingController.text = t['title'] ?? t['service_title'];
@@ -358,24 +358,65 @@
 //   }
 
 //   Future<void> _confirmBooking() async {
+//     if (_isCreatingTask) return; // Prevent multiple taps
+//     _isCreatingTask = true;
+//     setState(() {}); // disable button
 //     FocusScope.of(context).unfocus();
 
+//     // 1️⃣ Service selected
+//     if (selectedServiceId == null) {
+//       ScaffoldMessenger.of(context).showSnackBar(
+//         const SnackBar(content: Text("Please select a service ❌")),
+//       );
+//       _isCreatingTask = false;
+//       setState(() {});
+//       return;
+//     }
+
+//     // 2️⃣ Date selected
 //     if (selectedDate == null) {
 //       ScaffoldMessenger.of(
 //         context,
 //       ).showSnackBar(const SnackBar(content: Text("Please select a date 📅")));
+//       _isCreatingTask = false;
+//       setState(() {});
 //       return;
 //     }
 
-//     if (selectedServiceId == null) {
-//       ScaffoldMessenger.of(
-//         context,
-//       ).showSnackBar(const SnackBar(content: Text("Invalid service ❌")));
+//     // 3️⃣ Title entered
+//     if (headingController.text.trim().isEmpty) {
+//       ScaffoldMessenger.of(context).showSnackBar(
+//         const SnackBar(content: Text("Please enter a task title ✏️")),
+//       );
+//       _isCreatingTask = false;
+//       setState(() {});
 //       return;
 //     }
 
+//     // 4️⃣ Location/address set
+//     if (addressController.text.trim().isEmpty ||
+//         selectedLat == null ||
+//         selectedLng == null) {
+//       ScaffoldMessenger.of(context).showSnackBar(
+//         const SnackBar(content: Text("Please set your location 📍")),
+//       );
+//       _isCreatingTask = false;
+//       setState(() {});
+//       return;
+//     }
+
+//     // 5️⃣ Notes/requirements filled
+//     if (notesController.text.trim().isEmpty) {
+//       ScaffoldMessenger.of(context).showSnackBar(
+//         const SnackBar(content: Text("Please add notes/requirements 📝")),
+//       );
+//       _isCreatingTask = false;
+//       setState(() {});
+//       return;
+//     }
+
+//     // ✅ If all validations pass, create the task
 //     try {
-//       // ⚡ Call helper function to create task with attachments
 //       await createTaskWithAttachments(
 //         userId: widget.currentUserId,
 //         providerId: widget.providerId,
@@ -399,7 +440,6 @@
 //         ),
 //       );
 
-//       // Navigate to MyTasksScreen
 //       Navigator.pushReplacement(
 //         context,
 //         MaterialPageRoute(
@@ -411,6 +451,9 @@
 //       ScaffoldMessenger.of(
 //         context,
 //       ).showSnackBar(SnackBar(content: Text("Error: $e")));
+//     } finally {
+//       _isCreatingTask = false;
+//       setState(() {}); // re-enable button
 //     }
 //   }
 
@@ -535,9 +578,9 @@
 //                     controller: headingController,
 //                     readOnly: widget.readOnly,
 //                     style: const TextStyle(
-//                       fontSize: 24, // slightly bigger
+//                       fontSize: 20, // slightly bigger
 //                       fontWeight: FontWeight.bold,
-//                       color: Color(0xFF2A3A69),
+//                       color: MyColors.textPrimary,
 //                     ),
 //                     decoration: InputDecoration(
 //                       hintText: "Task Title",
@@ -547,9 +590,7 @@
 //                         fontWeight: FontWeight.w500,
 //                       ),
 //                       filled: true,
-//                       fillColor: const Color(
-//                         0xFFEFF4FB,
-//                       ), // soft bluish background
+//                       fillColor: MyColors.inputFill, // soft bluish background
 //                       contentPadding: const EdgeInsets.symmetric(
 //                         horizontal: 20,
 //                         vertical: 16,
@@ -573,21 +614,21 @@
 //                     ),
 //                   ),
 
-//                   const SizedBox(height: 20),
+//                   const SizedBox(height: 30),
 //                   Container(
 //                     alignment: Alignment.centerLeft,
 //                     padding: const EdgeInsets.symmetric(vertical: 8),
 //                     child: Text(
 //                       "Choose the service You need",
 //                       style: TextStyle(
-//                         fontSize: 22,
+//                         fontSize: 16,
 //                         fontWeight: FontWeight.bold,
 //                         foreground: Paint()
 //                           ..shader =
 //                               LinearGradient(
 //                                 colors: <Color>[
-//                                   MyColors.primary, // theme primary color
-//                                   MyColors.secondary, // theme secondary color
+//                                   MyColors.textPrimary, // theme primary color
+//                                   MyColors.textPrimary, // theme secondary color
 //                                 ],
 //                               ).createShader(
 //                                 const Rect.fromLTWH(0.0, 0.0, 250.0, 50.0),
@@ -629,18 +670,20 @@
 //                           )
 //                         : DropdownButtonFormField<int?>(
 //                             value: selectedServiceId,
-//                            hint: const Text(
-//     "Select a service",
-//     style: TextStyle(
-//       color: MyColors.textSecondary, // placeholder color
-//       fontSize: 15,
-//     ),
-//   ),
-//   style: const TextStyle(
-//     color: MyColors.textPrimary, // selected item ka color
-//     fontSize: 16,
-//   ),
-//    dropdownColor: MyColors.surface,
+//                             hint: const Text(
+//                               "Select a service",
+//                               style: TextStyle(
+//                                 color:
+//                                     MyColors.textSecondary, // placeholder color
+//                                 fontSize: 15,
+//                               ),
+//                             ),
+//                             style: const TextStyle(
+//                               color: MyColors
+//                                   .textPrimary, // selected item ka color
+//                               fontSize: 14,
+//                             ),
+//                             dropdownColor: MyColors.surface,
 //                             items: _providerServices.map((s) {
 //                               final id = s['id'] is int
 //                                   ? s['id']
@@ -673,11 +716,14 @@
 //                     ),
 
 //                   const SizedBox(height: 40),
+
+//                   simpleDivider(),
+//                   const SizedBox(height: 40),
 //                   Container(
 //                     alignment: Alignment.centerLeft,
 //                     padding: const EdgeInsets.symmetric(vertical: 6),
 //                     child: Text(
-//                       "Set Expiry Date For Task",
+//                       "Set expiry date for task",
 //                       style: TextStyle(
 //                         fontSize: 16,
 //                         fontWeight: FontWeight.bold,
@@ -710,7 +756,7 @@
 //                       style: const TextStyle(
 //                         color: MyColors.textPrimary, // theme white
 //                         fontWeight: FontWeight.w500,
-//                         fontSize: 16,
+//                         fontSize: 12,
 //                       ),
 //                     ),
 //                     onTap: widget.readOnly ? null : _pickDate,
@@ -724,7 +770,10 @@
 //                     ),
 //                   ),
 
-//                   SizedBox(height: 20),
+//                   const SizedBox(height: 40),
+
+//                   simpleDivider(),
+//                   const SizedBox(height: 40),
 
 //                   Container(
 //                     alignment: Alignment.centerLeft,
@@ -878,7 +927,10 @@
 //                       ),
 //                   ],
 
-//                   const SizedBox(height: 35),
+//                   const SizedBox(height: 40),
+
+//                   simpleDivider(),
+//                   const SizedBox(height: 40),
 //                   Container(
 //                     alignment: Alignment.centerLeft,
 //                     padding: const EdgeInsets.symmetric(vertical: 6),
@@ -1051,13 +1103,15 @@
 //                           child: ElevatedButton(
 //                             onPressed:
 //                                 (_providerServices.isEmpty ||
-//                                     selectedServiceId == null)
+//                                     selectedServiceId == null ||
+//                                     _isCreatingTask)
 //                                 ? null
 //                                 : _confirmBooking,
 //                             style: ElevatedButton.styleFrom(
 //                               backgroundColor:
 //                                   (_providerServices.isEmpty ||
-//                                       selectedServiceId == null)
+//                                       selectedServiceId == null ||
+//                                       _isCreatingTask)
 //                                   ? Colors.grey
 //                                   : MyColors.buttonBackground,
 //                               padding: const EdgeInsets.symmetric(vertical: 14),
@@ -1067,13 +1121,22 @@
 //                               elevation: 6,
 //                               shadowColor: Colors.black.withOpacity(0.3),
 //                             ),
-//                             child: const Text(
-//                               "Confirm Booking",
-//                               style: TextStyle(
-//                                 fontSize: 16,
-//                                 color: MyColors.buttonText,
-//                               ),
-//                             ),
+//                             child: _isCreatingTask
+//                                 ? const SizedBox(
+//                                     height: 20,
+//                                     width: 20,
+//                                     child: CircularProgressIndicator(
+//                                       color: Colors.white,
+//                                       strokeWidth: 2,
+//                                     ),
+//                                   )
+//                                 : const Text(
+//                                     "Confirm Booking",
+//                                     style: TextStyle(
+//                                       fontSize: 16,
+//                                       color: MyColors.buttonText,
+//                                     ),
+//                                   ),
 //                           ),
 //                         ),
 //                         const SizedBox(width: 16),
@@ -1201,7 +1264,7 @@
 //   InputDecoration _dropdownDecoration() => InputDecoration(
 //     filled: true,
 //     fillColor: MyColors.surface,
-//      // theme dark surface
+//     // theme dark surface
 //     contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
 //     border: OutlineInputBorder(
 //       borderRadius: BorderRadius.circular(16),
@@ -1298,6 +1361,33 @@
 //   }
 // }
 
+// Widget simpleDivider() {
+//   return Divider(color: MyColors.textSecondary, thickness: 1, height: 20);
+// }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
@@ -1308,10 +1398,10 @@ import '../helpers/backend.dart';
 import 'my_tasks_screen.dart';
 import 'full_scree.dart';
 import 'chat_page.dart';
-import '../helpers/colors.dart';
+import '../helpers/coolors.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:url_launcher/url_launcher_string.dart';
-import '../helpers/my_colors.dart';
+
 
 class TaskDetailPage extends StatefulWidget {
   final int currentUserId;
@@ -1593,13 +1683,13 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.light(
-              primary: MyColors.primary, // Header background
-              onPrimary: Colors.white, // Header text (month/year/day)
-              onSurface: MyColors.primary, // Dates text
+              primary: kPrimaryColor, // Header background
+              onPrimary: Colors.black, // Header text (month/year/day)
+              onSurface: kPrimaryColor, // Dates text
             ),
             textButtonTheme: TextButtonThemeData(
               style: TextButton.styleFrom(
-                foregroundColor: MyColors.primary, // Action button text
+                foregroundColor: kPrimaryColor, // Action button text
                 textStyle: const TextStyle(fontWeight: FontWeight.bold),
               ),
             ),
@@ -1617,13 +1707,13 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
           return Theme(
             data: Theme.of(context).copyWith(
               colorScheme: const ColorScheme.light(
-                primary: MyColors.inputFocusedBorder, // Time picker dial color
-                onPrimary: Colors.white, // Selected text
-                onSurface: MyColors.inputFill, // Normal text
+                primary: kTextPrimary, // Time picker dial color
+                onPrimary: kBackgroundColor, // Selected text
+                onSurface: kTextPrimary, // Normal text
               ),
               textButtonTheme: TextButtonThemeData(
                 style: TextButton.styleFrom(
-                  foregroundColor: MyColors.primary,
+                  foregroundColor: kPrimaryColor,
                   textStyle: const TextStyle(fontWeight: FontWeight.bold),
                 ),
               ),
@@ -1735,7 +1825,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
           content: Text(
             "✅ Your task has been successfully sent. Please wait for provider approval.",
           ),
-          backgroundColor: Colors.blue,
+          backgroundColor: kPrimaryColor,
         ),
       );
 
@@ -1833,13 +1923,13 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: MyColors.background,
+      backgroundColor: kBackgroundColor,
 
       appBar: AppBar(
         title: const Text(
           "Task Details",
           style: TextStyle(
-            color: Colors.white,
+            color: heaidng,
             fontWeight: FontWeight.bold,
             fontSize: 22,
           ),
@@ -1849,13 +1939,13 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
         ),
-        iconTheme: const IconThemeData(color: Colors.white),
+        iconTheme: const IconThemeData(color: heaidng),
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                Color(0xFF2A2A40), // royal indigo
-                Color(0xFF3D3A8B), // violet glow
+                kBackgroundColor, // royal indigo
+                kBackgroundColor, // violet glow
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
@@ -1866,7 +1956,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
 
       body: loadingServices && !widget.readOnly
           ? const Center(
-              child: CircularProgressIndicator(color: MyColors.primary),
+              child: CircularProgressIndicator(color: kPrimaryColor),
             )
           : SingleChildScrollView(
               padding: const EdgeInsets.all(16),
@@ -1879,34 +1969,40 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                     style: const TextStyle(
                       fontSize: 20, // slightly bigger
                       fontWeight: FontWeight.bold,
-                      color: MyColors.textPrimary,
+                      color:kTextPrimary,
                     ),
                     decoration: InputDecoration(
                       hintText: "Task Title",
                       hintStyle: const TextStyle(
-                        color: Color(0xFFA1A1A1),
+                        color: kTextSecondary,
                         fontSize: 18,
                         fontWeight: FontWeight.w500,
                       ),
                       filled: true,
-                      fillColor: MyColors.inputFill, // soft bluish background
+                      fillColor: kBackgroundColor, // soft bluish background
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 20,
                         vertical: 16,
                       ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(18),
-                        borderSide: BorderSide.none,
+                         borderSide: const BorderSide(
+                          color: heaidng, // dark blue glow
+                          width: 1,
+                        ),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(18),
-                        borderSide: BorderSide.none,
+                         borderSide: const BorderSide(
+                          color: heaidng, // dark blue glow
+                          width: 1,
+                        ),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(18),
                         borderSide: const BorderSide(
-                          color: Color(0xFF2A3A69), // dark blue glow
-                          width: 2,
+                          color: heaidng, // dark blue glow
+                          width: 1,
                         ),
                       ),
                       // optional shadow inside
@@ -1926,8 +2022,8 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                           ..shader =
                               LinearGradient(
                                 colors: <Color>[
-                                  MyColors.textPrimary, // theme primary color
-                                  MyColors.textPrimary, // theme secondary color
+                                 kTextPrimary, // theme primary color
+                                 kTextPrimary, // theme secondary color
                                 ],
                               ).createShader(
                                 const Rect.fromLTWH(0.0, 0.0, 250.0, 50.0),
@@ -1962,7 +2058,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                                 icon: const Icon(Icons.refresh),
                                 label: const Text(
                                   "Refresh services",
-                                  style: TextStyle(color: MyColors.primary),
+                                  style: TextStyle(color:kPrimaryColor),
                                 ),
                               ),
                             ],
@@ -1973,16 +2069,15 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                               "Select a service",
                               style: TextStyle(
                                 color:
-                                    MyColors.textSecondary, // placeholder color
+                                   kTextSecondary, // placeholder color
                                 fontSize: 15,
                               ),
                             ),
                             style: const TextStyle(
-                              color: MyColors
-                                  .textPrimary, // selected item ka color
+                              color: kTextPrimary, // selected item ka color
                               fontSize: 14,
                             ),
-                            dropdownColor: MyColors.surface,
+                            dropdownColor:kBackgroundColor,
                             items: _providerServices.map((s) {
                               final id = s['id'] is int
                                   ? s['id']
@@ -2026,12 +2121,12 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: MyColors.textPrimary, // simple white from theme
+                        color: kTextPrimary, // simple white from theme
                         shadows: const [
                           Shadow(
                             offset: Offset(0, 2),
                             blurRadius: 5,
-                            color: Colors.black26, // optional subtle shadow
+                            color: kBackgroundColor, // optional subtle shadow
                           ),
                         ],
                         letterSpacing: 0.4,
@@ -2044,7 +2139,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                   ListTile(
                     leading: Icon(
                       Icons.calendar_today,
-                      color: MyColors.textPrimary, // theme white
+                      color: kTextPrimary, // theme white
                     ),
                     title: Text(
                       selectedDate != null
@@ -2053,7 +2148,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                             )[0] // yyyy-mm-dd hh:mm:ss
                           : "No date & time selected",
                       style: const TextStyle(
-                        color: MyColors.textPrimary, // theme white
+                        color:kTextPrimary, // theme white
                         fontWeight: FontWeight.w500,
                         fontSize: 12,
                       ),
@@ -2061,7 +2156,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                     onTap: widget.readOnly ? null : _pickDate,
                     contentPadding: EdgeInsets.zero,
                     tileColor:
-                        MyColors.surface, // optional: dark background for tile
+                        kBackgroundColor, // optional: dark background for tile
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(
                         12,
@@ -2082,12 +2177,12 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                       style: TextStyle(
                         fontSize: 16, // slightly bigger than default
                         fontWeight: FontWeight.bold,
-                        color: MyColors.textPrimary, // theme white
+                        color: kTextPrimary, // theme white
                         shadows: const [
                           Shadow(
                             offset: Offset(0, 2),
                             blurRadius: 5,
-                            color: Colors.black26,
+                            color: kBackgroundColor,
                           ),
                         ],
                         letterSpacing: 0.4,
@@ -2102,18 +2197,18 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                       controller: addressController,
                       style: const TextStyle(
                         fontSize: 16,
-                        color: MyColors.textPrimary, // theme white text
+                        color:kTextPrimary, // theme white text
                         fontWeight: FontWeight.w500,
                       ),
                       decoration: InputDecoration(
                         labelText: "Type your address",
                         labelStyle: const TextStyle(
-                          color: MyColors.primary, // theme primary color
+                          color: kTextPrimary, // theme primary color
                           fontWeight: FontWeight.bold,
                         ),
                         filled: true,
                         fillColor:
-                            MyColors.inputFill, // theme input background (dark)
+                             kBackgroundColor, // theme input background (dark)
                         contentPadding: const EdgeInsets.symmetric(
                           horizontal: 20,
                           vertical: 16,
@@ -2121,24 +2216,23 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(18),
                           borderSide: BorderSide(
-                            color: MyColors.inputBorder.withOpacity(
-                              0.3,
+                            color: heaidng.withOpacity(
+                              1,
                             ), // theme border
-                            width: 1.2,
+                            width: 1,
                           ),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(18),
                           borderSide: BorderSide(
-                            color: MyColors.inputBorder.withOpacity(0.3),
-                            width: 1.2,
+                            color: heaidng.withOpacity(0.3),
+                            width: 1,
                           ),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(18),
                           borderSide: const BorderSide(
-                            color: MyColors
-                                .primary, // focus glow with theme primary
+                            color:kTextPrimary, // focus glow with theme primary
                             width: 2,
                           ),
                         ),
@@ -2165,28 +2259,28 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                               content: Text(
                                 "Location set: $selectedLat, $selectedLng",
                                 style: const TextStyle(
-                                  color: MyColors.textPrimary,
+                                  color:kTextPrimary,
                                 ),
                               ),
-                              backgroundColor: MyColors.primary,
+                              backgroundColor:kPrimaryColor,
                             ),
                           );
                         }
                       },
                       icon: const Icon(
                         Icons.my_location,
-                        color: MyColors.buttonText,
+                        color:buttonText,
                       ),
                       label: const Text(
                         "Share my location",
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: MyColors.buttonText,
+                          color: buttonText,
                         ),
                       ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: MyColors.secondary,
+                        backgroundColor: kPrimaryColor,
                         padding: const EdgeInsets.symmetric(
                           vertical: 14,
                           horizontal: 20,
@@ -2195,7 +2289,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                           borderRadius: BorderRadius.circular(16),
                         ),
                         elevation: 6,
-                        shadowColor: MyColors.secondary.withOpacity(0.3),
+                     //   shadowColor: MyColors.secondary.withOpacity(0.3),
                       ),
                     ),
                   ] else ...[
@@ -2204,7 +2298,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: MyColors.textSecondary,
+                        color: kTextSecondary ,
                       ),
                     ),
 
@@ -2238,12 +2332,12 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: MyColors.textPrimary, // theme ka white
+                        color: kTextPrimary, // theme ka white
                         shadows: const [
                           Shadow(
                             offset: Offset(0, 1),
                             blurRadius: 3,
-                            color: Colors.black26, // soft shadow
+                          //  color: Colors.black26, // soft shadow
                           ),
                         ],
                         letterSpacing: 0.4,
@@ -2256,7 +2350,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                   TextField(
                     controller: notesController,
                     maxLines: 6,
-                    style: TextStyle(color: MyColors.textPrimary),
+                    style: TextStyle(color: kTextPrimary),
                     readOnly: widget.readOnly,
                     decoration: _inputDecoration(
                       "Write any additional notes...",
@@ -2271,12 +2365,12 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: MyColors.textPrimary, // theme ka white
+                        color: kTextPrimary, // theme ka white
                         shadows: const [
                           Shadow(
                             offset: Offset(0, 1),
                             blurRadius: 3,
-                            color: Colors.black26, // soft shadow
+                           // color: Colors.black26, // soft shadow
                           ),
                         ],
                         letterSpacing: 0.4,
@@ -2316,14 +2410,14 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                                       setState(() => _attachments.remove(file)),
                                   child: Container(
                                     decoration: const BoxDecoration(
-                                      color: MyColors.divider,
+                                      color:kDividerColor,
                                       shape: BoxShape.circle,
                                     ),
                                     padding: const EdgeInsets.all(4),
                                     child: const Icon(
                                       Icons.close,
                                       size: 16,
-                                      color: MyColors.buttonText,
+                                      color: buttonText,
                                     ),
                                   ),
                                 ),
@@ -2339,13 +2433,13 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                             width: 100,
                             height: 100,
                             decoration: BoxDecoration(
-                              border: Border.all(color: MyColors.textSecondary),
+                              border: Border.all(color:  kTextSecondary),
                               borderRadius: BorderRadius.circular(8),
-                              color: AppColors.textLight.withOpacity(0.1),
+                              color: kTextSecondary.withOpacity(0.1),
                             ),
                             child: const Icon(
                               Icons.add,
-                              color: MyColors.primary,
+                              color:  kPrimaryColor,
                               size: 30,
                             ),
                           ),
@@ -2375,7 +2469,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: MyColors.textPrimary,
+                        color: kTextPrimary,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -2388,7 +2482,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                       controller: imageDetailsController,
                       minLines: 1, // start with 1 line
                       maxLines: 7, // expand up to 7 lines only
-                      style: TextStyle(color: MyColors.textPrimary),
+                      style: TextStyle(color:kTextPrimary),
                       decoration: _inputDecoration(
                         "You can add details about images...",
                       ),
@@ -2412,20 +2506,20 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                                       selectedServiceId == null ||
                                       _isCreatingTask)
                                   ? Colors.grey
-                                  : MyColors.buttonBackground,
+                                  : kPrimaryColor,
                               padding: const EdgeInsets.symmetric(vertical: 14),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               elevation: 6,
-                              shadowColor: Colors.black.withOpacity(0.3),
+                             // shadowColor: Colors.black.withOpacity(0.3),
                             ),
                             child: _isCreatingTask
                                 ? const SizedBox(
                                     height: 20,
                                     width: 20,
                                     child: CircularProgressIndicator(
-                                      color: Colors.white,
+                                      color: kPrimaryColor,
                                       strokeWidth: 2,
                                     ),
                                   )
@@ -2433,7 +2527,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                                     "Confirm Booking",
                                     style: TextStyle(
                                       fontSize: 16,
-                                      color: MyColors.buttonText,
+                                      color: buttonText,
                                     ),
                                   ),
                           ),
@@ -2448,14 +2542,14 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               side: const BorderSide(
-                                color: MyColors.textSecondary,
+                                color: kTextSecondary,
                               ),
                             ),
                             child: const Text(
                               "Cancel Booking",
                               style: TextStyle(
                                 fontSize: 16,
-                                color: MyColors.primary,
+                                color: kPrimaryColor,
                               ),
                             ),
                           ),
@@ -2470,14 +2564,14 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                         },
                         icon: const Icon(
                           Icons.message,
-                          color: MyColors.buttonText,
+                          color: buttonText,
                         ),
                         label: const Text(
                           "Message User",
-                          style: TextStyle(color: MyColors.buttonText),
+                          style: TextStyle(color:buttonText),
                         ),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: MyColors.buttonBackground,
+                          backgroundColor: kPrimaryColor ,
                           padding: const EdgeInsets.symmetric(
                             vertical: 14,
                             horizontal: 20,
@@ -2499,33 +2593,26 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
     width: double.infinity,
     padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
     decoration: BoxDecoration(
-      color: MyColors.surface, // theme surface dark background
+      color: kBackgroundColor, // theme surface dark background
       borderRadius: BorderRadius.circular(20),
       border: Border.all(
-        color: MyColors.primary.withOpacity(0.4), // subtle primary border
+        color: kPrimaryColor.withOpacity(0.4), // subtle primary border
         width: 1.5,
       ),
       boxShadow: [
         BoxShadow(
-          color: Colors.black.withOpacity(0.25),
+         
           offset: const Offset(0, 6),
           blurRadius: 20,
           spreadRadius: 1,
         ),
-        BoxShadow(
-          color: MyColors.secondary.withOpacity(
-            0.15,
-          ), // soft gold top highlight
-          offset: const Offset(-2, -2),
-          blurRadius: 10,
-          spreadRadius: 0,
-        ),
+       
       ],
     ),
     child: Text(
       text,
       style: const TextStyle(
-        color: MyColors.textPrimary, // white text for contrast
+        color: kTextPrimary, // white text for contrast
         fontWeight: FontWeight.w600,
         fontSize: 16,
         height: 1.5,
@@ -2537,54 +2624,65 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
   InputDecoration _inputDecoration(String hint) => InputDecoration(
     hintText: hint,
     hintStyle: TextStyle(
-      color: MyColors.textSecondary, // theme secondary text color
+      color: kTextSecondary, // theme secondary text color
       fontSize: 15,
     ),
     filled: true,
-    fillColor: MyColors.surface, // theme dark surface
+    fillColor: kBackgroundColor, // theme dark surface
     contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
     border: OutlineInputBorder(
       borderRadius: BorderRadius.circular(16),
-      borderSide: BorderSide.none,
+       borderSide: BorderSide(
+        color: heaidng, // premium gold glow
+        width: 1,
+      ),
     ),
     enabledBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(16),
-      borderSide: BorderSide.none,
+       borderSide: BorderSide(
+        color: heaidng, // premium gold glow
+        width: 1,
+      ),
     ),
     focusedBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(16),
       borderSide: BorderSide(
-        color: MyColors.secondary, // premium gold glow
-        width: 1.5,
+        color: heaidng, // premium gold glow
+        width: 1,
       ),
     ),
   );
 
-  InputDecoration _dropdownDecoration() => InputDecoration(
-    filled: true,
-    fillColor: MyColors.surface,
-    // theme dark surface
-    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-    border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(16),
-      borderSide: BorderSide.none,
+ InputDecoration _dropdownDecoration() => InputDecoration(
+  filled: true,
+  fillColor: kCardColor,
+  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+  border: OutlineInputBorder(
+    borderRadius: BorderRadius.circular(16),
+    borderSide: BorderSide(
+      color: heaidng, // same gold accent
+      width: 1.5,
     ),
-    enabledBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(16),
-      borderSide: BorderSide.none,
+  ),
+  enabledBorder: OutlineInputBorder(
+    borderRadius: BorderRadius.circular(16),
+    borderSide: BorderSide(
+      color: heaidng, // visible even when not focused
+      width: 1.5,
     ),
-    focusedBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(16),
-      borderSide: BorderSide(
-        color: MyColors.secondary, // premium gold accent
-        width: 1.5,
-      ),
+  ),
+  focusedBorder: OutlineInputBorder(
+    borderRadius: BorderRadius.circular(16),
+    borderSide: BorderSide(
+      color: heaidng, // same color
+      width: 1.5,
     ),
-    hintStyle: TextStyle(
-      color: MyColors.textSecondary, // subtle text color
-      fontSize: 15,
-    ),
-  );
+  ),
+  hintStyle: TextStyle(
+    color: kTextSecondary,
+    fontSize: 15,
+  ),
+);
 
   // ----- msg btn logic function ----
   Future<void> _messageUser(BuildContext context) async {
@@ -2641,8 +2739,8 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
             content: Text(
               "Failed to start chat ❌",
               style: TextStyle(
-                backgroundColor: MyColors.divider,
-                color: MyColors.textPrimary,
+                backgroundColor:kDividerColor,
+                color: kTextPrimary,
               ),
             ),
           ),
@@ -2661,5 +2759,5 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
 }
 
 Widget simpleDivider() {
-  return Divider(color: MyColors.textSecondary, thickness: 1, height: 20);
+  return Divider(color: kDividerColor, thickness: 1, height: 20);
 }

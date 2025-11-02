@@ -372,7 +372,7 @@ import 'messages_page.dart';
 import 'my_tasks_screen.dart';
 import '../helpers/backend.dart';
 import 'status_screen.dart';
-import '../helpers/my_colors.dart';
+import '../helpers/coolors.dart';
 import '../widgets/status_widget.dart';
 class HomeScreen extends StatefulWidget {
   final String role;
@@ -617,13 +617,13 @@ void fetchUnseenCount() async {
     ];
 
     return Scaffold(
-      backgroundColor: MyColors.background,
+      backgroundColor: kBackgroundColor,
       body: IndexedStack(index: _currentIndex, children: pages),
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         child: Container(
           decoration: BoxDecoration(
-            color: MyColors.surface,
+            color: kCardColor,
             borderRadius: BorderRadius.circular(30),
             boxShadow: [
               BoxShadow(
@@ -638,9 +638,9 @@ void fetchUnseenCount() async {
             child: BottomNavigationBar(
               currentIndex: _currentIndex,
               type: BottomNavigationBarType.fixed,
-              backgroundColor: MyColors.surface,
-              selectedItemColor: MyColors.primary,
-              unselectedItemColor: MyColors.textSecondary,
+              backgroundColor: kCardColor,
+              selectedItemColor: kPrimaryColor,
+              unselectedItemColor: kTextSecondary,
               showSelectedLabels: true,
               showUnselectedLabels: true,
               onTap: (index) {
@@ -658,7 +658,7 @@ void fetchUnseenCount() async {
                         : EdgeInsets.all(0),
                     decoration: _currentIndex == 0
                         ? BoxDecoration(
-                            color: MyColors.primary.withOpacity(0.15),
+                            color: kPrimaryColor.withOpacity(0.15),
                             shape: BoxShape.circle,
                           )
                         : null,
@@ -674,7 +674,7 @@ void fetchUnseenCount() async {
                         : EdgeInsets.all(0),
                     decoration: _currentIndex == 1
                         ? BoxDecoration(
-                            color: MyColors.primary.withOpacity(0.15),
+                            color: kPrimaryColor.withOpacity(0.15),
                             shape: BoxShape.circle,
                           )
                         : null,
@@ -692,7 +692,7 @@ void fetchUnseenCount() async {
                             : EdgeInsets.all(0),
                         decoration: _currentIndex == 2
                             ? BoxDecoration(
-                                color: MyColors.primary.withOpacity(0.15),
+                                color: kPrimaryColor.withOpacity(0.15),
                                 shape: BoxShape.circle,
                               )
                             : null,
@@ -705,7 +705,7 @@ void fetchUnseenCount() async {
                           child: Container(
                             padding: EdgeInsets.all(4),
                             decoration: BoxDecoration(
-                              color: MyColors.error,
+                              color: redAccent,
                               shape: BoxShape.circle,
                             ),
                             child: Text(
@@ -730,7 +730,7 @@ void fetchUnseenCount() async {
         padding: _currentIndex == 3 ? EdgeInsets.all(6) : EdgeInsets.all(0),
         decoration: _currentIndex == 3
             ? BoxDecoration(
-                color: MyColors.primary.withOpacity(0.15),
+                color: kPrimaryColor.withOpacity(0.15),
                 shape: BoxShape.circle,
               )
             : null,
@@ -743,7 +743,7 @@ void fetchUnseenCount() async {
           child: Container(
             padding: EdgeInsets.all(4),
             decoration: BoxDecoration(
-              color: MyColors.error,
+              color:  redAccent,
               shape: BoxShape.circle,
             ),
             child: Text(
@@ -769,7 +769,7 @@ void fetchUnseenCount() async {
                         : EdgeInsets.all(0),
                     decoration: _currentIndex == 4
                         ? BoxDecoration(
-                            color: MyColors.primary.withOpacity(0.15),
+                            color: kPrimaryColor.withOpacity(0.15),
                             shape: BoxShape.circle,
                           )
                         : null,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../helpers/backend.dart';
+import 'wallet.dart';
 
 class ProviderStatusScreen extends StatefulWidget {
   final int providerId;
@@ -37,21 +38,33 @@ class _ProviderStatusScreenState extends State<ProviderStatusScreen> {
     });
 
     try {
-      final url = Uri.parse('${Backend.baseUrl}/provider/${widget.providerId}/status');
+      final url = Uri.parse(
+        '${Backend.baseUrl}/provider/status/${widget.providerId}',
+      );
+      print("Fetching URL: $url"); // 🔹 Log URL
+
       final response = await http.get(url);
+      print("Status code: ${response.statusCode}"); // 🔹 Log status code
+      print("Response body: ${response.body}"); // 🔹 Log full body
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
+        print("Decoded data: $data"); // 🔹 Log parsed JSON
 
         setState(() {
+          final provider = data['provider'];
+          final payment = data['payment']; // 🔹 Add this line
+
           progress = {
-            "signed_up": data['signed_up'] ?? false,
-            "payment_done": data['payment_done'] ?? false,
-            "documents_submitted": data['documents_submitted'] ?? false,
-            "under_review": data['under_review'] ?? false,
-            "approved": data['approved'] ?? false,
-            "rejected": data['rejected'] ?? false,
+            "signed_up": true, // signup hamesha true hai agar provider exists
+            "payment_done":
+                payment != null && payment['payment_record_status'] == 'paid',
+            "documents_submitted": provider['documents_uploaded'] == true,
+            "under_review": data['overall_status'] == 'under_review',
+            "approved": provider['provider_status'] == 'approved',
+            "rejected": provider['provider_status'] == 'rejected',
           };
+
           isLoading = false;
         });
       } else {
@@ -61,6 +74,7 @@ class _ProviderStatusScreenState extends State<ProviderStatusScreen> {
         });
       }
     } catch (e) {
+      print("Network error: $e"); // 🔹 Log exception
       setState(() {
         error = "Network error: $e";
         isLoading = false;
@@ -81,18 +95,19 @@ class _ProviderStatusScreenState extends State<ProviderStatusScreen> {
     return Column(
       children: steps.map((step) {
         final isDone = progress[step['key']] ?? false;
-        final isRejected = step['key'] == "rejected" && progress["rejected"] == true;
+        final isRejected =
+            step['key'] == "rejected" && progress["rejected"] == true;
         final color = isRejected
             ? Colors.red
             : isDone
-                ? Colors.green
-                : Colors.grey;
+            ? Colors.green
+            : Colors.grey;
 
         final icon = isRejected
             ? Icons.cancel
             : isDone
-                ? Icons.check_circle
-                : Icons.radio_button_unchecked;
+            ? Icons.check_circle
+            : Icons.radio_button_unchecked;
 
         return Padding(
           padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -103,7 +118,9 @@ class _ProviderStatusScreenState extends State<ProviderStatusScreen> {
               Text(
                 step['label']!,
                 style: TextStyle(
-                  fontWeight: isDone || isRejected ? FontWeight.bold : FontWeight.normal,
+                  fontWeight: isDone || isRejected
+                      ? FontWeight.bold
+                      : FontWeight.normal,
                   color: color,
                   fontSize: 16,
                 ),
@@ -124,68 +141,96 @@ class _ProviderStatusScreenState extends State<ProviderStatusScreen> {
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : error != null
-              ? Center(child: Text(error!))
-              : Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      buildTimeline(),
-                      const SizedBox(height: 30),
-                      if (!isApproved && !progress["rejected"]!)
-                        Container(
-                          color: Colors.yellow[200],
-                          padding: const EdgeInsets.all(16),
-                          child: const Text(
-                            "Awaiting verification — you cannot access provider features until approved.",
-                            style: TextStyle(
-                                fontSize: 16, fontWeight: FontWeight.bold),
-                            textAlign: TextAlign.center,
+          ? Center(child: Text(error!))
+          : Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  buildTimeline(),
+                  const SizedBox(height: 30),
+                  if (!isApproved && !progress["rejected"]!)
+                    Container(
+                      color: Colors.yellow[200],
+                      padding: const EdgeInsets.all(16),
+                      child: const Text(
+                        "Awaiting verification — you cannot access provider features until approved.",
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  const SizedBox(height: 20),
+                  Expanded(
+                    child: ListView(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      children: [
+                        ElevatedButton(
+                          onPressed: isApproved ? () => createService() : null,
+                          child: const Text("Create Service"),
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                           ),
                         ),
-                      const SizedBox(height: 20),
-                      Expanded(
-                        child: ListView(
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                          children: [
-                            ElevatedButton(
-                              onPressed: isApproved ? () => createService() : null,
-                              child: const Text("Create Service"),
-                              style: ElevatedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(vertical: 16),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
+                        const SizedBox(height: 12),
+                        ElevatedButton(
+                          onPressed: isApproved ? () => acceptBooking() : null,
+                          child: const Text("Accept Bookings"),
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
                             ),
-                            const SizedBox(height: 12),
-                            ElevatedButton(
-                              onPressed: isApproved ? () => acceptBooking() : null,
-                              child: const Text("Accept Bookings"),
-                              style: ElevatedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(vertical: 16),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            ElevatedButton(
-                              onPressed: isApproved ? () => viewBookings() : null,
-                              child: const Text("View Bookings"),
-                              style: ElevatedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(vertical: 16),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 12),
+                        ElevatedButton(
+                          onPressed: isApproved ? () => viewBookings() : null,
+                          child: const Text("View Bookings"),
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 12),
+                        ElevatedButton.icon(
+                          onPressed: isApproved
+                              ? () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => ProviderWalletScreen(
+                                        providerId: widget.providerId,
+                                      ),
+                                    ),
+                                  );
+                                }
+                              : null,
+                          icon: const Icon(
+                            Icons.account_balance_wallet_outlined,
+                          ),
+                          label: const Text("View Wallet"),
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
+                ],
+              ),
+            ),
     );
   }
 

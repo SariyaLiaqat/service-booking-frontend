@@ -5,7 +5,7 @@ import '../screens/chat_page.dart';
 import '../screens/task_detail_screen.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import '../helpers/my_colors.dart';
+import '../helpers/coolors.dart';
 class ActionButtonsWidget extends StatelessWidget {
   final int providerId;               // Provider ka ID (jiske profile par ho)
   final String providerName;          // Provider ka Name
@@ -91,17 +91,17 @@ Widget build(BuildContext context) {
       Expanded(
         child: ElevatedButton.icon(
           onPressed: () => messageProvider(context),
-          icon: const Icon(Icons.chat_bubble, color: Colors.white, size: 18),
+          icon: const Icon(Icons.chat_bubble, color: Colors.black, size: 18),
           label: const Text(
             'Message',
             style: TextStyle(
-              color: MyColors.textPrimary,
+              color: kTextPrimary,
               fontSize: 15,
               fontWeight: FontWeight.bold,
             ),
           ),
           style: ElevatedButton.styleFrom(
-            backgroundColor: MyColors.primary, // LinkedIn Dark Blue
+            backgroundColor: kPrimaryColor, // LinkedIn Dark Blue
             padding: const EdgeInsets.symmetric(vertical: 14),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
@@ -119,7 +119,7 @@ Widget build(BuildContext context) {
           onPressed: () => bookNow(context),
           style: OutlinedButton.styleFrom(
             side: const BorderSide(
-              color: MyColors.primary, // LinkedIn Dark Blue Border
+              color: kPrimaryColor, // LinkedIn Dark Blue Border
               width: 2,
             ),
             padding: const EdgeInsets.symmetric(vertical: 14),
@@ -130,7 +130,7 @@ Widget build(BuildContext context) {
           child: const Text(
             'Book Now',
             style: TextStyle(
-              color: MyColors.primary, // LinkedIn Dark Blue Text
+              color: kPrimaryColor, // LinkedIn Dark Blue Text
               fontSize: 15,
               fontWeight: FontWeight.bold,
             ),
