@@ -1,13 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import '../helpers/backend.dart';
 
 class PaymentWebViewScreen extends StatefulWidget {
   final String url;
-  final VoidCallback? onPaymentSuccess; // 👈 callback for refreshing parent screen
+  final int taskId;
+  final int userId;
+  final int spId;
+  final double amount;
+  final String txnId; // ✅ Add dynamic txnId
+  final String ordId; // ✅ Add dynamic ordId
+  final VoidCallback? onPaymentSuccess;
 
   const PaymentWebViewScreen({
     super.key,
     required this.url,
+    required this.taskId,
+    required this.userId,
+    required this.spId,
+    required this.amount,
+    required this.txnId,
+    required this.ordId,
     this.onPaymentSuccess,
   });
 
@@ -27,13 +42,19 @@ class _PaymentWebViewScreenState extends State<PaymentWebViewScreen> {
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setNavigationDelegate(
         NavigationDelegate(
-          onPageFinished: (url) {
+          onPageFinished: (url) async {
             setState(() => isLoading = false);
+            print("🔍 WebView loaded: $url");
 
-            // ✅ Detect success page or callback URL
-            if (url.contains("payment/uis") || url.contains("Success")) {
-              widget.onPaymentSuccess?.call(); // refresh task list in parent
-              Navigator.pop(context); // close WebView
+            if (url.contains("user-payment/uis") || url.toLowerCase().contains("success")) {
+              print("✅ Payment success detected!");
+
+              // 🔔 Notify backend with dynamic txnId and ordId
+              await _notifyBackend();
+
+              widget.onPaymentSuccess?.call();
+              Navigator.pop(context);
+
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text("✅ Payment Successful")),
               );
@@ -44,6 +65,33 @@ class _PaymentWebViewScreenState extends State<PaymentWebViewScreen> {
       ..loadRequest(Uri.parse(widget.url));
   }
 
+  Future<void> _notifyBackend() async {
+    try {
+      final backendUrl = Uri.parse("${Backend.baseUrl}/user-payment/uis");
+
+      final response = await http.post(
+        backendUrl,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          "username": "Service_APP",
+          "password": "Demo@sp25",
+          "taskId": widget.taskId,
+          "userId": widget.userId,
+          "spId": widget.spId,
+          "amount": widget.amount,
+          "status": "Success",
+          "txnId": widget.txnId, // ✅ dynamic
+          "ordId": widget.ordId, // ✅ dynamic
+        }),
+      );
+
+      print("🔔 Backend notified: ${response.statusCode}");
+      print("📦 Response: ${response.body}");
+    } catch (e) {
+      print("❌ Failed to notify backend: $e");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -52,9 +100,7 @@ class _PaymentWebViewScreenState extends State<PaymentWebViewScreen> {
         children: [
           WebViewWidget(controller: _controller),
           if (isLoading)
-            const Center(
-              child: CircularProgressIndicator(color: Colors.amber),
-            ),
+            const Center(child: CircularProgressIndicator(color: Colors.amber)),
         ],
       ),
     );

@@ -1598,7 +1598,10 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
 
       // ⚡ Task fields
       request.fields['user_id'] = userId.toString();
-      request.fields['provider_id'] = providerId.toString();
+      request.fields['sp_id'] = providerId.toString();
+request.fields['provider_id'] = providerId.toString();
+
+
       request.fields['service_id'] = serviceId.toString();
       request.fields['scheduled_date'] = scheduledDate.toIso8601String();
       request.fields['notes'] = sanitize(notes);

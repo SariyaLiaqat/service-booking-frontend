@@ -191,7 +191,6 @@ import 'helpers/socket_manager.dart'; // ✅ Global Socket Manager
 import 'screens/reset-password.dart';
 import 'screens/splashScreen.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import '../helpers/backend.dart';
 import 'screens/provider_status_screen.dart';
 
 /// 🔹 Firebase background message handler

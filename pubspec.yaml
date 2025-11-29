@@ -220,6 +220,9 @@ flutter:
     - assets/categories/130.jpeg
     - assets/categories/120.jpeg
 
+    - assets/images/popular/
+    
+
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see

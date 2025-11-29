@@ -25,14 +25,15 @@ class _ProviderWalletScreenState extends State<ProviderWalletScreen> {
 
   Future<void> fetchWallet() async {
     final url = Uri.parse(
-      "${Backend.baseUrl}/providers/wallet/${widget.providerId}",
+      "${Backend.baseUrl}/provider/wallet/${widget.providerId}",
     );
     final response = await http.get(url);
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
       setState(() {
-        walletBalance = (data['wallet_balance'] ?? 0) * 1.0;
+        walletBalance = double.tryParse(data['wallet_balance'].toString()) ?? 0.0;
+
         isLoading = false;
       });
     } else {
@@ -43,7 +44,7 @@ class _ProviderWalletScreenState extends State<ProviderWalletScreen> {
 
   Future<void> fetchHistory() async {
     final url = Uri.parse(
-      "${Backend.baseUrl}/providers/wallet/${widget.providerId}/history",
+     "${Backend.baseUrl}/provider/wallet/${widget.providerId}/history",
     );
     final response = await http.get(url);
 
@@ -173,7 +174,7 @@ class _ProviderWalletScreenState extends State<ProviderWalletScreen> {
 
                           if (amount != null && amount > 0) {
                             final url = Uri.parse(
-                              "${Backend.baseUrl}/providers/${widget.providerId}/withdraw",
+                              "${Backend.baseUrl}/provider/${widget.providerId}/withdraw",
                             );
                             final response = await http.post(
                               url,
