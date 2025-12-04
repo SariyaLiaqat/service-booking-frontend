@@ -3,9 +3,10 @@
 // import 'package:http/http.dart' as http;
 // import 'task_detail_screen.dart';
 // import '../helpers/backend.dart';
-// import '../helpers/colors.dart';
-// import '../helpers/my_colors.dart';
+
+// import '../helpers/coolors.dart';
 // import 'sp_user_payment.dart';
+
 // class Task {
 //   final int id;
 //   final int userId;
@@ -23,7 +24,8 @@
 //   final String? attachmentDetails;
 //   final DateTime? completedAt;
 //   final List<Map<String, dynamic>> attachments; // <-- changed type
-// final String? payment_status;
+//   final String? payment_status;
+//    double amount;
 //   Task({
 //     required this.id,
 //     required this.userId,
@@ -42,38 +44,43 @@
 //     this.completedAt,
 //     this.attachments = const [], // default empty list of maps
 //     this.payment_status,
+//     required this.amount, // new field
 //   });
 
 //   factory Task.fromJson(Map<String, dynamic> json) => Task(
-//     id: json['id'],
-//     userId: json['user_id'],
-//     providerId: json['provider_id'],
-//     serviceId: json['service_id'],
-//     status: json['status'],
-//     scheduledDate: DateTime.parse(json['scheduled_date']),
-//     address: json['address'], // new
+//     id: json['id'] ?? 0,
+//     userId: json['user_id'] ?? 0,
+//     providerId: json['provider_id'] ?? 0,
+//     serviceId: json['service_id'] ?? 0,
+//     status: json['status'] ?? "pending",
+//     scheduledDate:
+//         DateTime.tryParse(json['scheduled_date'] ?? "") ?? DateTime.now(),
+//     address: json['address'],
 //     latitude: json['latitude'] != null
 //         ? double.tryParse(json['latitude'].toString())
-//         : null, // new
+//         : null,
 //     longitude: json['longitude'] != null
 //         ? double.tryParse(json['longitude'].toString())
-//         : null, // new
+//         : null,
 //     notes: json['notes'] ?? "",
 //     serviceTitle: json['service_title'] ?? "Service",
 //     userName: json['user_name'] ?? "User",
 //     providerName: json['provider_name'] ?? "Provider",
 //     attachmentDetails: json['attachment_details'],
 //     completedAt: json['completed_at'] != null
-//         ? DateTime.parse(json['completed_at'])
+//         ? DateTime.tryParse(json['completed_at'])
 //         : null,
-//     attachments: json['attachments'] != null
+//     attachments: (json['attachments'] != null && json['attachments'] is List)
 //         ? List<Map<String, dynamic>>.from(
 //             (json['attachments'] as List).map(
 //               (a) => Map<String, dynamic>.from(a),
 //             ),
 //           )
 //         : [],
-//         payment_status: json['payment_status'],
+//     payment_status: json['payment_status'],
+//      amount: json['amount'] != null
+//       ? double.tryParse(json['amount'].toString()) ?? 0
+//       : 0, // new
 //   );
 // }
 
@@ -142,871 +149,85 @@
 //     _loadTasks();
 //   }
 
-// void _payNow(Task task) async {
-//   // 👑 Show loading while payment link is being created
-//   showDialog(
-//     context: context,
-//     barrierDismissible: false,
-//     builder: (_) => const Center(
-//       child: CircularProgressIndicator(color: Colors.blueAccent),
-//     ),
-//   );
-
-//   try {
-//     // 🔗 Create payment link via backend
-//     final paymentUrl = await PaymentApi.createPayment(
-//       userId: task.userId,
-//       spId: task.providerId,
-//       taskId: task.id,
-//       amount: 1000, // 💰 dynamic amount if needed
-//     );
-
-//     // ✅ Close loading dialog
-//     Navigator.pop(context);
-
-//     // 🔍 Check if URL is valid before opening
-//     if (paymentUrl.isEmpty || !paymentUrl.startsWith("http")) {
-//       throw Exception("Invalid payment URL received from server");
-//     }
-
-//     // 🌐 Open PayPro link in WebView
-//     Navigator.push(
-//       context,
-//       MaterialPageRoute(
-//         builder: (_) => PaymentWebViewScreen(
-//           url: paymentUrl,
-//           onPaymentSuccess: _loadTasks, // 🔁 Refresh tasks after success
-//         ),
-//       ),
-//     );
-//   } catch (e) {
-//     // ✅ Close loading dialog (if still open)
-//     if (Navigator.canPop(context)) Navigator.pop(context);
-
-//     // 🚨 Show clear error message
-//     ScaffoldMessenger.of(context).showSnackBar(
-//       SnackBar(
-//         content: Text("❌ Payment failed: ${e.toString()}"),
-//         backgroundColor: Colors.redAccent,
-//         behavior: SnackBarBehavior.floating,
-//       ),
-//     );
-//   }
-// }
-
-//   Future<void> _loadTasks() async {
-//     setState(() => isLoading = true);
-//     try {
-//       List<Task> allTasks;
-//       if (widget.role == "user") {
-//         allTasks = await TasksApi.fetchTasks(userId: widget.currentUserId);
-//       } else {
-//         allTasks = await TasksApi.fetchTasks(providerId: widget.currentUserId);
-//       }
-
-//       setState(() {
-//         pendingTasks = allTasks.where((t) => t.status != "completed").toList()
-//           ..sort((a, b) => b.scheduledDate.compareTo(a.scheduledDate));
-//         completedTasks = allTasks.where((t) => t.status == "completed").toList()
-//           ..sort((a, b) => b.scheduledDate.compareTo(a.scheduledDate));
-//       });
-//     } catch (e) {
-//       ScaffoldMessenger.of(
-//         context,
-//       ).showSnackBar(SnackBar(content: Text("❌ Failed to load tasks: $e")));
-//     } finally {
-//       setState(() => isLoading = false);
-//     }
-//   }
-
-//   Future<void> _updateTask(Task task, String newStatus) async {
-//     bool confirm = true;
-
-//     if (newStatus == "completed") {
-//       confirm =
-//           await showDialog(
-//             context: context,
-//             builder: (ctx) => AlertDialog(
-//               backgroundColor: AppColors.backgroundWhite,
-//               shape: RoundedRectangleBorder(
-//                 borderRadius: BorderRadius.circular(16),
-//               ),
-//               title: Text(
-//                 'Complete Task',
-//                 style: TextStyle(
-//                   fontWeight: FontWeight.bold,
-//                   fontSize: 20,
-//                   color: AppColors.darkBlue,
-//                 ),
-//               ),
-//               content: Text(
-//                 'Are you sure you have completed this task carefully?',
-//                 style: TextStyle(fontSize: 16, color: AppColors.textDark),
-//               ),
-//               actions: [
-//                 TextButton(
-//                   onPressed: () => Navigator.pop(ctx, false),
-//                   style: TextButton.styleFrom(
-//                     backgroundColor: AppColors.lightGrey.withOpacity(0.3),
-//                     shape: RoundedRectangleBorder(
-//                       borderRadius: BorderRadius.circular(12),
-//                     ),
-//                   ),
-//                   child: Text(
-//                     'Cancel',
-//                     style: TextStyle(
-//                       color: AppColors.textDark,
-//                       fontWeight: FontWeight.w600,
-//                     ),
-//                   ),
-//                 ),
-//                 TextButton(
-//                   onPressed: () => Navigator.pop(ctx, true),
-//                   style: TextButton.styleFrom(
-//                     backgroundColor: AppColors.darkBlue,
-//                     shape: RoundedRectangleBorder(
-//                       borderRadius: BorderRadius.circular(12),
-//                     ),
-//                   ),
-//                   child: const Text(
-//                     'Yes, Completed',
-//                     style: TextStyle(
-//                       color: Colors.white,
-//                       fontWeight: FontWeight.bold,
-//                     ),
-//                   ),
-//                 ),
-//               ],
-//             ),
-//           ) ??
-//           false;
-//     }
-
-//     if (!confirm) return;
-
-//     try {
-//       await TasksApi.updateTaskStatus(task.id, newStatus);
-
-//       String message = '';
-//       Color snackColor = AppColors.darkBlue;
-
-//       if (newStatus == "confirmed") {
-//         message = "✅ Task accepted";
-//         snackColor = Colors.green.shade700;
-
-//         // 🔹 Send notification to user
-//         NotificationsApi.sendNotification(
-//           userId: task.userId,
-//           title: "Task Accepted ✅",
-//           body:
-//               "Your task '${task.serviceTitle}' has been accepted✅ by the provider",
-//           senderId: task.providerId,
-//         );
-//       }
-
-//       if (newStatus == "rejected") {
-//         message = "❌ Task rejected";
-//         snackColor = Colors.red.shade600;
-
-//         // 🔹 Send notification to user
-//         NotificationsApi.sendNotification(
-//           userId: task.userId,
-//           title: "Task Rejected ❌",
-//           body:
-//               "Your task '${task.serviceTitle}' has been rejected❌ by the provider",
-//           senderId: task.providerId,
-//         );
-//       }
-
-//       if (newStatus == "completed") {
-//         message = "🎉 Task completed";
-//         snackColor = AppColors.darkBlue;
-
-//         // 🔹 Send notification to user
-//         NotificationsApi.sendNotification(
-//           userId: task.userId,
-//           title: "Task Completed 🎉",
-//           body:
-//               "Your task '${task.serviceTitle}' has been marked as completed🎉 by the provider",
-//           senderId: task.providerId,
-//         );
-//       }
-
-//       ScaffoldMessenger.of(context).showSnackBar(
-//         SnackBar(
-//           content: Text(
-//             message,
-//             style: const TextStyle(
-//               fontWeight: FontWeight.bold,
-//               color: Colors.white,
-//             ),
-//           ),
-//           backgroundColor: snackColor,
-//           behavior: SnackBarBehavior.floating,
-//           shape: RoundedRectangleBorder(
-//             borderRadius: BorderRadius.circular(12),
-//           ),
-//           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-//           duration: const Duration(seconds: 2),
-//         ),
-//       );
-
-//       await _loadTasks();
-//     } catch (e) {
-//       ScaffoldMessenger.of(context).showSnackBar(
-//         SnackBar(
-//           content: Text(
-//             "❌ Failed to update task: $e",
-//             style: const TextStyle(color: Colors.white),
-//           ),
-//           backgroundColor: Colors.red.shade600,
-//           behavior: SnackBarBehavior.floating,
-//           shape: RoundedRectangleBorder(
-//             borderRadius: BorderRadius.circular(12),
-//           ),
-//           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-//           duration: const Duration(seconds: 3),
-//         ),
-//       );
-//     }
-//   }
-
-//   Color _statusColor(String status) {
-//     switch (status) {
-//       case 'pending':
-//         return const Color(0xFFFACC15);
-//       case 'confirmed':
-//         return const Color(0xFF4F46E5);
-//       case 'completed':
-//         return const Color(0xFF22C55E);
-//       case 'rejected':
-//         return const Color(0xFFEF4444);
-//       default:
-//         return const Color(0xFFA1A1A1);
-//     }
-//   }
-
-//   Widget _statusBadge(String status) {
-//     return Container(
-//       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-//       decoration: BoxDecoration(
-//         color: _statusColor(status).withOpacity(0.15),
-//         border: Border.all(color: _statusColor(status).withOpacity(0.8)),
-//         borderRadius: BorderRadius.circular(12),
-//       ),
-//       child: Text(
-//         status.toUpperCase(),
-//         style: TextStyle(
-//           color: _statusColor(status),
-//           fontWeight: FontWeight.bold,
-//           fontSize: 12,
-//         ),
-//       ),
-//     );
-//   }
-
-//   Widget _buildTaskCard(Task task) {
-//     final isNew = task.status == 'pending' && widget.role == "provider";
-
-//     String notesPreview = task.notes;
-//     if (notesPreview.length > 50) {
-//       notesPreview = notesPreview.substring(0, 50) + "...";
-//     }
-
-//     return InkWell(
-//       onTap: () {
-//         Navigator.push(
-//           context,
-//           MaterialPageRoute(
-//             builder: (_) => TaskDetailPage(
-//               currentUserId: widget.currentUserId,
-//               providerId: task.providerId,
-//               readOnly: widget.role == "provider",
-//               taskData: widget.role == "provider"
-//                   ? {
-//                       'id': task.id,
-//                       'user_id': task.userId,
-//                       'notes': task.notes,
-//                       'scheduled_date': task.scheduledDate.toIso8601String(),
-//                       'title': task.serviceTitle,
-//                       'service_title': task.serviceTitle,
-//                       'price': '',
-//                       'description': task.notes,
-//                       'attachments': task.attachments,
-//                       'attachment_details': task.attachmentDetails ?? '',
-//                       'address': task.address,
-//                       'latitude': task.latitude,
-//                       'longitude': task.longitude,
-//                     }
-//                   : null,
-//               serviceData: widget.role == "user"
-//                   ? {
-//                       'id': task.serviceId,
-//                       'title': task.serviceTitle,
-//                       'price': '',
-//                       'description': notesPreview,
-//                     }
-//                   : null,
-//             ),
-//           ),
-//         );
-//       },
-//       child: Container(
-//         margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-//         decoration: BoxDecoration(
-//           color: isNew ? MyColors.divider : MyColors.divider,
-//           borderRadius: BorderRadius.circular(12),
-//           border: Border.all(
-//             color: isNew ? MyColors.primary : MyColors.surface,
-//             width: 1,
-//           ),
-//           boxShadow: [
-//             BoxShadow(
-//               color: Colors.black.withOpacity(0.4),
-//               offset: const Offset(0, 6),
-//               blurRadius: 10,
-//             ),
-//           ],
-//         ),
-
-//         child: Padding(
-//           padding: const EdgeInsets.all(14.0),
-//           child: Column(
-//             crossAxisAlignment: CrossAxisAlignment.start,
-//             children: [
-//               Row(
-//                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//                 children: [
-//                   Text(
-//                     task.serviceTitle,
-//                     style: const TextStyle(
-//                       fontWeight: FontWeight.bold,
-//                       fontSize: 18,
-//                       color: Colors.white,
-//                       letterSpacing: 0.4,
-//                       shadows: [
-//                         Shadow(
-//                           color: MyColors.primary,
-//                           offset: Offset(0, 1),
-//                           blurRadius: 3,
-//                         ),
-//                       ],
-//                     ),
-//                   ),
-
-//                   _statusBadge(task.status),
-//                 ],
-//               ),
-//               const SizedBox(height: 6),
-//               Container(
-//                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-//                 decoration: BoxDecoration(
-//                   color: const Color(0xFF2A2A40),
-
-//                   borderRadius: BorderRadius.circular(8),
-//                 ),
-//                 child: Row(
-//                   mainAxisSize: MainAxisSize.min,
-//                   children: [
-//                     const Icon(
-//                       Icons.calendar_today,
-//                       size: 14,
-//                       color: MyColors.secondary, // gold text
-//                     ),
-//                     const SizedBox(width: 4),
-//                     Text(
-//                       task.scheduledDate.toLocal().toString().split(' ')[0],
-//                       style: const TextStyle(
-//                         fontWeight: FontWeight.w500,
-//                         fontSize: 14,
-//                         color: MyColors.secondary, // gold text
-//                       ),
-//                     ),
-//                   ],
-//                 ),
-//               ),
-
-//               Container(
-//                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-//                 decoration: BoxDecoration(
-//                   color: const Color(0xFF2A2A40),
-
-//                   borderRadius: BorderRadius.circular(8),
-//                 ),
-//                 child: Row(
-//                   mainAxisSize: MainAxisSize.min,
-//                   children: [
-//                     Icon(
-//                       widget.role == "user" ? Icons.handyman : Icons.person,
-//                       size: 14,
-//                       color: MyColors.textSecondary,
-//                     ),
-//                     const SizedBox(width: 4),
-//                     Text(
-//                       widget.role == "user" ? task.providerName : task.userName,
-//                       style: const TextStyle(
-//                         fontWeight: FontWeight.w500,
-//                         fontSize: 14,
-//                         color: MyColors.textSecondary,
-//                       ),
-//                     ),
-//                   ],
-//                 ),
-//               ),
-
-//               if (notesPreview.isNotEmpty)
-//                 Padding(
-//                   padding: const EdgeInsets.only(top: 4.0),
-//                   child: Container(
-//                     width: double.infinity,
-//                     padding: const EdgeInsets.symmetric(
-//                       horizontal: 8,
-//                       vertical: 6,
-//                     ),
-//                     decoration: BoxDecoration(
-//                       color: const Color(0xFF1E1B2E),
-
-//                       borderRadius: BorderRadius.circular(8),
-//                     ),
-//                     child: Text(
-//                       "📝 Notes: $notesPreview",
-//                       style: TextStyle(
-//                         color: Color(0xFFA1A1A1),
-
-//                         fontSize: 13,
-//                         fontWeight: FontWeight.w400,
-//                       ),
-//                     ),
-//                   ),
-//                 ),
-
-//               if (task.status != "completed")
-//                 Padding(
-//                   padding: const EdgeInsets.only(top: 6.0, bottom: 4.0),
-//                   child: Container(
-//                     width: double.infinity,
-//                     padding: const EdgeInsets.symmetric(
-//                       horizontal: 8,
-//                       vertical: 6,
-//                     ),
-//                     decoration: BoxDecoration(
-//                       color: const Color(0xFF2A2A40),
-
-//                       borderRadius: BorderRadius.circular(6),
-//                     ),
-//                     child: Text(
-//                       "⚠️ This task is not completed yet",
-//                       style: TextStyle(
-//                         fontWeight: FontWeight.w600,
-//                         color: MyColors.secondary,
-
-//                         fontSize: 13,
-//                       ),
-//                     ),
-//                   ),
-//                 ),
-
-//               if (task.status == "completed" && task.completedAt != null)
-//                 Padding(
-//                   padding: const EdgeInsets.only(top: 6.0, bottom: 4.0),
-
-//                   child: Container(
-//                     width: double.infinity,
-//                     padding: const EdgeInsets.symmetric(
-//                       horizontal: 8,
-//                       vertical: 6,
-//                     ),
-//                     decoration: BoxDecoration(
-//                       color: const Color(0xFF1E1B2E),
-
-//                       borderRadius: BorderRadius.circular(6),
-//                     ),
-
-//                     child: Text(
-//                       "✅ Completed on: ${task.completedAt!.toLocal().toString().split(' ')[0]}",
-//                       style: TextStyle(
-//                         fontWeight: FontWeight.bold,
-//                         color: Color(0xFF22C55E),
-
-//                         fontSize: 13,
-//                       ),
-//                     ),
-//                   ),
-
-//                 ),
-//  // Phase 1: Pay Now button
-//         if (widget.role == "user" && task.payment_status != "paid")
-//           Padding(
-//             padding: const EdgeInsets.only(top: 6.0),
-//             child: ElevatedButton(
-//               onPressed: () => _payNow(task),
-//               style: ElevatedButton.styleFrom(
-//                 backgroundColor: Color(0xFFFACC15),
-//                 foregroundColor: Colors.black,
-//               ),
-//               child: const Text("💳 Pay Now"),
-//             ),
-//           ),
-//               if (widget.role == "provider")
-//                 if (task.status == "pending")
-//                   Row(
-//                     children: [
-//                       ElevatedButton(
-//                         onPressed: () => _updateTask(task, "confirmed"),
-//                         style: ElevatedButton.styleFrom(
-//                           backgroundColor: Color(0xFF22C55E),
-//                         ),
-//                         child: const Text(
-//                           "Accept",
-//                           style: TextStyle(color: MyColors.textPrimary),
-//                         ),
-//                       ),
-//                       const SizedBox(width: 8),
-//                       ElevatedButton(
-//                         onPressed: () => _updateTask(task, "rejected"),
-//                         style: ElevatedButton.styleFrom(
-//                           backgroundColor: Color(0xFFEF4444),
-//                         ),
-//                         child: const Text(
-//                           "Reject",
-//                           style: TextStyle(color: MyColors.textPrimary),
-//                         ),
-//                       ),
-//                     ],
-//                   )
-//                 else if (task.status == "confirmed")
-//                   ElevatedButton(
-//                     onPressed: () => _updateTask(task, "completed"),
-//                     style: ElevatedButton.styleFrom(
-//                       backgroundColor: Color(0xFF4F46E5),
-//                       foregroundColor: MyColors.textPrimary,
-//                     ),
-//                     child: const Text("Mark Completed"),
-//                   ),
-//             ],
-//           ),
-//         ),
-//       ),
-//     );
-//   }
-
-//   Widget _buildTaskList(List<Task> tasks) {
-//     if (isLoading) return const Center(child: CircularProgressIndicator());
-//     if (tasks.isEmpty)
-//       return const Center(
-//         child: Text(
-//           "No tasks found",
-//           style: TextStyle(color: MyColors.textSecondary),
-//         ),
-//       );
-
-//     return RefreshIndicator(
-//       onRefresh: _loadTasks,
-//       child: ListView.builder(
-//         itemCount: tasks.length,
-//         itemBuilder: (context, index) => _buildTaskCard(tasks[index]),
-//       ),
-//     );
-//   }
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       backgroundColor: MyColors.background,
-//       appBar: AppBar(
-//         title: const Text(
-//           "📋 My Tasks",
-//           style: TextStyle(
-//             fontWeight: FontWeight.bold,
-//             fontSize: 20,
-//             color: Colors.white,
-//           ),
-//         ),
-//         centerTitle: true,
-//         elevation: 0,
-//         flexibleSpace: Container(
-//           decoration: const BoxDecoration(
-//             gradient: LinearGradient(
-//               colors: [
-//                 Color(0xFF2A2A40), // royal indigo
-//                 Color(0xFF3D3A8B), // violet glow
-//               ],
-//               begin: Alignment.topLeft,
-//               end: Alignment.bottomRight,
-//             ),
-//           ),
-//         ),
-//         shape: const RoundedRectangleBorder(
-//           borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
-//         ),
-//         bottom: PreferredSize(
-//           preferredSize: const Size.fromHeight(50),
-//           child: Align(
-//             alignment: Alignment.center,
-//             child: TabBar(
-//               controller: _tabController,
-//               indicatorColor: Color(0xFFFACC15), // soft gold underline
-//               indicatorWeight: 3,
-//               labelColor: Colors.white,
-//               unselectedLabelColor: Color(0xFFA1A1A1),
-//               labelStyle: const TextStyle(
-//                 fontWeight: FontWeight.bold,
-//                 fontSize: 16,
-//               ),
-//               unselectedLabelStyle: const TextStyle(
-//                 fontWeight: FontWeight.w500,
-//                 fontSize: 16,
-//               ),
-//               tabs: const [
-//                 Tab(text: "⏳ Pending"),
-//                 Tab(text: "✅ Completed"),
-//               ],
-//             ),
-//           ),
-//         ),
-//       ),
-
-//       body: TabBarView(
-//         controller: _tabController,
-//         children: [
-//           _buildTaskList(pendingTasks),
-//           _buildTaskList(completedTasks),
-//         ],
-//       ),
-//     );
-//   }
-// }
-
-// class PaymentApi {
-//   static Future<String> createPayment({
-//     required int taskId,
-//     required int userId,
-//     required int spId,
-//     required double amount,
-//   }) async {
-//     final uri = Uri.parse("${Backend.baseUrl}/payment/create");
-//     print("📤 Sending request to: $uri");
-
-//     final body = {
-//       "taskId": taskId,
-//       "userId": userId,
-//       "spId": spId,
-//       "amount": amount,
-//     };
-
-//     print("📦 Payment Request Body: $body");
-
-//     final response = await http.post(
-//       uri,
-//       headers: {"Content-Type": "application/json"},
-//       body: json.encode(body),
-//     );
-
-//     print("📥 Status Code: ${response.statusCode}");
-//     print("📥 Raw Response: ${response.body}");
-
-//     if (response.statusCode == 200) {
-//       final data = json.decode(response.body);
-//       print("✅ Payment URL Received: ${data['payment_url']}");
-//       return data['payment_url'];
-//     } else {
-//       throw Exception("Failed to create payment → ${response.body}");
-//     }
-//   }
-// }
-
-/////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////
-
-// import 'dart:convert';
-// import 'package:flutter/material.dart';
-// import 'package:http/http.dart' as http;
-// import 'task_detail_screen.dart';
-// import '../helpers/backend.dart';
-
-// import '../helpers/coolors.dart';
-// import 'sp_user_payment.dart';
-// class Task {
-//   final int id;
-//   final int userId;
-//   final int providerId;
-//   final int serviceId;
-//   final String status;
-//   final DateTime scheduledDate;
-//   final String? address; // new
-//   final double? latitude; // new
-//   final double? longitude; // new
-//   final String notes;
-//   final String serviceTitle;
-//   final String userName;
-//   final String providerName;
-//   final String? attachmentDetails;
-//   final DateTime? completedAt;
-//   final List<Map<String, dynamic>> attachments; // <-- changed type
-// final String? payment_status;
-//   Task({
-//     required this.id,
-//     required this.userId,
-//     required this.providerId,
-//     required this.serviceId,
-//     required this.status,
-//     required this.scheduledDate,
-//     this.address,
-//     this.latitude,
-//     this.longitude,
-//     required this.notes,
-//     required this.serviceTitle,
-//     required this.userName,
-//     required this.providerName,
-//     this.attachmentDetails,
-//     this.completedAt,
-//     this.attachments = const [], // default empty list of maps
-//     this.payment_status,
-//   });
-
-//  factory Task.fromJson(Map<String, dynamic> json) => Task(
-//   id: json['id'] ?? 0,
-//   userId: json['user_id'] ?? 0,
-//   providerId: json['provider_id'] ?? 0,
-//   serviceId: json['service_id'] ?? 0,
-//   status: json['status'] ?? "pending",
-//   scheduledDate: DateTime.tryParse(json['scheduled_date'] ?? "") ?? DateTime.now(),
-//   address: json['address'],
-//   latitude: json['latitude'] != null
-//       ? double.tryParse(json['latitude'].toString())
-//       : null,
-//   longitude: json['longitude'] != null
-//       ? double.tryParse(json['longitude'].toString())
-//       : null,
-//   notes: json['notes'] ?? "",
-//   serviceTitle: json['service_title'] ?? "Service",
-//   userName: json['user_name'] ?? "User",
-//   providerName: json['provider_name'] ?? "Provider",
-//   attachmentDetails: json['attachment_details'],
-//   completedAt: json['completed_at'] != null
-//       ? DateTime.tryParse(json['completed_at'])
-//       : null,
-//   attachments: (json['attachments'] != null && json['attachments'] is List)
-//       ? List<Map<String, dynamic>>.from(
-//           (json['attachments'] as List).map(
-//             (a) => Map<String, dynamic>.from(a),
-//           ),
-//         )
-//       : [],
-//   payment_status: json['payment_status'],
-// );
-
-// }
-
-// class TasksApi {
-//   static Future<List<Task>> fetchTasks({int? userId, int? providerId}) async {
-//     final Map<String, String> queryParams = {};
-//     if (userId != null) queryParams['user_id'] = userId.toString();
-//     if (providerId != null) queryParams['provider_id'] = providerId.toString();
-
-//     final uri = Uri.parse(
-//       "${Backend.baseUrl}/tasks",
-//     ).replace(queryParameters: queryParams);
-
-//     final response = await http.get(uri);
-
-//     if (response.statusCode == 200) {
-//       final List data = json.decode(response.body)['tasks'];
-//       return data.map((t) => Task.fromJson(t)).toList();
-//     } else {
-//       throw Exception("Failed to load tasks");
-//     }
-//   }
-
-//   static Future<Task> updateTaskStatus(int taskId, String status) async {
-//     final uri = Uri.parse("${Backend.baseUrl}/tasks/$taskId");
-
-//     final response = await http.patch(
-//       uri,
-//       headers: {"Content-Type": "application/json"},
-//       body: json.encode({"status": status}),
-//     );
-
-//     if (response.statusCode == 200) {
-//       return Task.fromJson(json.decode(response.body)['task']);
-//     } else {
-//       throw Exception("Failed to update task");
-//     }
-//   }
-// }
-
-// class MyTasksScreen extends StatefulWidget {
-//   final String role; // "user" or "provider"
-//   final int currentUserId;
-
-//   const MyTasksScreen({
-//     super.key,
-//     required this.role,
-//     required this.currentUserId,
-//   });
-
-//   @override
-//   State<MyTasksScreen> createState() => _MyTasksScreenState();
-// }
-
-// class _MyTasksScreenState extends State<MyTasksScreen>
-//     with SingleTickerProviderStateMixin {
-//   late TabController _tabController;
-//   List<Task> pendingTasks = [];
-//   List<Task> completedTasks = [];
-//   bool isLoading = true;
-
-//   @override
-//   void initState() {
-//     super.initState();
-//     _tabController = TabController(length: 2, vsync: this);
-//     _loadTasks();
-//   }
-
-// void _payNow(Task task) async {
+//  void _payNow(Task task) async {
 //   print("💡 _payNow called for Task ID: ${task.id}");
 
 //   if (task.userId == 0 || task.providerId == 0) {
-//     print("⚠️ Invalid task data: Missing userId/providerId for task ${task.id}");
 //     ScaffoldMessenger.of(context).showSnackBar(
 //       const SnackBar(
-//         content: Text("⚠️ Task missing user or provider info. Please refresh."),
+//         content: Text(
+//           "⚠️ Task missing user or provider info. Please refresh.",
+//         ),
 //         backgroundColor: Colors.red,
 //       ),
 //     );
 //     return;
 //   }
 
-//   showDialog(
+//   // Step 1: Ask user to enter the amount dynamically
+//   double enteredAmount = task.amount; // default value
+//   final result = await showDialog<double>(
 //     context: context,
-//     barrierDismissible: false,
-//     builder: (_) => const Center(
-//       child: CircularProgressIndicator(color: kPrimaryColor),
+//     builder: (ctx) => AlertDialog(
+//       title: const Text("Enter Amount to Pay"),
+//       content: TextField(
+//         keyboardType: const TextInputType.numberWithOptions(decimal: true),
+//         decoration: InputDecoration(
+//           hintText: task.amount.toStringAsFixed(2), // show default nicely
+//         ),
+//         onChanged: (val) {
+//           enteredAmount = double.tryParse(val) ?? task.amount;
+//         },
+//       ),
+//       actions: [
+//         TextButton(
+//           onPressed: () => Navigator.pop(ctx, null),
+//           child: const Text("Cancel"),
+//         ),
+//         TextButton(
+//           onPressed: () {
+//             if (enteredAmount <= 0) {
+//               ScaffoldMessenger.of(context).showSnackBar(
+//                 const SnackBar(
+//                   content: Text("❌ Enter a valid amount greater than 0"),
+//                   backgroundColor: Colors.redAccent,
+//                 ),
+//               );
+//               return;
+//             }
+//             Navigator.pop(ctx, enteredAmount);
+//           },
+//           child: const Text("Pay"),
+//         ),
+//       ],
 //     ),
 //   );
 
-//   try {
-//     print("📤 Sending to API => taskId: ${task.id}, spId: ${task.providerId}, userId: ${task.userId}, amount: 1000");
+//   if (result == null) return; // user cancelled
+//   task.amount = result; // set task amount dynamically
 
-//     // ✅ Create payment and get payment URL + txnId & ordId
+//   // Step 2: Show loading while creating payment
+//   showDialog(
+//     context: context,
+//     barrierDismissible: false,
+//     builder: (_) =>
+//         const Center(child: CircularProgressIndicator(color: kPrimaryColor)),
+//   );
+
+//   try {
+//     // ✅ Use task.amount dynamically
 //     final paymentResponse = await PaymentApi.createPayment(
 //       userId: task.userId,
 //       spId: task.providerId,
 //       taskId: task.id,
-//       amount: 1000,
+//       amount: task.amount,
 //     );
 
-//    final paymentUrl = paymentResponse['payment_url']!;
-// final txnId = paymentResponse['txnId']!;
-// final ordId = paymentResponse['ordId']!;
+//     final paymentUrl = paymentResponse['payment_url']!;
+//     final txnId = paymentResponse['txnId']!;
+//     final ordId = paymentResponse['ordId']!;
 
 //     Navigator.pop(context); // close loading dialog
-
-//     if (paymentUrl.isEmpty || !paymentUrl.startsWith("http")) {
-//       throw Exception("Invalid payment URL received from server");
-//     }
-
-//     print("🌐 Opening PaymentWebViewScreen with txnId: $txnId, ordId: $ordId");
 
 //     Navigator.push(
 //       context,
@@ -1016,11 +237,16 @@
 //           taskId: task.id,
 //           userId: task.userId,
 //           spId: task.providerId,
-//           amount: 1000, // or task.amount if dynamic
-//           txnId: txnId, // ✅ pass txnId dynamically
-//           ordId: ordId, // ✅ pass ordId dynamically
+//           amount: task.amount,
+//           txnId: txnId,
+//           ordId: ordId,
 //           onPaymentSuccess: () {
-//             print("🎉 Payment success callback triggered!");
+//             ScaffoldMessenger.of(context).showSnackBar(
+//               const SnackBar(
+//                 content: Text("✅ Payment successful!"),
+//                 backgroundColor: Colors.green,
+//               ),
+//             );
 //             _loadTasks(); // refresh tasks after payment success
 //           },
 //         ),
@@ -1028,8 +254,6 @@
 //     );
 //   } catch (e) {
 //     if (Navigator.canPop(context)) Navigator.pop(context);
-//     print("❌ Payment failed: $e");
-
 //     ScaffoldMessenger.of(context).showSnackBar(
 //       SnackBar(
 //         content: Text("❌ Payment failed: ${e.toString()}"),
@@ -1073,7 +297,7 @@
 //           await showDialog(
 //             context: context,
 //             builder: (ctx) => AlertDialog(
-//               backgroundColor: kPrimaryColor ,
+//               backgroundColor: kPrimaryColor,
 //               shape: RoundedRectangleBorder(
 //                 borderRadius: BorderRadius.circular(16),
 //               ),
@@ -1166,7 +390,7 @@
 
 //       if (newStatus == "completed") {
 //         message = "🎉 Task completed";
-//         snackColor =kPrimaryColor;
+//         snackColor = kPrimaryColor;
 
 //         // 🔹 Send notification to user
 //         NotificationsApi.sendNotification(
@@ -1254,9 +478,20 @@
 //   Widget _buildTaskCard(Task task) {
 //     final isNew = task.status == 'pending' && widget.role == "provider";
 
-//     String notesPreview = task.notes;
-//     if (notesPreview.length > 50) {
-//       notesPreview = notesPreview.substring(0, 50) + "...";
+//     // Status-based background color
+//     Color cardBgColor = kCardColor;
+//     switch (task.status) {
+//       case "confirmed":
+//         cardBgColor = Colors.blue.shade50;
+//         break;
+//       case "completed":
+//         cardBgColor = Colors.green.shade50;
+//         break;
+//       case "rejected":
+//         cardBgColor = Colors.red.shade50;
+//         break;
+//       default:
+//         cardBgColor = kCardColor;
 //     }
 
 //     return InkWell(
@@ -1290,260 +525,225 @@
 //                       'id': task.serviceId,
 //                       'title': task.serviceTitle,
 //                       'price': '',
-//                       'description': notesPreview,
+//                       'description': task.notes,
 //                     }
 //                   : null,
 //             ),
 //           ),
 //         );
 //       },
-//       child: Container(
-//         margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-//         decoration: BoxDecoration(
-//           color: isNew ? kDividerColor : kCardColor,
-//           borderRadius: BorderRadius.circular(12),
-//           border: Border.all(
-//             color: isNew ? kPrimaryColor : kCardColor,
-//             width: 1,
-//           ),
-//           boxShadow: [
-//             BoxShadow(
-//               color: Colors.black.withOpacity(0.4),
-//               offset: const Offset(0, 6),
-//               blurRadius: 8,
+//       child: Stack(
+//         children: [
+//           Container(
+//             margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+//             decoration: BoxDecoration(
+//               color: cardBgColor,
+//               borderRadius: BorderRadius.circular(12),
+//               border: Border.all(
+//                 color: isNew ? kPrimaryColor : Colors.transparent,
+//                 width: isNew ? 1.5 : 0,
+//               ),
+//               boxShadow: [
+//                 BoxShadow(
+//                   color: Colors.black.withOpacity(0.08),
+//                   offset: const Offset(0, 2),
+//                   blurRadius: 4,
+//                 ),
+//               ],
 //             ),
-//           ],
-//         ),
-
-//         child: Padding(
-//           padding: const EdgeInsets.all(14.0),
-//           child: Column(
-//             crossAxisAlignment: CrossAxisAlignment.start,
-//             children: [
-//               Row(
-//                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//             child: Padding(
+//               padding: const EdgeInsets.all(14.0),
+//               child: Column(
+//                 crossAxisAlignment: CrossAxisAlignment.start,
 //                 children: [
-//                   Text(
-//                     task.serviceTitle,
-//                     style: const TextStyle(
-//                       fontWeight: FontWeight.bold,
-//                       fontSize: 18,
-//                       color: kTextPrimary,
-//                       letterSpacing: 0.4,
-//                       shadows: [
-//                         Shadow(
-//                         //  color: kPrimaryColor,
-//                           offset: Offset(0, 1),
-//                           blurRadius: 3,
+//                   // Title & Status
+//                   Row(
+//                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//                     children: [
+//                       Expanded(
+//                         child: Text(
+//                           task.serviceTitle,
+//                           style: const TextStyle(
+//                             fontWeight: FontWeight.bold,
+//                             fontSize: 17,
+//                             color: kTextPrimary,
+//                           ),
 //                         ),
-//                       ],
-//                     ),
+//                       ),
+//                       _statusBadge(task.status),
+//                     ],
 //                   ),
+//                   const SizedBox(height: 8),
 
-//                   _statusBadge(task.status),
+//                   // Scheduled Date
+//                   _infoChip(
+//                     icon: Icons.calendar_today,
+//                     text: task.scheduledDate.toLocal().toString().split(' ')[0],
+//                     color: kSecondaryColor,
+//                   ),
+//                   const SizedBox(height: 4),
+
+//                   // User / Provider Info
+//                   _infoChip(
+//                     icon: widget.role == "user" ? Icons.handyman : Icons.person,
+//                     text: widget.role == "user"
+//                         ? task.providerName
+//                         : task.userName,
+//                     color: kTextPrimary,
+//                   ),
+//                   const SizedBox(height: 8),
+
+//                   // Notes (1 line preview, tap to expand)
+//                   if (task.notes.isNotEmpty)
+//                     GestureDetector(
+//                       onTap: () {
+//                         showDialog(
+//                           context: context,
+//                           builder: (_) => AlertDialog(
+//                             title: const Text("Notes"),
+//                             content: Text(task.notes),
+//                             actions: [
+//                               TextButton(
+//                                 onPressed: () => Navigator.pop(context),
+//                                 child: const Text("Close"),
+//                               ),
+//                             ],
+//                           ),
+//                         );
+//                       },
+//                       child: Text(
+//                         "📝 Notes: ${task.notes.length > 50 ? task.notes.substring(0, 50) + "..." : task.notes}",
+//                         style: TextStyle(color: kTextSecondary, fontSize: 13),
+//                         maxLines: 1,
+//                         overflow: TextOverflow.ellipsis,
+//                       ),
+//                     ),
+//                   const SizedBox(height: 8),
+
+//                   // Task Status Message
+//                   if (task.status != "completed")
+//                     _statusMessage(
+//                       "⚠️ This task is not completed yet",
+//                       kSecondaryColor,
+//                     ),
+//                   if (task.status == "completed" && task.completedAt != null)
+//                     _statusMessage(
+//                       "✅ Completed on: ${task.completedAt!.toLocal().toString().split(' ')[0]}",
+//                       const Color(0xFF22C55E),
+//                     ),
+//                   const SizedBox(height: 8),
+
+//                   // Action Buttons
+//                   _buildActionButtons(task),
 //                 ],
 //               ),
-//               const SizedBox(height: 6),
-//               Container(
-//                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-//                 decoration: BoxDecoration(
-//                   color: kBackgroundColor,
-
-//                   borderRadius: BorderRadius.circular(8),
-//                 ),
-//                 child: Row(
-//                   mainAxisSize: MainAxisSize.min,
-//                   children: [
-//                     const Icon(
-//                       Icons.calendar_today,
-//                       size: 14,
-//                       color: kSecondaryColor, // gold text
-//                     ),
-//                     const SizedBox(width: 4),
-//                     Text(
-//                       task.scheduledDate.toLocal().toString().split(' ')[0],
-//                       style: const TextStyle(
-//                         fontWeight: FontWeight.w500,
-//                         fontSize: 14,
-//                         color: kSecondaryColor, // gold text
-//                       ),
-//                     ),
-//                   ],
-//                 ),
-//               ),
-
-//               Container(
-//                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-//                 decoration: BoxDecoration(
-//                   color: kBackgroundColor,
-
-//                   borderRadius: BorderRadius.circular(8),
-//                 ),
-//                 child: Row(
-//                   mainAxisSize: MainAxisSize.min,
-//                   children: [
-//                     Icon(
-//                       widget.role == "user" ? Icons.handyman : Icons.person,
-//                       size: 14,
-//                       color: kTextPrimary,
-//                     ),
-//                     const SizedBox(width: 4),
-//                     Text(
-//                       widget.role == "user" ? task.providerName : task.userName,
-//                       style: const TextStyle(
-//                         fontWeight: FontWeight.w500,
-//                         fontSize: 14,
-//                         color: kTextPrimary,
-//                       ),
-//                     ),
-//                   ],
-//                 ),
-//               ),
-
-//               if (notesPreview.isNotEmpty)
-//                 Padding(
-//                   padding: const EdgeInsets.only(top: 4.0),
-//                   child: Container(
-//                     width: double.infinity,
-//                     padding: const EdgeInsets.symmetric(
-//                       horizontal: 8,
-//                       vertical: 6,
-//                     ),
-//                     decoration: BoxDecoration(
-//                       color: kBackgroundColor,
-
-//                       borderRadius: BorderRadius.circular(8),
-//                     ),
-//                     child: Text(
-//                       "📝 Notes: $notesPreview",
-//                       style: TextStyle(
-//                         color: kTextSecondary,
-
-//                         fontSize: 13,
-//                         fontWeight: FontWeight.w400,
-//                       ),
-//                     ),
-//                   ),
-//                 ),
-
-//               if (task.status != "completed")
-//                 Padding(
-//                   padding: const EdgeInsets.only(top: 6.0, bottom: 4.0),
-//                   child: Container(
-//                     width: double.infinity,
-//                     padding: const EdgeInsets.symmetric(
-//                       horizontal: 8,
-//                       vertical: 6,
-//                     ),
-//                     decoration: BoxDecoration(
-//                       color: kBackgroundColor,
-
-//                       borderRadius: BorderRadius.circular(6),
-//                     ),
-//                     child: Text(
-//                       "⚠️ This task is not completed yet",
-//                       style: TextStyle(
-//                         fontWeight: FontWeight.w600,
-//                         color: kSecondaryColor,
-
-//                         fontSize: 13,
-//                       ),
-//                     ),
-//                   ),
-//                 ),
-
-//               if (task.status == "completed" && task.completedAt != null)
-//                 Padding(
-//                   padding: const EdgeInsets.only(top: 6.0, bottom: 4.0),
-
-//                   child: Container(
-//                     width: double.infinity,
-//                     padding: const EdgeInsets.symmetric(
-//                       horizontal: 8,
-//                       vertical: 6,
-//                     ),
-//                     decoration: BoxDecoration(
-//                       color: kBackgroundColor,
-
-//                       borderRadius: BorderRadius.circular(6),
-//                     ),
-
-//                     child: Text(
-//                       "✅ Completed on: ${task.completedAt!.toLocal().toString().split(' ')[0]}",
-//                       style: TextStyle(
-//                         fontWeight: FontWeight.bold,
-//                         color: Color(0xFF22C55E),
-
-//                         fontSize: 13,
-//                       ),
-//                     ),
-//                   ),
-
-//                 ),
-//  // Phase 1: Pay Now button
-//         if (widget.role == "user" && task.payment_status != "paid")
-//           Padding(
-//             padding: const EdgeInsets.only(top: 6.0),
-//             child: ElevatedButton(
-//               onPressed: () => _payNow(task),
-//               style: ElevatedButton.styleFrom(
-//                 backgroundColor: kPrimaryColor,
-//                 foregroundColor: kBackgroundColor,
-//               ),
-//               child: const Text("💳 Pay Now"),
 //             ),
 //           ),
-//               if (widget.role == "provider")
-//                 if (task.status == "pending")
-//                   Row(
-//                     children: [
-//                       ElevatedButton(
-//                         onPressed: () => _updateTask(task, "confirmed"),
-//                         style: ElevatedButton.styleFrom(
-//                           backgroundColor: Color(0xFF22C55E),
-//                         ),
-//                         child: const Text(
-//                           "Accept",
-//                           style: TextStyle(color: kTextPrimary),
-//                         ),
-//                       ),
-//                       const SizedBox(width: 8),
-//                       ElevatedButton(
-//                         onPressed: () => _updateTask(task, "rejected"),
-//                         style: ElevatedButton.styleFrom(
-//                           backgroundColor: Color(0xFFEF4444),
-//                         ),
-//                         child: const Text(
-//                           "Reject",
-//                           style: TextStyle(color: kTextPrimary),
-//                         ),
-//                       ),
-//                     ],
-//                   )
-//                 else if (task.status == "confirmed")
-//                   ElevatedButton(
-//                     onPressed: () => _updateTask(task, "completed"),
-//                     style: ElevatedButton.styleFrom(
-//                       backgroundColor: kPrimaryColor,
-//                       foregroundColor: kCardColor,
-//                     ),
-//                     child: const Text("Mark Completed"),
-//                   ),
-//             ],
-//           ),
+//         ],
+//       ),
+//     );
+//   }
+
+//   // Helper Widgets (same as before)
+//   Widget _infoChip({
+//     required IconData icon,
+//     required String text,
+//     required Color color,
+//   }) {
+//     return Container(
+//       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+//       decoration: BoxDecoration(
+//         color: kBackgroundColor,
+//         borderRadius: BorderRadius.circular(8),
+//       ),
+//       child: Row(
+//         mainAxisSize: MainAxisSize.min,
+//         children: [
+//           Icon(icon, size: 14, color: color),
+//           const SizedBox(width: 4),
+//           Text(text, style: TextStyle(fontSize: 14, color: color)),
+//         ],
+//       ),
+//     );
+//   }
+
+//   Widget _statusMessage(String message, Color color) {
+//     return Container(
+//       width: double.infinity,
+//       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+//       decoration: BoxDecoration(
+//         color: kBackgroundColor,
+//         borderRadius: BorderRadius.circular(6),
+//       ),
+//       child: Text(
+//         message,
+//         style: TextStyle(
+//           fontSize: 13,
+//           fontWeight: FontWeight.w600,
+//           color: color,
 //         ),
 //       ),
 //     );
+//   }
+
+//   Widget _buildActionButtons(Task task) {
+//     if (widget.role == "user") {
+//       if (task.payment_status != "paid") {
+//         return ElevatedButton(
+//           onPressed: () => _payNow(task),
+//           style: ElevatedButton.styleFrom(
+//             backgroundColor: kPrimaryColor,
+//             foregroundColor: kCardColor,
+//           ),
+//           child: const Text("💳 Pay Now"),
+//         );
+//       }
+//     } else if (widget.role == "provider") {
+//       if (task.status == "pending") {
+//         return Row(
+//           children: [
+//             ElevatedButton(
+//               onPressed: () => _updateTask(task, "confirmed"),
+//               style: ElevatedButton.styleFrom(
+//                 backgroundColor: const Color(0xFF22C55E),
+//               ),
+//               child: const Text(
+//                 "Accept",
+//                 style: TextStyle(color: kTextPrimary),
+//               ),
+//             ),
+//             const SizedBox(width: 8),
+//             ElevatedButton(
+//               onPressed: () => _updateTask(task, "rejected"),
+//               style: ElevatedButton.styleFrom(
+//                 backgroundColor: const Color(0xFFEF4444),
+//               ),
+//               child: const Text(
+//                 "Reject",
+//                 style: TextStyle(color: kTextPrimary),
+//               ),
+//             ),
+//           ],
+//         );
+//       } else if (task.status == "confirmed") {
+//         return ElevatedButton(
+//           onPressed: () => _updateTask(task, "completed"),
+//           style: ElevatedButton.styleFrom(
+//             backgroundColor: kPrimaryColor,
+//             foregroundColor: kCardColor,
+//           ),
+//           child: const Text("Mark Completed"),
+//         );
+//       }
+//     }
+//     return const SizedBox.shrink();
 //   }
 
 //   Widget _buildTaskList(List<Task> tasks) {
 //     if (isLoading) return const Center(child: CircularProgressIndicator());
 //     if (tasks.isEmpty)
 //       return const Center(
-//         child: Text(
-//           "No tasks found",
-//           style: TextStyle(color:  kTextSecondary),
-//         ),
+//         child: Text("No tasks found", style: TextStyle(color: kTextSecondary)),
 //       );
 
 //     return RefreshIndicator(
@@ -1558,7 +758,7 @@
 //   @override
 //   Widget build(BuildContext context) {
 //     return Scaffold(
-//       backgroundColor:kCardColor,
+//       backgroundColor: kCardColor,
 //       appBar: AppBar(
 //         title: const Text(
 //           "📋 My Tasks",
@@ -1626,15 +826,916 @@
 
 
 
+///////////////////////////////////////////////////////////////
+///
+///
+///
+
+
+
+
+
+
+
+
+// import 'dart:convert';
+// import 'package:flutter/material.dart';
+// import 'package:http/http.dart' as http;
+// import 'task_detail_screen.dart';
+// import '../helpers/backend.dart';
+
+// import '../helpers/coolors.dart';
+// import 'sp_user_payment.dart';
+// import '../providers/task_provider.dart';
+// import 'package:provider/provider.dart';
+// class Task {
+//   final int id;
+//   final int userId;
+//   final int providerId;
+//   final int serviceId;
+//   final String status;
+//   final DateTime scheduledDate;
+//   final String? address; // new
+//   final double? latitude; // new
+//   final double? longitude; // new
+//   final String notes;
+//   final String serviceTitle;
+//   final String userName;
+//   final String providerName;
+//   final String? attachmentDetails;
+//   final DateTime? completedAt;
+//   final List<Map<String, dynamic>> attachments; // <-- changed type
+//   final String? payment_status;
+//   double amount;
+//   Task({
+//     required this.id,
+//     required this.userId,
+//     required this.providerId,
+//     required this.serviceId,
+//     required this.status,
+//     required this.scheduledDate,
+//     this.address,
+//     this.latitude,
+//     this.longitude,
+//     required this.notes,
+//     required this.serviceTitle,
+//     required this.userName,
+//     required this.providerName,
+//     this.attachmentDetails,
+//     this.completedAt,
+//     this.attachments = const [], // default empty list of maps
+//     this.payment_status,
+//     required this.amount, // new field
+//   });
+
+//   factory Task.fromJson(Map<String, dynamic> json) => Task(
+//     id: json['id'] ?? 0,
+//     userId: json['user_id'] ?? 0,
+//     providerId: json['provider_id'] ?? 0,
+//     serviceId: json['service_id'] ?? 0,
+//     status: json['status'] ?? "pending",
+//     scheduledDate:
+//         DateTime.tryParse(json['scheduled_date'] ?? "") ?? DateTime.now(),
+//     address: json['address'],
+//     latitude: json['latitude'] != null
+//         ? double.tryParse(json['latitude'].toString())
+//         : null,
+//     longitude: json['longitude'] != null
+//         ? double.tryParse(json['longitude'].toString())
+//         : null,
+//     notes: json['notes'] ?? "",
+//     serviceTitle: json['service_title'] ?? "Service",
+//     userName: json['user_name'] ?? "User",
+//     providerName: json['provider_name'] ?? "Provider",
+//     attachmentDetails: json['attachment_details'],
+//     completedAt: json['completed_at'] != null
+//         ? DateTime.tryParse(json['completed_at'])
+//         : null,
+//     attachments: (json['attachments'] != null && json['attachments'] is List)
+//         ? List<Map<String, dynamic>>.from(
+//             (json['attachments'] as List).map(
+//               (a) => Map<String, dynamic>.from(a),
+//             ),
+//           )
+//         : [],
+//     payment_status: json['payment_status'],
+//     amount: json['amount'] != null
+//         ? double.tryParse(json['amount'].toString()) ?? 0
+//         : 0, // new
+//   );
+// }
+
+// class TasksApi {
+//   static Future<List<Task>> fetchTasks({int? userId, int? providerId}) async {
+//     final Map<String, String> queryParams = {};
+//     if (userId != null) queryParams['user_id'] = userId.toString();
+//     if (providerId != null) queryParams['provider_id'] = providerId.toString();
+
+//     final uri = Uri.parse(
+//       "${Backend.baseUrl}/tasks",
+//     ).replace(queryParameters: queryParams);
+
+//     final response = await http.get(uri);
+
+//     if (response.statusCode == 200) {
+//       final List data = json.decode(response.body)['tasks'];
+//       return data.map((t) => Task.fromJson(t)).toList();
+//     } else {
+//       throw Exception("Failed to load tasks");
+//     }
+//   }
+
+//   static Future<Task> updateTaskStatus(int taskId, String status) async {
+//     final uri = Uri.parse("${Backend.baseUrl}/tasks/$taskId");
+
+//     final response = await http.patch(
+//       uri,
+//       headers: {"Content-Type": "application/json"},
+//       body: json.encode({"status": status}),
+//     );
+
+//     if (response.statusCode == 200) {
+//       return Task.fromJson(json.decode(response.body)['task']);
+//     } else {
+//       throw Exception("Failed to update task");
+//     }
+//   }
+// }
+
+// class MyTasksScreen extends StatefulWidget {
+//   final String role; // "user" or "provider"
+//   final int currentUserId;
+
+//   const MyTasksScreen({
+//     super.key,
+//     required this.role,
+//     required this.currentUserId,
+//   });
+
+//   @override
+//   State<MyTasksScreen> createState() => _MyTasksScreenState();
+// }
+
+// class _MyTasksScreenState extends State<MyTasksScreen>
+//     with SingleTickerProviderStateMixin {
+//   late TabController _tabController;
+//   // List<Task> pendingTasks = [];
+//   // List<Task> completedTasks = [];
+//   // bool isLoading = true;
+
+//   @override
+// void initState() {
+//   super.initState();
+//   _tabController = TabController(length: 2, vsync: this);
+
+//   // Load tasks via Provider
+//   WidgetsBinding.instance.addPostFrameCallback((_) {
+//     final taskProvider = Provider.of<TaskProvider>(context, listen: false);
+//     taskProvider.loadTasks(widget.currentUserId, role: widget.role);
+//   });
+// }
+
+
+//   void _payNow(Task task) async {
+//     print("💡 _payNow called for Task ID: ${task.id}");
+
+//     if (task.userId == 0 || task.providerId == 0) {
+//       ScaffoldMessenger.of(context).showSnackBar(
+//         const SnackBar(
+//           content: Text(
+//             "⚠️ Task missing user or provider info. Please refresh.",
+//           ),
+//           backgroundColor: Colors.red,
+//         ),
+//       );
+//       return;
+//     }
+
+//     // Step 1: Ask user to enter the amount dynamically
+//     double enteredAmount = task.amount; // default value
+//     final result = await showDialog<double>(
+//       context: context,
+//       builder: (ctx) => AlertDialog(
+//         title: const Text("Enter Amount to Pay"),
+//         content: TextField(
+//           keyboardType: const TextInputType.numberWithOptions(decimal: true),
+//           decoration: InputDecoration(
+//             hintText: task.amount.toStringAsFixed(2), // show default nicely
+//           ),
+//           onChanged: (val) {
+//             enteredAmount = double.tryParse(val) ?? task.amount;
+//           },
+//         ),
+//         actions: [
+//           TextButton(
+//             onPressed: () => Navigator.pop(ctx, null),
+//             child: const Text("Cancel"),
+//           ),
+//           TextButton(
+//             onPressed: () {
+//               if (enteredAmount <= 0) {
+//                 ScaffoldMessenger.of(context).showSnackBar(
+//                   const SnackBar(
+//                     content: Text("❌ Enter a valid amount greater than 0"),
+//                     backgroundColor: Colors.redAccent,
+//                   ),
+//                 );
+//                 return;
+//               }
+//               Navigator.pop(ctx, enteredAmount);
+//             },
+//             child: const Text("Pay"),
+//           ),
+//         ],
+//       ),
+//     );
+
+//     if (result == null) return; // user cancelled
+//     task.amount = result; // set task amount dynamically
+
+//     // Step 2: Show loading while creating payment
+//     showDialog(
+//       context: context,
+//       barrierDismissible: false,
+//       builder: (_) =>
+//           const Center(child: CircularProgressIndicator(color: kPrimaryColor)),
+//     );
+
+//     try {
+//       // ✅ Use task.amount dynamically
+//       final paymentResponse = await PaymentApi.createPayment(
+//         userId: task.userId,
+//         spId: task.providerId,
+//         taskId: task.id,
+//         amount: task.amount,
+//       );
+
+//       final paymentUrl = paymentResponse['payment_url']!;
+//       final txnId = paymentResponse['txnId']!;
+//       final ordId = paymentResponse['ordId']!;
+
+//       Navigator.pop(context); // close loading dialog
+
+//       Navigator.push(
+//         context,
+//         MaterialPageRoute(
+//           builder: (_) => PaymentWebViewScreen(
+//             url: paymentUrl,
+//             taskId: task.id,
+//             userId: task.userId,
+//             spId: task.providerId,
+//             amount: task.amount,
+//             txnId: txnId,
+//             ordId: ordId,
+//             onPaymentSuccess: () {
+//               ScaffoldMessenger.of(context).showSnackBar(
+//                 const SnackBar(
+//                   content: Text("✅ Payment successful!"),
+//                   backgroundColor: Colors.green,
+//                 ),
+//               );
+//               Provider.of<TaskProvider>(context, listen: false)
+//     .refreshTasks(widget.currentUserId, role: widget.role);
+//  // refresh tasks after payment success
+//             },
+//           ),
+//         ),
+//       );
+//     } catch (e) {
+//       if (Navigator.canPop(context)) Navigator.pop(context);
+//       ScaffoldMessenger.of(context).showSnackBar(
+//         SnackBar(
+//           content: Text("❌ Payment failed: ${e.toString()}"),
+//           backgroundColor: Colors.redAccent,
+//           behavior: SnackBarBehavior.floating,
+//         ),
+//       );
+//     }
+//   }
+
+
+
+
+
+
+
+
+
+  
+
+
+
+//   Future<void> _updateTask(Task task, String newStatus) async {
+//     bool confirm = true;
+
+//     if (newStatus == "completed") {
+//       confirm =
+//           await showDialog(
+//             context: context,
+//             builder: (ctx) => AlertDialog(
+//               backgroundColor: kPrimaryColor,
+//               shape: RoundedRectangleBorder(
+//                 borderRadius: BorderRadius.circular(16),
+//               ),
+//               title: Text(
+//                 'Complete Task',
+//                 style: TextStyle(
+//                   fontWeight: FontWeight.bold,
+//                   fontSize: 20,
+//                   color: kCardColor,
+//                 ),
+//               ),
+//               content: Text(
+//                 'Are you sure you have completed this task carefully?',
+//                 style: TextStyle(fontSize: 16, color: kTextPrimary),
+//               ),
+//               actions: [
+//                 TextButton(
+//                   onPressed: () => Navigator.pop(ctx, false),
+//                   style: TextButton.styleFrom(
+//                     backgroundColor: kPrimaryColor.withOpacity(0.3),
+//                     shape: RoundedRectangleBorder(
+//                       borderRadius: BorderRadius.circular(12),
+//                     ),
+//                   ),
+//                   child: Text(
+//                     'Cancel',
+//                     style: TextStyle(
+//                       color: kCardColor,
+//                       fontWeight: FontWeight.w600,
+//                     ),
+//                   ),
+//                 ),
+//                 TextButton(
+//                   onPressed: () => Navigator.pop(ctx, true),
+//                   style: TextButton.styleFrom(
+//                     backgroundColor: kPrimaryColor,
+//                     shape: RoundedRectangleBorder(
+//                       borderRadius: BorderRadius.circular(12),
+//                     ),
+//                   ),
+//                   child: const Text(
+//                     'Yes, Completed',
+//                     style: TextStyle(
+//                       color: kCardColor,
+//                       fontWeight: FontWeight.bold,
+//                     ),
+//                   ),
+//                 ),
+//               ],
+//             ),
+//           ) ??
+//           false;
+//     }
+
+//     if (!confirm) return;
+
+//     try {
+//       await TasksApi.updateTaskStatus(task.id, newStatus);
+
+//       String message = '';
+//       Color snackColor = kPrimaryColor;
+
+//       if (newStatus == "confirmed") {
+//         message = "✅ Task accepted";
+//         snackColor = Colors.green.shade700;
+
+//         // 🔹 Send notification to user
+//         NotificationsApi.sendNotification(
+//           userId: task.userId,
+//           title: "Task Accepted ✅",
+//           body:
+//               "Your task '${task.serviceTitle}' has been accepted✅ by the provider",
+//           senderId: task.providerId,
+//         );
+//       }
+
+//       if (newStatus == "rejected") {
+//         message = "❌ Task rejected";
+//         snackColor = Colors.red.shade600;
+
+//         // 🔹 Send notification to user
+//         NotificationsApi.sendNotification(
+//           userId: task.userId,
+//           title: "Task Rejected ❌",
+//           body:
+//               "Your task '${task.serviceTitle}' has been rejected❌ by the provider",
+//           senderId: task.providerId,
+//         );
+//       }
+
+//       if (newStatus == "completed") {
+//         message = "🎉 Task completed";
+//         snackColor = kPrimaryColor;
+
+//         // 🔹 Send notification to user
+//         NotificationsApi.sendNotification(
+//           userId: task.userId,
+//           title: "Task Completed 🎉",
+//           body:
+//               "Your task '${task.serviceTitle}' has been marked as completed🎉 by the provider",
+//           senderId: task.providerId,
+//         );
+//       }
+
+//       ScaffoldMessenger.of(context).showSnackBar(
+//         SnackBar(
+//           content: Text(
+//             message,
+//             style: const TextStyle(
+//               fontWeight: FontWeight.bold,
+//               color: Colors.white,
+//             ),
+//           ),
+//           backgroundColor: snackColor,
+//           behavior: SnackBarBehavior.floating,
+//           shape: RoundedRectangleBorder(
+//             borderRadius: BorderRadius.circular(12),
+//           ),
+//           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+//           duration: const Duration(seconds: 2),
+//         ),
+//       );
+
+//       Provider.of<TaskProvider>(context, listen: false)
+//     .refreshTasks(widget.currentUserId, role: widget.role);
+
+//     } catch (e) {
+//       ScaffoldMessenger.of(context).showSnackBar(
+//         SnackBar(
+//           content: Text(
+//             "❌ Failed to update task: $e",
+//             style: const TextStyle(color: Colors.white),
+//           ),
+//           backgroundColor: Colors.red.shade600,
+//           behavior: SnackBarBehavior.floating,
+//           shape: RoundedRectangleBorder(
+//             borderRadius: BorderRadius.circular(12),
+//           ),
+//           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+//           duration: const Duration(seconds: 3),
+//         ),
+//       );
+//     }
+//   }
+
+//   Color _statusColor(String status) {
+//     switch (status) {
+//       case 'pending':
+//         return kSecondaryColor;
+//       case 'confirmed':
+//         return kPrimaryColor;
+//       case 'completed':
+//         return const Color(0xFF22C55E);
+//       case 'rejected':
+//         return const Color(0xFFEF4444);
+//       default:
+//         return const Color(0xFFA1A1A1);
+//     }
+//   }
+
+//   Widget _statusBadge(String status) {
+//     return Container(
+//       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+//       decoration: BoxDecoration(
+//         color: _statusColor(status).withOpacity(0.15),
+//         border: Border.all(color: _statusColor(status).withOpacity(0.8)),
+//         borderRadius: BorderRadius.circular(12),
+//       ),
+//       child: Text(
+//         status.toUpperCase(),
+//         style: TextStyle(
+//           color: _statusColor(status),
+//           fontWeight: FontWeight.bold,
+//           fontSize: 12,
+//         ),
+//       ),
+//     );
+//   }
+
+
+
+
+
+
+
+
+
+
+
+
+//   Widget _buildTaskCard(Task task) {
+//     final isNew = task.status == 'pending' && widget.role == "provider";
+
+//     // Status-based background color
+//     Color cardBgColor = kCardColor;
+//     switch (task.status) {
+//       case "confirmed":
+//         cardBgColor = Colors.blue.shade50;
+//         break;
+//       case "completed":
+//         cardBgColor = Colors.green.shade50;
+//         break;
+//       case "rejected":
+//         cardBgColor = Colors.red.shade50;
+//         break;
+//       default:
+//         cardBgColor = kCardColor;
+//     }
+
+//     return InkWell(
+//       onTap: () {
+//         Navigator.push(
+//           context,
+//           MaterialPageRoute(
+//             builder: (_) => TaskDetailPage(
+//               currentUserId: widget.currentUserId,
+//               providerId: task.providerId,
+//               readOnly: widget.role == "provider",
+//               taskData: widget.role == "provider"
+//                   ? {
+//                       'id': task.id,
+//                       'user_id': task.userId,
+//                       'notes': task.notes,
+//                       'scheduled_date': task.scheduledDate.toIso8601String(),
+//                       'title': task.serviceTitle,
+//                       'service_title': task.serviceTitle,
+//                       'price': '',
+//                       'description': task.notes,
+//                       'attachments': task.attachments,
+//                       'attachment_details': task.attachmentDetails ?? '',
+//                       'address': task.address,
+//                       'latitude': task.latitude,
+//                       'longitude': task.longitude,
+//                     }
+//                   : null,
+//               serviceData: widget.role == "user"
+//                   ? {
+//                       'id': task.serviceId,
+//                       'title': task.serviceTitle,
+//                       'price': '',
+//                       'description': task.notes,
+//                     }
+//                   : null,
+//             ),
+//           ),
+//         );
+//       },
+//       child: Stack(
+//         children: [
+//           Container(
+//             margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+//             decoration: BoxDecoration(
+//               color: cardBgColor,
+//               borderRadius: BorderRadius.circular(12),
+//               border: Border.all(
+//                 color: isNew ? kPrimaryColor : Colors.transparent,
+//                 width: isNew ? 1.5 : 0,
+//               ),
+//               boxShadow: [
+//                 BoxShadow(
+//                   color: Colors.black.withOpacity(0.08),
+//                   offset: const Offset(0, 2),
+//                   blurRadius: 4,
+//                 ),
+//               ],
+//             ),
+//             child: Padding(
+//               padding: const EdgeInsets.all(14.0),
+//               child: Column(
+//                 crossAxisAlignment: CrossAxisAlignment.start,
+//                 children: [
+//                   // Title & Status
+//                   Row(
+//                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//                     children: [
+//                       Expanded(
+//                         child: Text(
+//                           task.serviceTitle,
+//                           style: const TextStyle(
+//                             fontWeight: FontWeight.bold,
+//                             fontSize: 17,
+//                             color: kTextPrimary,
+//                           ),
+//                         ),
+//                       ),
+//                       _statusBadge(task.status),
+//                     ],
+//                   ),
+//                   const SizedBox(height: 8),
+
+//                   // Scheduled Date
+//                   _infoChip(
+//                     icon: Icons.calendar_today,
+//                     text: task.scheduledDate.toLocal().toString().split(' ')[0],
+//                     color: kSecondaryColor,
+//                   ),
+//                   const SizedBox(height: 4),
+
+//                   // User / Provider Info
+//                   _infoChip(
+//                     icon: widget.role == "user" ? Icons.handyman : Icons.person,
+//                     text: widget.role == "user"
+//                         ? task.providerName
+//                         : task.userName,
+//                     color: kTextPrimary,
+//                   ),
+//                   const SizedBox(height: 8),
+
+//                   // Notes (1 line preview, tap to expand)
+//                   if (task.notes.isNotEmpty)
+//                     GestureDetector(
+//                       onTap: () {
+//                         showDialog(
+//                           context: context,
+//                           builder: (_) => AlertDialog(
+//                             title: const Text("Notes"),
+//                             content: Text(task.notes),
+//                             actions: [
+//                               TextButton(
+//                                 onPressed: () => Navigator.pop(context),
+//                                 child: const Text("Close"),
+//                               ),
+//                             ],
+//                           ),
+//                         );
+//                       },
+//                       child: Text(
+//                         "📝 Notes: ${task.notes.length > 50 ? task.notes.substring(0, 50) + "..." : task.notes}",
+//                         style: TextStyle(color: kTextSecondary, fontSize: 13),
+//                         maxLines: 1,
+//                         overflow: TextOverflow.ellipsis,
+//                       ),
+//                     ),
+//                   const SizedBox(height: 8),
+
+//                   // Task Status Message
+//                   if (task.status != "completed")
+//                     _statusMessage(
+//                       "⚠️ This task is not completed yet",
+//                       kSecondaryColor,
+//                     ),
+//                   if (task.status == "completed" && task.completedAt != null)
+//                     _statusMessage(
+//                       "✅ Completed on: ${task.completedAt!.toLocal().toString().split(' ')[0]}",
+//                       const Color(0xFF22C55E),
+//                     ),
+//                   const SizedBox(height: 8),
+
+//                   // Action Buttons
+//                   _buildActionButtons(task),
+//                 ],
+//               ),
+//             ),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//   // Helper Widgets (same as before)
+//   Widget _infoChip({
+//     required IconData icon,
+//     required String text,
+//     required Color color,
+//   }) {
+//     return Container(
+//       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+//       decoration: BoxDecoration(
+//         color: kBackgroundColor,
+//         borderRadius: BorderRadius.circular(8),
+//       ),
+//       child: Row(
+//         mainAxisSize: MainAxisSize.min,
+//         children: [
+//           Icon(icon, size: 14, color: color),
+//           const SizedBox(width: 4),
+//           Text(text, style: TextStyle(fontSize: 14, color: color)),
+//         ],
+//       ),
+//     );
+//   }
+
+//   Widget _statusMessage(String message, Color color) {
+//     return Container(
+//       width: double.infinity,
+//       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+//       decoration: BoxDecoration(
+//         color: kBackgroundColor,
+//         borderRadius: BorderRadius.circular(6),
+//       ),
+//       child: Text(
+//         message,
+//         style: TextStyle(
+//           fontSize: 13,
+//           fontWeight: FontWeight.w600,
+//           color: color,
+//         ),
+//       ),
+//     );
+//   }
+
+//   Widget _buildActionButtons(Task task) {
+//     if (widget.role == "user") {
+//       if (task.payment_status != "paid") {
+//         return ElevatedButton(
+//           onPressed: () => _payNow(task),
+//           style: ElevatedButton.styleFrom(
+//             backgroundColor: kPrimaryColor,
+//             foregroundColor: kCardColor,
+//           ),
+//           child: const Text("💳 Pay Now"),
+//         );
+//       }
+//     } else if (widget.role == "provider") {
+//       if (task.status == "pending") {
+//         return Row(
+//           children: [
+//             ElevatedButton(
+//               onPressed: () => _updateTask(task, "confirmed"),
+//               style: ElevatedButton.styleFrom(
+//                 backgroundColor: const Color(0xFF22C55E),
+//               ),
+//               child: const Text(
+//                 "Accept",
+//                 style: TextStyle(color: kTextPrimary),
+//               ),
+//             ),
+//             const SizedBox(width: 8),
+//             ElevatedButton(
+//               onPressed: () => _updateTask(task, "rejected"),
+//               style: ElevatedButton.styleFrom(
+//                 backgroundColor: const Color(0xFFEF4444),
+//               ),
+//               child: const Text(
+//                 "Reject",
+//                 style: TextStyle(color: kTextPrimary),
+//               ),
+//             ),
+//           ],
+//         );
+//       } else if (task.status == "confirmed") {
+//         return ElevatedButton(
+//           onPressed: () => _updateTask(task, "completed"),
+//           style: ElevatedButton.styleFrom(
+//             backgroundColor: kPrimaryColor,
+//             foregroundColor: kCardColor,
+//           ),
+//           child: const Text("Mark Completed"),
+//         );
+//       }
+//     }
+//     return const SizedBox.shrink();
+//   }
+
+//  Widget _buildTaskList(bool isPending) {
+//   return RefreshIndicator(
+//     onRefresh: () => Provider.of<TaskProvider>(context, listen: false)
+//         .refreshTasks(widget.currentUserId, role: widget.role),
+//     child: Consumer<TaskProvider>(
+//       builder: (context, taskProvider, _) {
+//         final taskList =
+//             isPending ? taskProvider.pendingTasks : taskProvider.completedTasks;
+
+//         if (taskProvider.isLoading) {
+//           return const Center(child: CircularProgressIndicator());
+//         }
+
+//         if (taskList.isEmpty) {
+//           return const Center(
+//             child: Text("No tasks found", style: TextStyle(color: kTextSecondary)),
+//           );
+//         }
+
+//         return ListView.builder(
+//           itemCount: taskList.length,
+//           itemBuilder: (context, index) => _buildTaskCard(taskList[index]),
+//         );
+//       },
+//     ),
+//   );
+// }
+
+// @override
+// Widget build(BuildContext context) {
+//   return Scaffold(
+//     backgroundColor: kCardColor,
+//     appBar: AppBar(
+//       title: const Text(
+//         "📋 My Tasks",
+//         style: TextStyle(
+//           fontWeight: FontWeight.bold,
+//           fontSize: 20,
+//           color: heaidng,
+//         ),
+//       ),
+//       centerTitle: true,
+//       elevation: 0,
+//       flexibleSpace: Container(
+//         decoration: const BoxDecoration(
+//           gradient: LinearGradient(
+//             colors: [
+//               kBackgroundColor,
+//               kBackgroundColor,
+//             ],
+//             begin: Alignment.topLeft,
+//             end: Alignment.bottomRight,
+//           ),
+//         ),
+//       ),
+//       shape: const RoundedRectangleBorder(
+//         borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
+//       ),
+//       bottom: PreferredSize(
+//         preferredSize: const Size.fromHeight(50),
+//         child: Align(
+//           alignment: Alignment.center,
+//           child: TabBar(
+//             controller: _tabController,
+//             indicatorColor: kPrimaryColor,
+//             indicatorWeight: 3,
+//             labelColor: kTextPrimary,
+//             unselectedLabelColor: kTextSecondary,
+//             labelStyle: const TextStyle(
+//               fontWeight: FontWeight.bold,
+//               fontSize: 16,
+//             ),
+//             unselectedLabelStyle: const TextStyle(
+//               fontWeight: FontWeight.w500,
+//               fontSize: 16,
+//             ),
+//             tabs: const [
+//               Tab(text: "⏳ Pending"),
+//               Tab(text: "✅ Completed"),
+//             ],
+//           ),
+//         ),
+//       ),
+//     ),
+//     body: TabBarView(
+//       controller: _tabController,
+//       children: [
+//         _buildTaskList(true),  // Pending tasks
+//         _buildTaskList(false), // Completed tasks
+//       ],
+//     ),
+//   );
+// }
+
+// }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/////////////////////////////////////////
+///
+
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'task_detail_screen.dart';
 import '../helpers/backend.dart';
-
+import 'package:shared_preferences/shared_preferences.dart';
+import '../models/ExternalProfileWidget.dart'; 
 import '../helpers/coolors.dart';
 import 'sp_user_payment.dart';
-
+import '../providers/task_provider.dart';
+import 'package:provider/provider.dart';
 class Task {
   final int id;
   final int userId;
@@ -1653,7 +1754,7 @@ class Task {
   final DateTime? completedAt;
   final List<Map<String, dynamic>> attachments; // <-- changed type
   final String? payment_status;
-   double amount;
+  double amount;
   Task({
     required this.id,
     required this.userId,
@@ -1706,9 +1807,9 @@ class Task {
           )
         : [],
     payment_status: json['payment_status'],
-     amount: json['amount'] != null
-      ? double.tryParse(json['amount'].toString()) ?? 0
-      : 0, // new
+    amount: json['amount'] != null
+        ? double.tryParse(json['amount'].toString()) ?? 0
+        : 0, // new
   );
 }
 
@@ -1766,163 +1867,175 @@ class MyTasksScreen extends StatefulWidget {
 class _MyTasksScreenState extends State<MyTasksScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  List<Task> pendingTasks = [];
-  List<Task> completedTasks = [];
-  bool isLoading = true;
-
+  
   @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 2, vsync: this);
-    _loadTasks();
-  }
+void initState() {
+  super.initState();
+  _tabController = TabController(length: 2, vsync: this);
 
-
-
-
-
-
- void _payNow(Task task) async {
-  print("💡 _payNow called for Task ID: ${task.id}");
-
-  if (task.userId == 0 || task.providerId == 0) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          "⚠️ Task missing user or provider info. Please refresh.",
-        ),
-        backgroundColor: Colors.red,
-      ),
-    );
-    return;
-  }
-
-  // Step 1: Ask user to enter the amount dynamically
-  double enteredAmount = task.amount; // default value
-  final result = await showDialog<double>(
-    context: context,
-    builder: (ctx) => AlertDialog(
-      title: const Text("Enter Amount to Pay"),
-      content: TextField(
-        keyboardType: const TextInputType.numberWithOptions(decimal: true),
-        decoration: InputDecoration(
-          hintText: task.amount.toStringAsFixed(2), // show default nicely
-        ),
-        onChanged: (val) {
-          enteredAmount = double.tryParse(val) ?? task.amount;
-        },
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(ctx, null),
-          child: const Text("Cancel"),
-        ),
-        TextButton(
-          onPressed: () {
-            if (enteredAmount <= 0) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text("❌ Enter a valid amount greater than 0"),
-                  backgroundColor: Colors.redAccent,
-                ),
-              );
-              return;
-            }
-            Navigator.pop(ctx, enteredAmount);
-          },
-          child: const Text("Pay"),
-        ),
-      ],
-    ),
-  );
-
-  if (result == null) return; // user cancelled
-  task.amount = result; // set task amount dynamically
-
-  // Step 2: Show loading while creating payment
-  showDialog(
-    context: context,
-    barrierDismissible: false,
-    builder: (_) =>
-        const Center(child: CircularProgressIndicator(color: kPrimaryColor)),
-  );
-
-  try {
-    // ✅ Use task.amount dynamically
-    final paymentResponse = await PaymentApi.createPayment(
-      userId: task.userId,
-      spId: task.providerId,
-      taskId: task.id,
-      amount: task.amount,
-    );
-
-    final paymentUrl = paymentResponse['payment_url']!;
-    final txnId = paymentResponse['txnId']!;
-    final ordId = paymentResponse['ordId']!;
-
-    Navigator.pop(context); // close loading dialog
-
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => PaymentWebViewScreen(
-          url: paymentUrl,
-          taskId: task.id,
-          userId: task.userId,
-          spId: task.providerId,
-          amount: task.amount,
-          txnId: txnId,
-          ordId: ordId,
-          onPaymentSuccess: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text("✅ Payment successful!"),
-                backgroundColor: Colors.green,
-              ),
-            );
-            _loadTasks(); // refresh tasks after payment success
-          },
-        ),
-      ),
-    );
-  } catch (e) {
-    if (Navigator.canPop(context)) Navigator.pop(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text("❌ Payment failed: ${e.toString()}"),
-        backgroundColor: Colors.redAccent,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-  }
+  // Load tasks via Provider
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    final taskProvider = Provider.of<TaskProvider>(context, listen: false);
+    taskProvider.loadTasks(widget.currentUserId, role: widget.role);
+  });
 }
 
 
 
-  Future<void> _loadTasks() async {
-    setState(() => isLoading = true);
-    try {
-      List<Task> allTasks;
-      if (widget.role == "user") {
-        allTasks = await TasksApi.fetchTasks(userId: widget.currentUserId);
-      } else {
-        allTasks = await TasksApi.fetchTasks(providerId: widget.currentUserId);
-      }
 
-      setState(() {
-        pendingTasks = allTasks.where((t) => t.status != "completed").toList()
-          ..sort((a, b) => b.scheduledDate.compareTo(a.scheduledDate));
-        completedTasks = allTasks.where((t) => t.status == "completed").toList()
-          ..sort((a, b) => b.scheduledDate.compareTo(a.scheduledDate));
-      });
-    } catch (e) {
-      ScaffoldMessenger.of(
+  void _payNow(Task task) async {
+    print("💡 _payNow called for Task ID: ${task.id}");
+
+    if (task.userId == 0 || task.providerId == 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            "⚠️ Task missing user or provider info. Please refresh.",
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // Step 1: Ask user to enter the amount dynamically
+    double enteredAmount = task.amount; // default value
+    final result = await showDialog<double>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Enter Amount to Pay"),
+        content: TextField(
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          decoration: InputDecoration(
+            hintText: task.amount.toStringAsFixed(2), // show default nicely
+          ),
+          onChanged: (val) {
+            enteredAmount = double.tryParse(val) ?? task.amount;
+          },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, null),
+            child: const Text("Cancel"),
+          ),
+          TextButton(
+            onPressed: () {
+              if (enteredAmount <= 0) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text("❌ Enter a valid amount greater than 0"),
+                    backgroundColor: Colors.redAccent,
+                  ),
+                );
+                return;
+              }
+              Navigator.pop(ctx, enteredAmount);
+            },
+            child: const Text("Pay"),
+          ),
+        ],
+      ),
+    );
+
+    if (result == null) return; // user cancelled
+    task.amount = result; // set task amount dynamically
+
+    // Step 2: Show loading while creating payment
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) =>
+          const Center(child: CircularProgressIndicator(color: kPrimaryColor)),
+    );
+
+    try {
+      // ✅ Use task.amount dynamically
+      final paymentResponse = await PaymentApi.createPayment(
+        userId: task.userId,
+        spId: task.providerId,
+        taskId: task.id,
+        amount: task.amount,
+      );
+
+      final paymentUrl = paymentResponse['payment_url']!;
+      final txnId = paymentResponse['txnId']!;
+      final ordId = paymentResponse['ordId']!;
+
+      Navigator.pop(context); // close loading dialog
+
+      Navigator.push(
         context,
-      ).showSnackBar(SnackBar(content: Text("❌ Failed to load tasks: $e")));
-    } finally {
-      setState(() => isLoading = false);
+        MaterialPageRoute(
+          builder: (_) => PaymentWebViewScreen(
+            url: paymentUrl,
+            taskId: task.id,
+            userId: task.userId,
+            spId: task.providerId,
+            amount: task.amount,
+            txnId: txnId,
+            ordId: ordId,
+            onPaymentSuccess: () async{
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text("✅ Payment successful!"),
+                  backgroundColor: Colors.green,
+                ),
+              );
+              Provider.of<TaskProvider>(context, listen: false)
+    .refreshTasks(widget.currentUserId, role: widget.role);
+
+// ----------------- Add Comment Popup Logic -----------------
+  final prefs = await SharedPreferences.getInstance();
+  final key = 'comment_dialog_shown_task_${task.id}';
+  final alreadyShown = prefs.getBool(key) ?? false;
+
+  if (!alreadyShown) {
+    // show dialog once
+    showDialog(
+      context: context,
+      builder: (_) {
+        return ExternalProfileWidget(
+          userData: {
+            'id': task.providerId,
+            'name': task.providerName,
+            'role': 'provider',
+          },
+          currentUserId: widget.currentUserId,
+        );
+      },
+    );
+
+    await prefs.setBool(key, true); // mark as shown
+  }
+
+
+            },
+          ),
+        ),
+      );
+    } catch (e) {
+      if (Navigator.canPop(context)) Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("❌ Payment failed: ${e.toString()}"),
+          backgroundColor: Colors.redAccent,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
     }
   }
+
+
+
+
+
+
+
+
+
+  
+
+
 
   Future<void> _updateTask(Task task, String newStatus) async {
     bool confirm = true;
@@ -2056,7 +2169,9 @@ class _MyTasksScreenState extends State<MyTasksScreen>
         ),
       );
 
-      await _loadTasks();
+      Provider.of<TaskProvider>(context, listen: false)
+    .refreshTasks(widget.currentUserId, role: widget.role);
+
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -2109,6 +2224,17 @@ class _MyTasksScreenState extends State<MyTasksScreen>
       ),
     );
   }
+
+
+
+
+
+
+
+
+
+
+
 
   Widget _buildTaskCard(Task task) {
     final isNew = task.status == 'pending' && widget.role == "provider";
@@ -2279,6 +2405,21 @@ class _MyTasksScreenState extends State<MyTasksScreen>
     );
   }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   // Helper Widgets (same as before)
   Widget _infoChip({
     required IconData icon,
@@ -2374,86 +2515,98 @@ class _MyTasksScreenState extends State<MyTasksScreen>
     return const SizedBox.shrink();
   }
 
-  Widget _buildTaskList(List<Task> tasks) {
-    if (isLoading) return const Center(child: CircularProgressIndicator());
-    if (tasks.isEmpty)
-      return const Center(
-        child: Text("No tasks found", style: TextStyle(color: kTextSecondary)),
-      );
+ Widget _buildTaskList(bool isPending) {
+  return RefreshIndicator(
+    onRefresh: () => Provider.of<TaskProvider>(context, listen: false)
+        .refreshTasks(widget.currentUserId, role: widget.role),
+    child: Consumer<TaskProvider>(
+      builder: (context, taskProvider, _) {
+        final taskList =
+            isPending ? taskProvider.pendingTasks : taskProvider.completedTasks;
 
-    return RefreshIndicator(
-      onRefresh: _loadTasks,
-      child: ListView.builder(
-        itemCount: tasks.length,
-        itemBuilder: (context, index) => _buildTaskCard(tasks[index]),
+        if (taskProvider.isLoading) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (taskList.isEmpty) {
+          return const Center(
+            child: Text("No tasks found", style: TextStyle(color: kTextSecondary)),
+          );
+        }
+
+        return ListView.builder(
+          itemCount: taskList.length,
+          itemBuilder: (context, index) => _buildTaskCard(taskList[index]),
+        );
+      },
+    ),
+  );
+}
+
+@override
+Widget build(BuildContext context) {
+  return Scaffold(
+    backgroundColor: kCardColor,
+    appBar: AppBar(
+      title: const Text(
+        "📋 My Tasks",
+        style: TextStyle(
+          fontWeight: FontWeight.bold,
+          fontSize: 20,
+          color: heaidng,
+        ),
       ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: kCardColor,
-      appBar: AppBar(
-        title: const Text(
-          "📋 My Tasks",
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
-            color: heaidng,
+      centerTitle: true,
+      elevation: 0,
+      flexibleSpace: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              kBackgroundColor,
+              kBackgroundColor,
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
         ),
-        centerTitle: true,
-        elevation: 0,
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                kBackgroundColor, // royal indigo
-                kBackgroundColor, // violet glow
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+      ),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
+      ),
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(50),
+        child: Align(
+          alignment: Alignment.center,
+          child: TabBar(
+            controller: _tabController,
+            indicatorColor: kPrimaryColor,
+            indicatorWeight: 3,
+            labelColor: kTextPrimary,
+            unselectedLabelColor: kTextSecondary,
+            labelStyle: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
             ),
-          ),
-        ),
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
-        ),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(50),
-          child: Align(
-            alignment: Alignment.center,
-            child: TabBar(
-              controller: _tabController,
-              indicatorColor: kPrimaryColor, // soft gold underline
-              indicatorWeight: 3,
-              labelColor: kTextPrimary,
-              unselectedLabelColor: kTextSecondary,
-              labelStyle: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-              ),
-              unselectedLabelStyle: const TextStyle(
-                fontWeight: FontWeight.w500,
-                fontSize: 16,
-              ),
-              tabs: const [
-                Tab(text: "⏳ Pending"),
-                Tab(text: "✅ Completed"),
-              ],
+            unselectedLabelStyle: const TextStyle(
+              fontWeight: FontWeight.w500,
+              fontSize: 16,
             ),
+            tabs: const [
+              Tab(text: "⏳ Pending"),
+              Tab(text: "✅ Completed"),
+            ],
           ),
         ),
       ),
+    ),
+    body: TabBarView(
+      controller: _tabController,
+      children: [
+        _buildTaskList(true),  // Pending tasks
+        _buildTaskList(false), // Completed tasks
+      ],
+    ),
+  );
+}
 
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _buildTaskList(pendingTasks),
-          _buildTaskList(completedTasks),
-        ],
-      ),
-    );
-  }
 }

@@ -1178,7 +1178,7 @@ import 'dart:convert';
 import '../helpers/backend.dart';
 import 'category_page.dart';
 import 'side_menu.dart';
-import 'provider_status_screen.dart';
+import 'dashboard.dart';
 import '../widgets/settings.dart';
 import '../widgets/Contact.dart';
 
@@ -1843,7 +1843,7 @@ Widget buildPopularCategories() {
               context,
               MaterialPageRoute(
                 builder: (_) =>
-                    ProviderStatusScreen(providerId: widget.currentUserId),
+                    ProviderDashboardScreen(providerId: widget.currentUserId),
               ),
             );
             return;

@@ -1,16 +1,16 @@
+// import 'screens/payment_screen.dart';
 // import 'package:flutter/material.dart';
 // import 'package:firebase_core/firebase_core.dart';
 // import 'package:firebase_messaging/firebase_messaging.dart';
 // import 'package:flutter/foundation.dart';
-// //import 'package:http/http.dart' as http;
-// //import 'dart:convert';
+// import 'screens/document_upload_screen.dart';
 // import 'package:app_links/app_links.dart';
 // import 'dart:async';
-// //import 'helpers/backend.dart';
 // import 'helpers/socket_manager.dart'; // ✅ Global Socket Manager
 // import 'screens/reset-password.dart';
 // import 'screens/splashScreen.dart';
 // import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+// import 'screens/provider_status_screen.dart';
 
 // /// 🔹 Firebase background message handler
 // Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -69,7 +69,8 @@
 //   // 🔹 Notification channel
 //   await flutterLocalNotificationsPlugin
 //       .resolvePlatformSpecificImplementation<
-//           AndroidFlutterLocalNotificationsPlugin>()
+//         AndroidFlutterLocalNotificationsPlugin
+//       >()
 //       ?.createNotificationChannel(defaultChannel);
 
 //   const initializationSettings = InitializationSettings(
@@ -135,22 +136,62 @@
 //       print("Error getting initial link: $e");
 //     }
 
-//     _sub = _appLinks.uriLinkStream.listen(
-//       (Uri? uri) {
-//         if (uri != null) handleDeepLink(uri);
-//       },
-//       onError: (err) => print("Deep link error: $err"),
-//     );
+//     _sub = _appLinks.uriLinkStream.listen((Uri? uri) {
+//       if (uri != null) handleDeepLink(uri);
+//     }, onError: (err) => print("Deep link error: $err"));
 //   }
 
 //   void handleDeepLink(Uri uri) {
-//     if (uri.host == 'resetpassword') {
-//       final token = uri.queryParameters['token'];
-//       if (token != null) {
-//         navigatorKey.currentState?.push(
-//           MaterialPageRoute(builder: (_) => ResetPasswordScreen(token: token)),
-//         );
-//       }
+//     switch (uri.host) {
+//       case 'resetpassword':
+//         final token = uri.queryParameters['token'];
+//         if (token != null) {
+//           navigatorKey.currentState?.push(
+//             MaterialPageRoute(
+//               builder: (_) => ResetPasswordScreen(token: token),
+//             ),
+//           );
+//         }
+//         break;
+
+//      case 'payment':
+//   final userId = int.tryParse(uri.queryParameters['userId'] ?? '');
+//   final amount = double.tryParse(uri.queryParameters['amount'] ?? '100') ?? 100;
+
+//   if (userId != null) {
+//     navigatorKey.currentState?.push(
+//       MaterialPageRoute(
+//         builder: (_) => PaymentScreen(
+//           userId: userId,
+//           amount: amount, // pass amount
+//         ),
+//       ),
+//     );
+//   }
+//   break;
+
+//       case 'documents':
+//         final userId = int.tryParse(uri.queryParameters['userId'] ?? '');
+//         if (userId != null) {
+//           navigatorKey.currentState?.push(
+//             MaterialPageRoute(
+//               builder: (_) => DocumentUploadScreen(userId: userId),
+//             ),
+//           );
+//         }
+//         break;
+
+//       case 'status':
+//   final providerId = int.tryParse(uri.queryParameters['userId'] ?? '');
+//   if (providerId != null) {
+//     navigatorKey.currentState?.push(
+//       MaterialPageRoute(
+//         builder: (_) => ProviderStatusScreen(providerId: providerId),
+//       ),
+//     );
+//   }
+//   break;
+
 //     }
 //   }
 
@@ -174,9 +215,7 @@
 //   }
 // }
 
-
-
-
+////
 
 
 import 'screens/payment_screen.dart';
@@ -191,7 +230,10 @@ import 'helpers/socket_manager.dart'; // ✅ Global Socket Manager
 import 'screens/reset-password.dart';
 import 'screens/splashScreen.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'screens/provider_status_screen.dart';
+import 'screens/dashboard.dart';
+import 'package:provider/provider.dart';
+import 'providers/task_provider.dart';
+
 
 /// 🔹 Firebase background message handler
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -283,16 +325,20 @@ Future<void> main() async {
       );
     }
   });
-
-  // 🔥 Initialize Global Socket
   await SocketManager().initSocket();
 
-  runApp(const MyApp());
+  runApp(  
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => TaskProvider()),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
-
   @override
   State<MyApp> createState() => _MyAppState();
 }
@@ -335,22 +381,22 @@ class _MyAppState extends State<MyApp> {
         }
         break;
 
-     case 'payment':
-  final userId = int.tryParse(uri.queryParameters['userId'] ?? '');
-  final amount = double.tryParse(uri.queryParameters['amount'] ?? '100') ?? 100;
+      case 'payment':
+        final userId = int.tryParse(uri.queryParameters['userId'] ?? '');
+        final amount =
+            double.tryParse(uri.queryParameters['amount'] ?? '100') ?? 100;
 
-  if (userId != null) {
-    navigatorKey.currentState?.push(
-      MaterialPageRoute(
-        builder: (_) => PaymentScreen(
-          userId: userId,
-          amount: amount, // pass amount
-        ),
-      ),
-    );
-  }
-  break;
-
+        if (userId != null) {
+          navigatorKey.currentState?.push(
+            MaterialPageRoute(
+              builder: (_) => PaymentScreen(
+                userId: userId,
+                amount: amount, // pass amount
+              ),
+            ),
+          );
+        }
+        break;
 
       case 'documents':
         final userId = int.tryParse(uri.queryParameters['userId'] ?? '');
@@ -364,16 +410,15 @@ class _MyAppState extends State<MyApp> {
         break;
 
       case 'status':
-  final providerId = int.tryParse(uri.queryParameters['userId'] ?? '');
-  if (providerId != null) {
-    navigatorKey.currentState?.push(
-      MaterialPageRoute(
-        builder: (_) => ProviderStatusScreen(providerId: providerId),
-      ),
-    );
-  }
-  break;
-
+        final providerId = int.tryParse(uri.queryParameters['userId'] ?? '');
+        if (providerId != null) {
+          navigatorKey.currentState?.push(
+            MaterialPageRoute(
+              builder: (_) => ProviderDashboardScreen(providerId: providerId),
+            ),
+          );
+        }
+        break;
     }
   }
 
@@ -396,13 +441,3 @@ class _MyAppState extends State<MyApp> {
     );
   }
 }
-
-
-
-
-
-
-
-
-
-

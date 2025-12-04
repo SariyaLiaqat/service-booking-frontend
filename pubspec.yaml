@@ -57,6 +57,8 @@ dependencies:
   webview_flutter: ^4.2.1
   fluttertoast: ^8.2.1
   confetti: ^0.7.0
+  fl_chart: ^1.1.1
+  
   
   
 

@@ -679,7 +679,7 @@ int get unviewedPublicCount {
   }
 
   // Mark status as viewed
-  void markStatusAsViewed(int statusId) async {
+  Future<void> markStatusAsViewed(int statusId) async {
   final index = publicStatuses.indexWhere((s) => s.id == statusId);
   if (index != -1) {
     publicStatuses[index].isViewed = true;
@@ -701,6 +701,7 @@ int get unviewedPublicCount {
     }
   }
 }
+
 
 
   // ---------------- Upload with caption & public/private ----------------
