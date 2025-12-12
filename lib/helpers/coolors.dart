@@ -8,8 +8,9 @@ const Color kCardColor = Color(0xFFFFFFFF);
 const Color kDividerColor = Color(0xFFE0E0E0);
 
 // Primary & Accent Colors
-const Color kPrimaryColor = Color(0xFF4A90E2);
-const Color kSecondaryColor = Color(0xFF50E3C2);
+// const Color kPrimaryColor = Color(0xFF4A90E2);
+const Color kPrimaryColor =  Color(0xFF4A90E2);
+const Color kSecondaryColor = Color(0xFFD4A017);
 
 // Text Colors
 const Color kTextPrimary = Color(0xFF212121);

@@ -56,11 +56,16 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
   double? selectedLat;
   double? selectedLng;
   bool _isCreatingTask = false;
-
+late Map<String, dynamic> currentUser;
   @override
   void initState() {
     super.initState();
-
+ // Initialize currentUser here
+  currentUser = {
+    "id": widget.currentUserId,
+    "username": widget.taskData?['username'] ?? "Username",
+    "profile_image": widget.taskData?['profile_image'] ?? '',
+  };
     _providerServices = widget.providerServices != null
         ? List<Map<String, dynamic>>.from(widget.providerServices!)
         : [];
@@ -360,6 +365,8 @@ request.fields['provider_id'] = providerId.toString();
       setState(() => _attachments.add(File(pickedFile.path)));
   }
 
+
+
   Future<void> _confirmBooking() async {
     if (_isCreatingTask) return; // Prevent multiple taps
     _isCreatingTask = true;
@@ -447,7 +454,7 @@ request.fields['provider_id'] = providerId.toString();
         context,
         MaterialPageRoute(
           builder: (_) =>
-              MyTasksScreen(currentUserId: widget.currentUserId, role: "user"),
+              MyTasksScreen(currentUserId: widget.currentUserId, role: "user", currentUser: currentUser,),
         ),
       );
     } catch (e) {
@@ -1329,7 +1336,7 @@ request.fields['provider_id'] = providerId.toString();
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({
           "user_id": widget.currentUserId,
-          "provider_id": receiverId!, // <-- force non-null
+          "provider_id": receiverId, // <-- force non-null
         }),
       );
 

@@ -144,8 +144,8 @@ import 'package:flutter/foundation.dart';
 
 
 class Backend {
-  static String get baseUrl => "http://192.168.1.193:5000";
-  static String get socketUrl => "http://192.168.1.193:5000";
+  static String get baseUrl => "http://172.24.54.177:5000";
+  static String get socketUrl => "http://172.24.54.177:5000";
 //http://192.168.1.193:5000
   static Future<Map<String, dynamic>?> get(String endpoint) async {
     try {

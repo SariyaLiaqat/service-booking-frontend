@@ -58,6 +58,9 @@ dependencies:
   fluttertoast: ^8.2.1
   confetti: ^0.7.0
   fl_chart: ^1.1.1
+  flutter_foreground_task: ^9.1.0
+  font_awesome_flutter: ^10.12.0
+  lottie: ^2.3.0
   
   
   
@@ -89,9 +92,15 @@ flutter:
     - assets/svg/signup.svg
     - assets/svg/login.svg
     - assets/images/bglogo.png
+    - assets/images/chatbot.png
    # - assets/images/mainImg.png
     - assets/images/newmain.png
-
+    - assets/lottie/Lovely cats.json
+    - assets/lottie/AI Searching.json
+    - assets/lottie/empty ghost.json
+    - assets/lottie/No History.json
+    - assets/lottie/Contact Us.json
+    - assets/lottie/Group of people communicating.json
     - assets/images/one.png
     - assets/images/two.png
     - assets/images/three.png

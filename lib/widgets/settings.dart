@@ -1,14 +1,26 @@
+
+
+
+
+
+
+
+
+
+
 // import 'package:flutter/material.dart';
 // import 'package:permission_handler/permission_handler.dart';
 // import 'package:geolocator/geolocator.dart';
 // import '../helpers/backend.dart';
 // import 'dart:convert';
 // import 'package:http/http.dart' as http;
+// import '../helpers/my_colors.dart';
+
 // class SettingsScreen extends StatelessWidget {
 //   final int currentUserId;
-//   const SettingsScreen({super.key,required this.currentUserId});
+//   const SettingsScreen({super.key, required this.currentUserId});
 
-//   // 🔹 Function to open location settings
+//   // 🔹 Open location settings
 //   Future<void> _openLocationSettings(BuildContext context) async {
 //     PermissionStatus status = await Permission.location.status;
 
@@ -18,7 +30,7 @@
 //         ScaffoldMessenger.of(context).showSnackBar(
 //           const SnackBar(
 //             content: Text('⚠️ Cannot open settings. Please enable manually.'),
-//             backgroundColor: Colors.redAccent,
+//             backgroundColor: MyColors.error,
 //           ),
 //         );
 //       }
@@ -35,12 +47,12 @@
 //   @override
 //   Widget build(BuildContext context) {
 //     return Scaffold(
-//       backgroundColor: const Color(0xFFF9FAFB),
+//       backgroundColor: MyColors.background,
 //       appBar: AppBar(
-//         backgroundColor: const Color(0xFF0A66C2),
+//         backgroundColor: MyColors.surface,
 //         title: const Text(
 //           "Settings",
-//           style: TextStyle(fontWeight: FontWeight.bold),
+//           style: TextStyle(fontWeight: FontWeight.bold,color: MyColors.textPrimary),
 //         ),
 //         centerTitle: true,
 //         elevation: 4,
@@ -50,45 +62,45 @@
 //           ),
 //         ),
 //       ),
-//       body: SingleChildScrollView(
+//     body: Stack(
+//     children: [
+//       SingleChildScrollView(
 //         padding: const EdgeInsets.all(16),
 //         child: Column(
+//           crossAxisAlignment: CrossAxisAlignment.stretch,
 //           children: [
-//             // 🔹 Location Option Card
+//             // 🔹 Location Card
 //             Card(
+//               color: MyColors.surface,
 //               shape: RoundedRectangleBorder(
 //                 borderRadius: BorderRadius.circular(20),
 //               ),
 //               elevation: 4,
-//               shadowColor: Colors.grey.withOpacity(0.2),
+//               shadowColor: Colors.black.withOpacity(0.2),
 //               child: ListTile(
 //                 contentPadding:
 //                     const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-//                 leading: const Icon(
-//                   Icons.location_on,
-//                   color: Color(0xFF0A66C2),
-//                   size: 32,
-//                 ),
-//                 title: const Text(
-//                   "Enable Location",
-//                   style: TextStyle(
-//                     fontWeight: FontWeight.bold,
-//                     fontSize: 18,
-//                   ),
-//                 ),
-//                 subtitle: const Text(
-//                   "Turn on location to see nearby service providers and be visible in the list.",
-//                   style: TextStyle(fontSize: 14, color: Colors.black54),
-//                 ),
+//                 leading: Icon(Icons.location_on, color: MyColors.secondary, size: 32),
+//                 title: Text("Enable Location",
+//                     style: TextStyle(
+//                         fontWeight: FontWeight.bold,
+//                         fontSize: 18,
+//                         color: MyColors.textPrimary)),
+//                 subtitle: Text(
+//                     "Turn on location to see nearby service providers and be visible in the list.",
+//                     style: TextStyle(fontSize: 14, color: MyColors.textSecondary)),
 //                 trailing: ElevatedButton(
 //                   onPressed: () => _openLocationSettings(context),
 //                   style: ElevatedButton.styleFrom(
-//                     backgroundColor: const Color(0xFF0A66C2),
+//                     backgroundColor: MyColors.primary,
 //                     shape: RoundedRectangleBorder(
 //                       borderRadius: BorderRadius.circular(16),
 //                     ),
 //                   ),
-//                   child: const Text("Open"),
+//                   child: const Text(
+//                     "Open",
+//                     style: TextStyle(color: MyColors.buttonText),
+//                   ),
 //                 ),
 //               ),
 //             ),
@@ -96,105 +108,64 @@
 
 //             // 🔹 App Info Card
 //             Card(
+//               color: MyColors.surface,
 //               shape: RoundedRectangleBorder(
 //                 borderRadius: BorderRadius.circular(20),
 //               ),
 //               elevation: 4,
-//               shadowColor: Colors.grey.withOpacity(0.2),
+//               shadowColor: Colors.black.withOpacity(0.2),
 //               child: ListTile(
 //                 contentPadding:
 //                     const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-//                 leading: const Icon(
-//                   Icons.info_outline,
-//                   color: Color(0xFF0A66C2),
-//                   size: 32,
-//                 ),
-//                 title: const Text(
-//                   "App Version",
-//                   style: TextStyle(
-//                     fontWeight: FontWeight.bold,
-//                     fontSize: 18,
-//                   ),
-//                 ),
-//                 subtitle: const Text(
-//                   "Version 1.0.0",
-//                   style: TextStyle(fontSize: 14, color: Colors.black54),
-//                 ),
+//                 leading: Icon(Icons.info_outline, color: MyColors.secondary, size: 32),
+//                 title: Text("App Version",
+//                     style: TextStyle(
+//                         fontWeight: FontWeight.bold,
+//                         fontSize: 18,
+//                         color: MyColors.textPrimary)),
+//                 subtitle: Text("Version 1.0.0",
+//                     style: TextStyle(fontSize: 14, color: MyColors.textSecondary)),
 //               ),
 //             ),
-//  const SizedBox(height: 24),
-// ElevatedButton(
-//  onPressed: () => updateLocation(context, currentUserId),
-//   style: ElevatedButton.styleFrom(
-//     backgroundColor: const Color(0xFF0A66C2),
-//     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-//     padding: const EdgeInsets.symmetric(vertical: 16),
-//   ),
-//   child: const Text(
-//     "Update Location",
-//     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold,color:Colors.white),
-//   ),
-// ),
-
-
-
-
-//             const SizedBox(height: 24),
-
-//             // 🔹 Logout Card (Optional)
-//             Card(
-//               shape: RoundedRectangleBorder(
-//                 borderRadius: BorderRadius.circular(20),
-//               ),
-//               elevation: 4,
-//               shadowColor: Colors.grey.withOpacity(0.2),
-//               child: ListTile(
-//                 contentPadding:
-//                     const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-//                 leading: const Icon(
-//                   Icons.logout,
-//                   color: Colors.redAccent,
-//                   size: 32,
-//                 ),
-//                 title: const Text(
-//                   "Logout",
-//                   style: TextStyle(
-//                     fontWeight: FontWeight.bold,
-//                     fontSize: 18,
-//                   ),
-//                 ),
-//                 trailing: ElevatedButton(
-//                   onPressed: () {
-//                     // 🔹 Add your logout logic here
-//                   },
-//                   style: ElevatedButton.styleFrom(
-//                     backgroundColor: Colors.redAccent,
-//                     shape: RoundedRectangleBorder(
-//                       borderRadius: BorderRadius.circular(16),
-//                     ),
-//                   ),
-//                   child: const Text("Logout"),
-//                 ),
-//               ),
-//             ),
+//             const SizedBox(height: 120), // extra space for button
 //           ],
 //         ),
 //       ),
+
+//       // 🔹 Positioned Button at bottom
+//       Positioned(
+//         left: 16,
+//         right: 16,
+//         bottom: 16,
+//         child: ElevatedButton(
+//           onPressed: () => updateLocation(context, currentUserId),
+//           style: ElevatedButton.styleFrom(
+//             backgroundColor: MyColors.primary,
+//             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+//             padding: const EdgeInsets.symmetric(vertical: 18),
+//           ),
+//           child: const Text(
+//             "Update Location",
+//             style: TextStyle(
+//                 fontSize: 18, fontWeight: FontWeight.bold, color: MyColors.buttonText),
+//           ),
+//         ),
+//       ),
+//     ],
+//   ),
 //     );
 //   }
 // }
 
-
-
-
+// // 🔹 Update Location Function
 // Future<void> updateLocation(BuildContext context, int currentUserId) async {
 //   try {
 //     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
 //     if (!serviceEnabled) {
 //       ScaffoldMessenger.of(context).showSnackBar(
-//         const SnackBar(
-//           content: Text('⚠️ Location services are disabled. Please enable GPS.'),
-//           backgroundColor: Colors.orange,
+//         SnackBar(
+//           content: const Text('⚠️ Location services are disabled. Please enable GPS.'),
+//           backgroundColor: MyColors.error,
 //         ),
 //       );
 //       return;
@@ -205,9 +176,9 @@
 //       permission = await Geolocator.requestPermission();
 //       if (permission == LocationPermission.denied) {
 //         ScaffoldMessenger.of(context).showSnackBar(
-//           const SnackBar(
-//             content: Text('⚠️ Location permission denied.'),
-//             backgroundColor: Colors.redAccent,
+//           SnackBar(
+//             content: const Text('⚠️ Location permission denied.'),
+//             backgroundColor: MyColors.error,
 //           ),
 //         );
 //         return;
@@ -216,9 +187,9 @@
 
 //     if (permission == LocationPermission.deniedForever) {
 //       ScaffoldMessenger.of(context).showSnackBar(
-//         const SnackBar(
-//           content: Text('❌ Location permission permanently denied. Enable from settings.'),
-//           backgroundColor: Colors.redAccent,
+//         SnackBar(
+//           content: const Text('❌ Location permission permanently denied. Enable from settings.'),
+//           backgroundColor: MyColors.error,
 //         ),
 //       );
 //       return;
@@ -245,16 +216,25 @@
 //         backgroundColor: Colors.green,
 //       ),
 //     );
-
 //   } catch (e) {
 //     ScaffoldMessenger.of(context).showSnackBar(
 //       SnackBar(
 //         content: Text('⚠️ Location error: ${e.toString()}'),
-//         backgroundColor: Colors.redAccent,
+//         backgroundColor: MyColors.error,
 //       ),
 //     );
 //   }
 // }
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -280,7 +260,7 @@ import 'package:geolocator/geolocator.dart';
 import '../helpers/backend.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import '../helpers/my_colors.dart';
+import '../helpers/coolors.dart'; // updated colors
 
 class SettingsScreen extends StatelessWidget {
   final int currentUserId;
@@ -296,7 +276,7 @@ class SettingsScreen extends StatelessWidget {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('⚠️ Cannot open settings. Please enable manually.'),
-            backgroundColor: MyColors.error,
+            backgroundColor: redAccent,
           ),
         );
       }
@@ -304,7 +284,7 @@ class SettingsScreen extends StatelessWidget {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('✅ Location already enabled!'),
-          backgroundColor: Colors.green,
+          backgroundColor: kSuccessColor,
         ),
       );
     }
@@ -313,12 +293,12 @@ class SettingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: MyColors.background,
+      backgroundColor: kBackgroundColor,
       appBar: AppBar(
-        backgroundColor: MyColors.surface,
+        backgroundColor: kCardColor,
         title: const Text(
           "Settings",
-          style: TextStyle(fontWeight: FontWeight.bold,color: MyColors.textPrimary),
+          style: TextStyle(fontWeight: FontWeight.bold, color: kTextPrimary),
         ),
         centerTitle: true,
         elevation: 4,
@@ -328,97 +308,125 @@ class SettingsScreen extends StatelessWidget {
           ),
         ),
       ),
-    body: Stack(
-    children: [
-      SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // 🔹 Location Card
-            Card(
-              color: MyColors.surface,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
-              elevation: 4,
-              shadowColor: Colors.black.withOpacity(0.2),
-              child: ListTile(
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                leading: Icon(Icons.location_on, color: MyColors.secondary, size: 32),
-                title: Text("Enable Location",
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
-                        color: MyColors.textPrimary)),
-                subtitle: Text(
-                    "Turn on location to see nearby service providers and be visible in the list.",
-                    style: TextStyle(fontSize: 14, color: MyColors.textSecondary)),
-                trailing: ElevatedButton(
-                  onPressed: () => _openLocationSettings(context),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: MyColors.primary,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
+      body: Stack(
+        children: [
+          SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // 🔹 Location Card
+                Card(
+                  color: kCardColor,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  elevation: 4,
+                  shadowColor: Colors.black.withOpacity(0.2),
+                  child: ListTile(
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    leading: Icon(Icons.location_on,
+                        color: kSecondaryColor, size: 32),
+                    title: Text("Enable Location",
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                            color: kTextPrimary)),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 4),
+                        Text(
+                          "Turn on location to see nearby service providers and be visible in the list.",
+                          style: TextStyle(fontSize: 14, color: kTextSecondary),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          "Your location helps us connect you with clients quickly and efficiently. "
+                          "Make sure your GPS is enabled for best results.",
+                          style: TextStyle(fontSize: 12, color: kTextHint),
+                        ),
+                      ],
+                    ),
+                    trailing: ElevatedButton(
+                      onPressed: () => _openLocationSettings(context),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: kPrimaryColor,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      child: const Text(
+                        "Open",
+                        style: TextStyle(color: buttonText),
+                      ),
                     ),
                   ),
-                  child: const Text(
-                    "Open",
-                    style: TextStyle(color: MyColors.buttonText),
+                ),
+                const SizedBox(height: 24),
+
+                // 🔹 App Info Card
+                Card(
+                  color: kCardColor,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  elevation: 4,
+                  shadowColor: Colors.black.withOpacity(0.2),
+                  child: ListTile(
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    leading: Icon(Icons.info_outline,
+                        color: kSecondaryColor, size: 32),
+                    title: Text("App Version",
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                            color: kTextPrimary)),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 4),
+                        Text("Version 1.0.0",
+                            style: TextStyle(
+                                fontSize: 14, color: kTextSecondary)),
+                        const SizedBox(height: 8),
+                        Text(
+                          "Stay updated! Make sure you are using the latest version for the best experience and new features.",
+                          style: TextStyle(fontSize: 12, color: kTextHint),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
+                const SizedBox(height: 120), // extra space for button
+              ],
+            ),
+          ),
+
+          // 🔹 Positioned Button at bottom
+          Positioned(
+            left: 16,
+            right: 16,
+            bottom: 16,
+            child: ElevatedButton(
+              onPressed: () => updateLocation(context, currentUserId),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: kPrimaryColor,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16)),
+                padding: const EdgeInsets.symmetric(vertical: 18),
+              ),
+              child: const Text(
+                "Update Location",
+                style: TextStyle(
+                    fontSize: 18, fontWeight: FontWeight.bold, color: buttonText),
               ),
             ),
-            const SizedBox(height: 24),
-
-            // 🔹 App Info Card
-            Card(
-              color: MyColors.surface,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
-              elevation: 4,
-              shadowColor: Colors.black.withOpacity(0.2),
-              child: ListTile(
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                leading: Icon(Icons.info_outline, color: MyColors.secondary, size: 32),
-                title: Text("App Version",
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
-                        color: MyColors.textPrimary)),
-                subtitle: Text("Version 1.0.0",
-                    style: TextStyle(fontSize: 14, color: MyColors.textSecondary)),
-              ),
-            ),
-            const SizedBox(height: 120), // extra space for button
-          ],
-        ),
-      ),
-
-      // 🔹 Positioned Button at bottom
-      Positioned(
-        left: 16,
-        right: 16,
-        bottom: 16,
-        child: ElevatedButton(
-          onPressed: () => updateLocation(context, currentUserId),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: MyColors.primary,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            padding: const EdgeInsets.symmetric(vertical: 18),
           ),
-          child: const Text(
-            "Update Location",
-            style: TextStyle(
-                fontSize: 18, fontWeight: FontWeight.bold, color: MyColors.buttonText),
-          ),
-        ),
+        ],
       ),
-    ],
-  ),
     );
   }
 }
@@ -430,8 +438,9 @@ Future<void> updateLocation(BuildContext context, int currentUserId) async {
     if (!serviceEnabled) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('⚠️ Location services are disabled. Please enable GPS.'),
-          backgroundColor: MyColors.error,
+          content:
+              const Text('⚠️ Location services are disabled. Please enable GPS.'),
+          backgroundColor: redAccent,
         ),
       );
       return;
@@ -444,7 +453,7 @@ Future<void> updateLocation(BuildContext context, int currentUserId) async {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Text('⚠️ Location permission denied.'),
-            backgroundColor: MyColors.error,
+            backgroundColor: redAccent,
           ),
         );
         return;
@@ -454,8 +463,9 @@ Future<void> updateLocation(BuildContext context, int currentUserId) async {
     if (permission == LocationPermission.deniedForever) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('❌ Location permission permanently denied. Enable from settings.'),
-          backgroundColor: MyColors.error,
+          content: const Text(
+              '❌ Location permission permanently denied. Enable from settings.'),
+          backgroundColor: redAccent,
         ),
       );
       return;
@@ -478,15 +488,16 @@ Future<void> updateLocation(BuildContext context, int currentUserId) async {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('✅ Location updated: ${position.latitude}, ${position.longitude}'),
-        backgroundColor: Colors.green,
+        content:
+            Text('✅ Location updated: ${position.latitude}, ${position.longitude}'),
+        backgroundColor: kSuccessColor,
       ),
     );
   } catch (e) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('⚠️ Location error: ${e.toString()}'),
-        backgroundColor: MyColors.error,
+        backgroundColor: redAccent,
       ),
     );
   }

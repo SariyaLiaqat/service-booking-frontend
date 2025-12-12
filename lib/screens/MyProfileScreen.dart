@@ -1751,53 +1751,12 @@ String? serviceDescValidator(String? val) {
     }
     return null;
   }
-
-  Future<void> _openExternalProviderProfile(int providerId) async {
-    setState(() => isLoading = true);
-    try {
-      final url = Uri.parse('${Backend.baseUrl}/auth/provider/$providerId');
-      final response = await http.get(url);
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final providerData = data['provider'];
-
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => MyProfileScreen(
-              userData: providerData,
-              currentUserId: widget.currentUserId,
-              readOnly: true, // external view
-            ),
-          ),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to load provider profile ❌')),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error: $e')));
-    } finally {
-      setState(() => isLoading = false);
-    }
-  }
-
   // ✅ Profile Save Function (self-only)
   Future<void> saveProfile() async {
     if (widget.readOnly) return;
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => isLoading = true);
-    final validServices = services.where((s) {
-      return (s['title'] != null && s['title'].toString().trim().isNotEmpty) &&
-          (s['description'] != null &&
-              s['description'].toString().trim().isNotEmpty) &&
-          (s['category_id'] != null);
-    }).toList();
     try {
       Map<String, dynamic> body = {
         'name': nameController.text.trim(),

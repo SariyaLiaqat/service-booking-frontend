@@ -1,19 +1,22 @@
+// // services_screen.dart
 // import 'package:flutter/material.dart';
 // import 'dart:async';
 // import 'package:http/http.dart' as http;
-
+// import '../widgets/confirmedSection.dart';
 // import '../helpers/coolors.dart';
 // import 'dart:convert';
 // import '../helpers/backend.dart';
 // import 'category_page.dart';
 // import 'side_menu.dart';
-// import 'provider_status_screen.dart';
+// import 'dashboard.dart';
 // import '../widgets/settings.dart';
 // import '../widgets/Contact.dart';
 
 // class ServicesScreen extends StatefulWidget {
+
 //   final int currentUserId;
-//   const ServicesScreen({Key? key, required this.currentUserId})
+//   final Map<String, dynamic> currentUser;
+//   const ServicesScreen({Key? key, required this.currentUserId,  required this.currentUser,})
 //     : super(key: key);
 
 //   @override
@@ -21,429 +24,11 @@
 // }
 
 // class ServicesScreenState extends State<ServicesScreen> {
+//     late Map<String, dynamic> currentUser;
 //   bool isLoading = true;
-//   List<dynamic> categories = [];
-//   List<dynamic> filteredCategories = [];
-//   TextEditingController searchController = TextEditingController();
-//   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+//   bool showAllCategories = false;
+//   bool showAllPopular = false;
 
-//   @override
-//   void initState() {
-//     super.initState();
-//     fetchCategories();
-//     searchController.addListener(_onSearchChanged);
-//   }
-
-//   @override
-//   void dispose() {
-//     searchController.dispose();
-//     super.dispose();
-//   }
-
-//   void _onSearchChanged() {
-//     String query = searchController.text.toLowerCase();
-//     setState(() {
-//       filteredCategories = categories.where((category) {
-//         String name = category['name']?.toLowerCase() ?? '';
-//         return name.contains(query);
-//       }).toList();
-//     });
-//   }
-
-//   Future<void> fetchCategories() async {
-//     // ... existing logic preserved ...
-//     try {
-//       final url = Uri.parse('${Backend.baseUrl}/categories');
-//       final response = await http.get(url);
-
-//       if (response.statusCode == 200) {
-//         final data = jsonDecode(response.body);
-//         setState(() {
-//           categories = data is List ? data : data['categories'] ?? [];
-//           filteredCategories = categories;
-//         });
-//       } else {
-//         showSnack('Failed to load categories ❌');
-//       }
-//     } catch (e) {
-//       showSnack('Error fetching categories: $e');
-//     }
-//   }
-
-//   void showSnack(String msg) {
-//     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
-//   }
-
-//   Widget buildCategorySection() {
-//     if (filteredCategories.isEmpty) {
-//       // Color updated: MyColors.primary -> kPrimaryColor
-//       return const Center(
-//         child: CircularProgressIndicator(color: kPrimaryColor),
-//       );
-//     }
-
-//     Map<String, List<dynamic>> groupedCategories = {};
-//     for (var cat in filteredCategories) {
-//       String section = cat.containsKey('section') ? cat['section'] : 'Other';
-//       if (!groupedCategories.containsKey(section)) {
-//         groupedCategories[section] = [];
-//       }
-//       groupedCategories[section]!.add(cat);
-//     }
-
-//     return SafeArea(
-//       child: SingleChildScrollView(
-//         child: Padding(
-//           padding: const EdgeInsets.only(bottom: 16.0),
-//           child: Column(
-//             crossAxisAlignment: CrossAxisAlignment.start,
-//             children: groupedCategories.entries.map((entry) {
-//               return Column(
-//                 crossAxisAlignment: CrossAxisAlignment.start,
-//                 children: [
-//                   Padding(
-//                     padding: const EdgeInsets.only(
-//                       left: 16.0,
-//                       top: 16.0,
-//                       bottom: 8.0,
-//                     ),
-//                     child: Text(
-//                       entry.key,
-//                       style: const TextStyle(
-//                         fontSize: 20,
-//                         fontWeight: FontWeight.bold,
-//                         // Color updated: MyColors.textPrimary -> kTextPrimary (Best fit for bold heading)
-//                         color: kTextPrimary,
-//                       ),
-//                     ),
-//                   ),
-//                   Padding(
-//                     padding: const EdgeInsets.symmetric(horizontal: 16.0),
-//                     child: LayoutBuilder(
-//                       builder: (context, constraints) {
-//                         return GridView.builder(
-//                           shrinkWrap: true,
-//                           physics: const NeverScrollableScrollPhysics(),
-//                           itemCount: entry.value.length,
-//                           gridDelegate:
-//                               const SliverGridDelegateWithFixedCrossAxisCount(
-//                                 crossAxisCount: 3,
-//                                 mainAxisSpacing: 15,
-//                                 crossAxisSpacing: 15,
-//                                 childAspectRatio:
-//                                     0.75, // existing ratio preserved
-//                               ),
-//                           itemBuilder: (context, index) {
-//                             final category = entry.value[index];
-//                             String? imagePath = category['image_url'];
-//                             Widget imageWidget;
-
-//                             // Image logic preserved (network, asset, or fallback icon)
-//                             if (imagePath != null && imagePath.isNotEmpty) {
-//                               if (imagePath.startsWith('http')) {
-//                                 imageWidget = Image.network(
-//                                   imagePath,
-//                                   fit: BoxFit.contain,
-//                                   errorBuilder: (context, error, stackTrace) {
-//                                     return const Icon(
-//                                       Icons.image,
-//                                       color: Colors.grey,
-//                                       size: 30,
-//                                     );
-//                                   },
-//                                 );
-//                               } else if (imagePath.startsWith('assets/')) {
-//                                 imageWidget = Image.asset(
-//                                   imagePath,
-//                                   fit: BoxFit.contain,
-//                                 );
-//                               } else {
-//                                 imageWidget = const Icon(
-//                                   Icons.image,
-//                                   color: Colors.grey,
-//                                   size: 30,
-//                                 );
-//                               }
-//                             } else {
-//                               imageWidget = const Icon(
-//                                 Icons.image,
-//                                 color: Colors.grey,
-//                                 size: 30,
-//                               );
-//                             }
-
-//                             return GestureDetector(
-//                               onTap: () {
-//                                 // Existing navigation logic preserved
-//                                 Navigator.push(
-//                                   context,
-//                                   MaterialPageRoute(
-//                                     builder: (_) => CategoryPage(
-//                                       categoryId: category['id'],
-//                                       categoryName: category['name'],
-//                                       currentUserId: widget.currentUserId,
-//                                     ),
-//                                   ),
-//                                 );
-//                               },
-//                               child: Container(
-//                                 decoration: BoxDecoration(
-//                                   // Color updated: MyColors.surface -> kCardColor
-//                                   color: kCardColor,
-//                                   borderRadius: BorderRadius.circular(20),
-//                                   // Box Shadow preserved
-//                                   boxShadow: [
-//                                     BoxShadow(
-//                                       color: Colors.black.withOpacity(0.4),
-//                                       blurRadius: 8,
-//                                       offset: const Offset(0, 4),
-//                                     ),
-//                                   ],
-//                                 ),
-//                                 padding: const EdgeInsets.all(10),
-//                                 child: Column(
-//                                   mainAxisAlignment: MainAxisAlignment.center,
-//                                   children: [
-//                                     SizedBox(
-//                                       width: 55,
-//                                       height: 55,
-//                                       child: Center(child: imageWidget),
-//                                     ),
-//                                     const SizedBox(height: 8),
-//                                     Text(
-//                                       category['name'] ?? 'Unknown',
-//                                       textAlign: TextAlign.center,
-//                                       maxLines: 2,
-//                                       overflow: TextOverflow.ellipsis,
-//                                       style: const TextStyle(
-//                                         // Color updated: MyColors.textPrimary -> kTextPrimary
-//                                         color: kTextPrimary,
-//                                         fontWeight: FontWeight.w600,
-//                                         fontSize: 12,
-//                                       ),
-//                                     ),
-//                                   ],
-//                                 ),
-//                               ),
-//                             );
-//                           },
-//                         );
-//                       },
-//                     ),
-//                   ),
-//                   const SizedBox(height: 16),
-//                 ],
-//               );
-//             }).toList(),
-//           ),
-//         ),
-//       ),
-//     );
-//   }
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       key: _scaffoldKey,
-//       // Color updated: MyColors.background -> kBackgroundColor
-//       backgroundColor: kBackgroundColor,
-//       drawer: SideMenu(
-//         // Colors updated for drawer:
-//         logoPath: "assets/images/bglogo.png",
-//         primaryColor: kPrimaryColor, // MyColors.primary -> kPrimaryColor
-//         secondaryColor: kCardColor, // MyColors.surface -> kCardColor
-//         highlightColor: kSecondaryColor, // MyColors.secondary -> kSecondaryColor
-
-//         selectedMenu: "Dashboard",
-//         onMenuSelected: (menu) {
-//           // ... existing drawer navigation logic preserved ...
-//           Navigator.push(
-//             context,
-//             MaterialPageRoute(
-//               builder: (_) =>
-//                   ProviderStatusScreen(providerId: widget.currentUserId),
-//             ),
-//           );
-
-//           // close the drawer first
-
-//           if (menu == "Settings") {
-//             Navigator.push(
-//               context,
-//               MaterialPageRoute(
-//                 builder: (_) =>
-//                     SettingsScreen(currentUserId: widget.currentUserId),
-//               ),
-//             );
-//           }
-//           else if (menu == "Contact Us") {
-//             Navigator.push(
-//               context,
-//               MaterialPageRoute(builder: (_) => ContactUsPage()),
-//             );
-//           }
-//         },
-//       ),
-
-//       body: SafeArea(
-//         child: Column(
-//           children: [
-//             // Top Image + Search Bar
-//             Stack(
-//               clipBehavior: Clip.none,
-//               children: [
-//                 // Image with rounded top corners
-//                 ClipRRect(
-//                   borderRadius: const BorderRadius.only(
-//                     topLeft: Radius.circular(24),
-//                     topRight: Radius.circular(24),
-//                   ),
-//                   child: Image.asset(
-//                     'assets/images/newmain.png',
-//                     width: double.infinity,
-//                     height: 240,
-//                     fit: BoxFit.cover,
-//                   ),
-//                 ),
-
-//                 // Search bar + menu icon
-//                 Positioned(
-//                   bottom: -25, // Overlapping effect preserved
-//                   left: 16,
-//                   right: 16,
-//                   child: Container(
-//                     height: 50,
-//                     decoration: BoxDecoration(
-//                       // Color updated: MyColors.surface -> kCardColor
-//                       color: kCardColor,
-//                       borderRadius: BorderRadius.circular(25),
-//                       // Box Shadow preserved
-//                       boxShadow: [
-//                         BoxShadow(
-//                           color: Colors.black.withOpacity(0.4),
-//                           blurRadius: 8,
-//                           offset: const Offset(0, 4),
-//                         ),
-//                       ],
-//                     ),
-//                     child: Row(
-//                       children: [
-//                         Container(
-//                           width: 50,
-//                           height: 50,
-//                           decoration: BoxDecoration(
-//                             // Color updated: MyColors.primary -> kPrimaryColor
-//                             color: kPrimaryColor,
-//                             borderRadius: BorderRadius.circular(25),
-//                           ),
-//                           child: Builder(
-//                             builder: (context) {
-//                               return IconButton(
-//                                 icon: const Icon(
-//                                   // Icon is for opening the drawer based on logic
-//                                   Icons.arrow_back_ios_new,
-//                                   color: buttonText, // Using your white buttonText color
-//                                 ),
-//                                 onPressed: () {
-//                                   // Existing drawer open logic preserved
-//                                   Scaffold.of(
-//                                     context,
-//                                   ).openDrawer();
-//                                 },
-//                               );
-//                             },
-//                           ),
-//                         ),
-
-//                         const SizedBox(width: 12),
-
-//                         // Search input
-//                         Expanded(
-//                           child: TextField(
-//                             controller: searchController,
-//                             style: const TextStyle(
-//                               // Color updated: MyColors.textPrimary -> kTextPrimary
-//                               color: kTextPrimary,
-//                               fontWeight: FontWeight.w500,
-//                               fontSize: 16,
-//                             ),
-//                             decoration: InputDecoration(
-//                               hintText: 'Search for a category',
-//                               hintStyle: const TextStyle(
-//                                 // Color updated: MyColors.textSecondary -> kTextSecondary
-//                                 color: kTextSecondary,
-//                                 fontSize: 16,
-//                                 fontWeight: FontWeight.w400,
-//                               ),
-//                               border: OutlineInputBorder(
-//                                 borderRadius: BorderRadius.circular(25),
-//                                 borderSide: BorderSide.none,
-//                               ),
-//                               filled: true,
-//                               // Color updated: MyColors.surface -> kCardColor
-//                               fillColor: kCardColor,
-//                               contentPadding: const EdgeInsets.symmetric(
-//                                 vertical: 14,
-//                                 horizontal: 16,
-//                               ),
-//                             ),
-//                           ),
-//                         ),
-//                       ],
-//                     ),
-//                   ),
-//                 ),
-//               ],
-//             ),
-
-//             const SizedBox(height: 35), // Space below search bar preserved
-//             // Main content
-//             Expanded(
-//               child: SingleChildScrollView(
-//                 padding: const EdgeInsets.all(16),
-//                 child: Column(
-//                   crossAxisAlignment: CrossAxisAlignment.start,
-//                   children: [
-//                     const SizedBox(height: 24),
-//                     buildCategorySection(),
-//                   ],
-//                 ),
-//               ),
-//             ),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-// }
-
-/////////////////////////
-
-// // services_screen.dart
-// import 'package:flutter/material.dart';
-// import 'dart:async';
-// import 'package:http/http.dart' as http;
-
-// import '../helpers/coolors.dart';
-// import 'dart:convert';
-// import '../helpers/backend.dart';
-// import 'category_page.dart';
-// import 'side_menu.dart';
-// import 'provider_status_screen.dart';
-// import '../widgets/settings.dart';
-// import '../widgets/Contact.dart';
-
-// class ServicesScreen extends StatefulWidget {
-//   final int currentUserId;
-//   const ServicesScreen({Key? key, required this.currentUserId})
-//       : super(key: key);
-
-//   @override
-//   ServicesScreenState createState() => ServicesScreenState();
-// }
-
-// class ServicesScreenState extends State<ServicesScreen> {
-//   bool isLoading = true;
 //   List<dynamic> categories = [];
 //   List<dynamic> filteredCategories = [];
 //   List<dynamic> popularCategories = [];
@@ -460,6 +45,9 @@
 //   @override
 //   void initState() {
 //     super.initState();
+//      // ✅ Use widget.currentUser directly
+//     currentUser = widget.currentUser;
+//     print("Profile Image URL: ${currentUser['profile_image']}");
 //     searchController.addListener(_onSearchChanged);
 //     _initialLoad();
 //   }
@@ -469,6 +57,7 @@
 //       fetchCategories(),
 //       fetchRecentlyViewed(),
 //       fetchAllServices(),
+//       fetchPopularCategories(), // <-- yaha add karo
 //     ]);
 //     setState(() {
 //       isLoading = false;
@@ -502,13 +91,12 @@
 
 //       if (response.statusCode == 200) {
 //         final data = jsonDecode(response.body);
-//         final List<dynamic> cats =
-//             data is List ? data : (data['categories'] ?? []);
+//         final List<dynamic> cats = data is List
+//             ? data
+//             : (data['categories'] ?? []);
 //         setState(() {
 //           categories = cats;
 //           filteredCategories = List.from(categories);
-//           // Simple heuristic: mark first 6 as popular (or use `is_popular` flag)
-//           popularCategories = cats.length <= 6 ? List.from(cats) : cats.sublist(0, 6);
 //         });
 //       } else {
 //         showSnack('Failed to load categories ❌');
@@ -518,17 +106,40 @@
 //     }
 //   }
 
-//   Future<void> fetchRecentlyViewed() async {
+//   Future<void> fetchPopularCategories() async {
 //     try {
-//       // Assumes backend endpoint that returns recently viewed items for user
-//       final url = Uri.parse(
-//           '${Backend.baseUrl}/recently-viewed?userId=${widget.currentUserId}');
+//       final url = Uri.parse('${Backend.baseUrl}/categories/popular');
 //       final response = await http.get(url);
 
 //       if (response.statusCode == 200) {
 //         final data = jsonDecode(response.body);
-//         final List<dynamic> list =
-//             data is List ? data : (data['recentlyViewed'] ?? data['items'] ?? []);
+//         final List<dynamic> cats = data is List
+//             ? data
+//             : (data['popularCategories'] ?? []);
+//         setState(() {
+//           popularCategories = cats;
+//         });
+//       } else {
+//         showSnack('Failed to load popular categories ❌');
+//       }
+//     } catch (e) {
+//       showSnack('Error fetching popular categories: $e');
+//     }
+//   }
+
+//   Future<void> fetchRecentlyViewed() async {
+//     try {
+//       // Assumes backend endpoint that returns recently viewed items for user
+//       final url = Uri.parse(
+//         '${Backend.baseUrl}/recently-viewed/${widget.currentUserId}',
+//       );
+//       final response = await http.get(url);
+
+//       if (response.statusCode == 200) {
+//         final data = jsonDecode(response.body);
+//         final List<dynamic> list = data is List
+//             ? data
+//             : (data['recentlyViewed'] ?? data['items'] ?? []);
 //         setState(() {
 //           recentlyViewed = list;
 //         });
@@ -553,8 +164,9 @@
 
 //       if (response.statusCode == 200) {
 //         final data = jsonDecode(response.body);
-//         final List<dynamic> list =
-//             data is List ? data : (data['services'] ?? []);
+//         final List<dynamic> list = data is List
+//             ? data
+//             : (data['services'] ?? []);
 //         setState(() {
 //           allServices = list;
 //         });
@@ -613,8 +225,8 @@
 //         height: kSearchHeight,
 //         decoration: BoxDecoration(
 //           color: kCardColor,
-//           borderRadius:
-//               BorderRadius.zero, // you wanted NOT rounded — 0 radius as requested
+//           borderRadius: BorderRadius
+//               .zero, // you wanted NOT rounded — 0 radius as requested
 //           boxShadow: [
 //             BoxShadow(
 //               color: Colors.black.withOpacity(0.06),
@@ -638,10 +250,7 @@
 //                 ),
 //                 decoration: InputDecoration(
 //                   hintText: 'Search for a category or service',
-//                   hintStyle: TextStyle(
-//                     color: kTextSecondary,
-//                     fontSize: 15,
-//                   ),
+//                   hintStyle: TextStyle(color: kTextSecondary, fontSize: 15),
 //                   border: InputBorder.none,
 //                 ),
 //                 textInputAction: TextInputAction.search,
@@ -665,7 +274,7 @@
 //     );
 //   }
 
-//   Widget buildSectionTitle(String title, {VoidCallback? onViewAll}) {
+//   Widget buildSectionTitle(String title, {Widget? action}) {
 //     return Padding(
 //       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
 //       child: Row(
@@ -679,18 +288,7 @@
 //             ),
 //           ),
 //           const Spacer(),
-//           if (onViewAll != null)
-//             GestureDetector(
-//               onTap: onViewAll,
-//               child: Text(
-//                 'View all',
-//                 style: TextStyle(
-//                   color: kSecondaryColor,
-//                   fontSize: 13,
-//                   fontWeight: FontWeight.w600,
-//                 ),
-//               ),
-//             ),
+//           if (action != null) action,
 //         ],
 //       ),
 //     );
@@ -701,21 +299,42 @@
 //       return const SizedBox.shrink();
 //     }
 
+//     // Show only 6 unless View All pressed
+//     final int itemCount = showAllPopular
+//         ? popularCategories.length
+//         : (popularCategories.length >= 6 ? 6 : popularCategories.length);
+
+//     final List<String> localImages = [
+//       'assets/images/popular/one.png',
+//       'assets/images/popular/three.png',
+//       'assets/images/popular/seven.png',
+//       'assets/images/popular/ten.png',
+//       'assets/images/popular/four.png',
+//       'assets/images/popular/five.png',
+//       'assets/images/popular/three.png',
+//       'assets/images/popular/eight.png',
+//       'assets/images/popular/nine.png',
+//       'assets/images/popular/six.png',
+//       'assets/images/popular/two.png',
+//     ];
+
 //     return SizedBox(
-//       height: 110,
+//       height: 140,
 //       child: ListView.separated(
 //         padding: const EdgeInsets.symmetric(horizontal: 16),
 //         scrollDirection: Axis.horizontal,
-//         itemCount: popularCategories.length,
+//         itemCount: itemCount,
 //         separatorBuilder: (_, __) => const SizedBox(width: 12),
 //         itemBuilder: (context, index) {
 //           final item = popularCategories[index];
 //           final String name = item['name'] ?? 'Unknown';
-//           final String? image = item['image_url'];
+
+//           final String image = index < localImages.length
+//               ? localImages[index]
+//               : 'assets/images/popular/placeholder.png';
 
 //           return GestureDetector(
 //             onTap: () {
-//               // open category page (keeps same behavior)
 //               Navigator.push(
 //                 context,
 //                 MaterialPageRoute(
@@ -729,36 +348,51 @@
 //             },
 //             child: Container(
 //               width: 120,
-//               padding: const EdgeInsets.all(12),
 //               decoration: BoxDecoration(
-//                 color: kCardColor,
+//                 color: const Color(
+//                   0xFFB799F2,
+//                 ).withOpacity(0.30), // Soft glassy purple
 //                 borderRadius: BorderRadius.circular(12),
 //                 boxShadow: [
 //                   BoxShadow(
-//                     color: Colors.black.withOpacity(0.06),
-//                     blurRadius: 8,
-//                     offset: const Offset(0, 4),
+//                     color: Colors.black.withOpacity(0.05),
+//                     blurRadius: 6,
+//                     offset: const Offset(0, 3),
 //                   ),
 //                 ],
 //               ),
 //               child: Column(
+//                 crossAxisAlignment: CrossAxisAlignment.center,
 //                 children: [
-//                   SizedBox(
-//                     height: 44,
-//                     width: 44,
-//                     child: imageWidgetFor(image, radius: 8),
-//                   ),
-//                   const SizedBox(height: 8),
-//                   Text(
-//                     name,
-//                     style: TextStyle(
-//                       color: kTextPrimary,
-//                       fontSize: 13,
-//                       fontWeight: FontWeight.w600,
+//                   // Image with cute glassy bg
+//                   Container(
+//                     height: 80,
+//                     width: double.infinity,
+//                     decoration: BoxDecoration(
+//                       color: const Color(0xFFB799F2).withOpacity(0.55),
+//                       borderRadius: BorderRadius.circular(12),
 //                     ),
-//                     textAlign: TextAlign.center,
-//                     maxLines: 2,
-//                     overflow: TextOverflow.ellipsis,
+//                     child: ClipRRect(
+//                       borderRadius: BorderRadius.circular(12),
+//                       child: Image.asset(image, fit: BoxFit.cover),
+//                     ),
+//                   ),
+
+//                   const SizedBox(height: 8),
+
+//                   Padding(
+//                     padding: const EdgeInsets.symmetric(horizontal: 4.0),
+//                     child: Text(
+//                       name,
+//                       style: TextStyle(
+//                         color: kTextPrimary,
+//                         fontSize: 13,
+//                         fontWeight: FontWeight.w600,
+//                       ),
+//                       textAlign: TextAlign.center,
+//                       maxLines: 2,
+//                       overflow: TextOverflow.ellipsis,
+//                     ),
 //                   ),
 //                 ],
 //               ),
@@ -770,149 +404,82 @@
 //   }
 
 //   Widget buildRecentlyViewed() {
-//     if (recentlyViewed.isEmpty) {
-//       // show placeholder empty state
+//     // Limit to max 10 categories
+//     final List limitedList = recentlyViewed.length > 10
+//         ? recentlyViewed.sublist(0, 10)
+//         : recentlyViewed;
+
+//     if (limitedList.isEmpty) {
 //       return Padding(
 //         padding: const EdgeInsets.symmetric(horizontal: 16.0),
 //         child: Text(
-//           'No recently viewed items.',
+//           'No recently viewed categories.',
 //           style: TextStyle(color: kTextSecondary),
 //         ),
 //       );
 //     }
 
 //     return SizedBox(
-//       height: 160,
+//       height: 130,
 //       child: ListView.separated(
 //         padding: const EdgeInsets.symmetric(horizontal: 16),
 //         scrollDirection: Axis.horizontal,
-//         itemCount: recentlyViewed.length,
-//         separatorBuilder: (_, __) => const SizedBox(width: 12),
+//         itemCount: limitedList.length,
+//         separatorBuilder: (_, __) => const SizedBox(width: 16),
 //         itemBuilder: (context, index) {
-//           final item = recentlyViewed[index];
-//           // Expect item to include service or category details and provider/user image
-//           final String title = item['title'] ?? item['name'] ?? 'Service';
-//           final String? cover = item['cover_image'] ?? item['image_url'];
-//           final String? avatar = item['provider']?['avatar_url'] ?? item['avatar_url'];
+//           final item = limitedList[index];
+//           final String title = item['category_name'] ?? "Category";
+//           final String? cover = item['category_image'];
+//           final int categoryId = item['category_id'];
 
 //           return GestureDetector(
 //             onTap: () {
-//               // if item has category id, open CategoryPage, otherwise show snackbar
-//               final dynamic categoryId = item['category_id'] ?? item['category']?['id'];
-//               if (categoryId != null) {
-//                 Navigator.push(
-//                   context,
-//                   MaterialPageRoute(
-//                     builder: (_) => CategoryPage(
-//                       categoryId: categoryId,
-//                       categoryName: item['name'] ?? '',
-//                       currentUserId: widget.currentUserId,
-//                     ),
+//               Navigator.push(
+//                 context,
+//                 MaterialPageRoute(
+//                   builder: (_) => CategoryPage(
+//                     categoryId: categoryId,
+//                     categoryName: title,
+//                     currentUserId: widget.currentUserId,
 //                   ),
-//                 );
-//               } else {
-//                 showSnack('Open item: ${item['id'] ?? title}');
-//               }
+//                 ),
+//               );
 //             },
-//             child: Container(
-//               width: 300,
-//               decoration: BoxDecoration(
-//                 color: kCardColor,
-//                 borderRadius: BorderRadius.circular(14),
-//                 boxShadow: [
-//                   BoxShadow(
-//                     color: Colors.black.withOpacity(0.06),
-//                     blurRadius: 10,
-//                     offset: const Offset(0, 6),
+//             child: Column(
+//               children: [
+//                 // 🔥 Cute Small Box Around Image
+//                 Container(
+//                   width: 75,
+//                   height: 75,
+//                   decoration: BoxDecoration(
+//                     color: const Color(0xFFF8D7DA), // Light cute pink
+//                     borderRadius: BorderRadius.circular(16), // Soft cute box
 //                   ),
-//                 ],
-//               ),
-//               child: Row(
-//                 children: [
-//                   // left: cover image
-//                   Container(
-//                     width: 110,
-//                     height: double.infinity,
-//                     decoration: BoxDecoration(
-//                       borderRadius: const BorderRadius.only(
-//                         topLeft: Radius.circular(14),
-//                         bottomLeft: Radius.circular(14),
-//                       ),
-//                       color: kBackgroundColor,
-//                     ),
-//                     child: ClipRRect(
-//                       borderRadius: const BorderRadius.only(
-//                         topLeft: Radius.circular(14),
-//                         bottomLeft: Radius.circular(14),
-//                       ),
-//                       child: imageWidgetFor(cover, fit: BoxFit.cover),
-//                     ),
+//                   padding: const EdgeInsets.all(6), // Inner spacing
+//                   child: ClipRRect(
+//                     borderRadius: BorderRadius.circular(12),
+//                     child: imageWidgetFor(cover, fit: BoxFit.cover),
 //                   ),
+//                 ),
 
-//                   // right: text + avatar
-//                   Expanded(
-//                     child: Padding(
-//                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-//                       child: Column(
-//                         crossAxisAlignment: CrossAxisAlignment.start,
-//                         children: [
-//                           Text(
-//                             title,
-//                             style: TextStyle(
-//                                 color: kTextPrimary,
-//                                 fontSize: 15,
-//                                 fontWeight: FontWeight.w700),
-//                             maxLines: 2,
-//                             overflow: TextOverflow.ellipsis,
-//                           ),
-//                           const SizedBox(height: 8),
-//                           Text(
-//                             item['short_description'] ?? item['subtitle'] ?? '',
-//                             style: TextStyle(
-//                               color: kTextSecondary,
-//                               fontSize: 13,
-//                             ),
-//                             maxLines: 2,
-//                             overflow: TextOverflow.ellipsis,
-//                           ),
-//                           const Spacer(),
-//                           Row(
-//                             children: [
-//                               // large profile image
-//                               CircleAvatar(
-//                                 radius: 20,
-//                                 backgroundColor: Colors.grey[200],
-//                                 backgroundImage:
-//                                     avatar != null && avatar.isNotEmpty && avatar.startsWith('http')
-//                                         ? NetworkImage(avatar)
-//                                         : null,
-//                                 child: (avatar == null || avatar.isEmpty)
-//                                     ? const Icon(Icons.person, size: 20)
-//                                     : null,
-//                               ),
-//                               const SizedBox(width: 8),
-//                               Expanded(
-//                                 child: Text(
-//                                   item['provider']?['name'] ??
-//                                       item['seller_name'] ??
-//                                       'Provider',
-//                                   style: TextStyle(
-//                                     color: kTextPrimary,
-//                                     fontSize: 13,
-//                                     fontWeight: FontWeight.w600,
-//                                   ),
-//                                   overflow: TextOverflow.ellipsis,
-//                                 ),
-//                               ),
-//                               const SizedBox(width: 8),
-//                             ],
-//                           ),
-//                         ],
-//                       ),
+//                 const SizedBox(height: 6),
+
+//                 // Category Name
+//                 SizedBox(
+//                   width: 75,
+//                   child: Text(
+//                     title,
+//                     style: TextStyle(
+//                       color: kTextPrimary,
+//                       fontSize: 12,
+//                       fontWeight: FontWeight.w600,
 //                     ),
-//                   )
-//                 ],
-//               ),
+//                     maxLines: 2,
+//                     overflow: TextOverflow.ellipsis,
+//                     textAlign: TextAlign.center,
+//                   ),
+//                 ),
+//               ],
 //             ),
 //           );
 //         },
@@ -921,91 +488,108 @@
 //   }
 
 //   Widget buildAllServicesGrid() {
-//     if (allServices.isEmpty) {
+//     if (filteredCategories.isEmpty) {
 //       return Padding(
 //         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12),
 //         child: Text(
-//           'No services found.',
+//           'No categories found.',
 //           style: TextStyle(color: kTextSecondary),
 //         ),
 //       );
 //     }
 
-//     // two columns on small screens, three on wider screens
+//     // show only first 6 unless user taps "View All"
+//     final displayList = showAllCategories
+//         ? filteredCategories
+//         : filteredCategories.take(6).toList();
+
 //     final crossAxis = MediaQuery.of(context).size.width > 700 ? 3 : 2;
 
-//     return GridView.builder(
-//       physics: const NeverScrollableScrollPhysics(),
-//       shrinkWrap: true,
-//       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-//       itemCount: allServices.length,
-//       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-//         crossAxisCount: crossAxis,
-//         mainAxisSpacing: 12,
-//         crossAxisSpacing: 12,
-//         childAspectRatio: 0.78,
-//       ),
-//       itemBuilder: (context, index) {
-//         final item = allServices[index];
-//         final String title = item['title'] ?? item['name'] ?? 'Service';
-//         final String? cover = item['cover_image'] ?? item['image_url'];
-//         final double price = (item['price'] != null)
-//             ? double.tryParse(item['price'].toString()) ?? 0
-//             : 0;
+//     return Column(
+//       children: [
+//         GridView.builder(
+//           physics: const NeverScrollableScrollPhysics(),
+//           shrinkWrap: true,
+//           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+//           itemCount: displayList.length,
+//           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+//             crossAxisCount: crossAxis,
+//             mainAxisSpacing: 16,
+//             crossAxisSpacing: 16,
+//             childAspectRatio: 0.90,
+//           ),
+//           itemBuilder: (context, index) {
+//             final category = displayList[index];
+//             final String title = category['name'] ?? 'Category';
+//             final String? cover = category['image_url'];
 
-//         return GestureDetector(
-//           onTap: () {
-//             // best-effort navigation: if service has category id, open CategoryPage or show snackbar
-//             final dynamic categoryId = item['category_id'] ?? item['category']?['id'];
-//             if (categoryId != null) {
-//               Navigator.push(
-//                 context,
-//                 MaterialPageRoute(
-//                   builder: (_) => CategoryPage(
-//                     categoryId: categoryId,
-//                     categoryName: item['name'] ?? '',
-//                     currentUserId: widget.currentUserId,
+//             return GestureDetector(
+//               onTap: () async {
+//                 Navigator.push(
+//                   context,
+//                   MaterialPageRoute(
+//                     builder: (_) => CategoryPage(
+//                       categoryId: category['id'],
+//                       categoryName: category['name'],
+//                       currentUserId: widget.currentUserId,
+//                     ),
 //                   ),
-//                 ),
-//               );
-//             } else {
-//               showSnack('Open service: ${item['id'] ?? title}');
-//             }
-//           },
-//           child: Container(
-//             decoration: BoxDecoration(
-//               color: kCardColor,
-//               borderRadius: BorderRadius.circular(12),
-//               boxShadow: [
-//                 BoxShadow(
-//                   color: Colors.black.withOpacity(0.05),
-//                   blurRadius: 8,
-//                   offset: const Offset(0, 4),
-//                 ),
-//               ],
-//             ),
-//             child: Column(
-//               children: [
-//                 // image
-//                 ClipRRect(
-//                   borderRadius: const BorderRadius.only(
-//                     topLeft: Radius.circular(12),
-//                     topRight: Radius.circular(12),
-//                   ),
-//                   child: SizedBox(
-//                     height: 120,
-//                     width: double.infinity,
-//                     child: imageWidgetFor(cover, fit: BoxFit.cover),
-//                   ),
-//                 ),
+//                 );
+//                 // 2️⃣ Send POST request to backend for recently viewed
+//                 try {
+//                   final url = Uri.parse('${Backend.baseUrl}/recently-viewed');
+//                   final response = await http.post(
+//                     url,
+//                     headers: {'Content-Type': 'application/json'},
+//                     body: jsonEncode({
+//                       'userId': widget.currentUserId,
+//                       'categoryId': category['id'],
+//                       'serviceId': null,
+//                     }),
+//                   );
 
-//                 // text
-//                 Padding(
-//                   padding: const EdgeInsets.all(10.0),
-//                   child: Column(
-//                     crossAxisAlignment: CrossAxisAlignment.start,
-//                     children: [
-//                       Text(
+//                   print("POST response status: ${response.statusCode}");
+//                   print("POST response body: ${response.body}");
+
+//                   // Refresh recently viewed list
+//                   await fetchRecentlyViewed();
+//                   print(
+//                     "Recently viewed list updated: ${recentlyViewed.length} items",
+//                   );
+//                 } catch (e) {
+//                   print("Error adding to recently viewed: $e");
+//                 }
+//               },
+//               child: Container(
+//                 decoration: BoxDecoration(
+//                   color: Color(0xFFD1E7DD),
+//                   borderRadius: BorderRadius.circular(14),
+//                   boxShadow: [
+//                     BoxShadow(
+//                       color: Colors.black.withOpacity(0.06),
+//                       blurRadius: 8,
+//                       offset: const Offset(0, 4),
+//                     ),
+//                   ],
+//                 ),
+//                 child: Column(
+//                   mainAxisAlignment: MainAxisAlignment.center,
+//                   children: [
+//                     // Rounded small image using ClipRRect (fixed)
+//                     ClipRRect(
+//                       borderRadius: BorderRadius.circular(12),
+//                       child: SizedBox(
+//                         height: 75,
+//                         width: 75,
+//                         child: imageWidgetFor(cover, fit: BoxFit.cover),
+//                       ),
+//                     ),
+
+//                     const SizedBox(height: 10),
+
+//                     Padding(
+//                       padding: const EdgeInsets.symmetric(horizontal: 8.0),
+//                       child: Text(
 //                         title,
 //                         style: TextStyle(
 //                           color: kTextPrimary,
@@ -1014,43 +598,47 @@
 //                         ),
 //                         maxLines: 2,
 //                         overflow: TextOverflow.ellipsis,
+//                         textAlign: TextAlign.center,
 //                       ),
-//                       const SizedBox(height: 6),
-//                       Row(
-//                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//                         children: [
-//                           Text(
-//                             item['provider']?['name'] ??
-//                                 item['seller_name'] ??
-//                                 'Provider',
-//                             style: TextStyle(
-//                               color: kTextSecondary,
-//                               fontSize: 12,
-//                             ),
-//                             overflow: TextOverflow.ellipsis,
-//                           ),
-//                           Text(
-//                             price > 0 ? 'PKR ${price.toStringAsFixed(0)}' : '',
-//                             style: TextStyle(
-//                               color: kPrimaryColor,
-//                               fontWeight: FontWeight.w700,
-//                             ),
-//                           ),
-//                         ],
-//                       ),
-//                     ],
-//                   ),
+//                     ),
+//                   ],
 //                 ),
-//               ],
+//               ),
+//             );
+//           },
+//         ),
+
+//         // SHOW VIEW ALL (only if categories > 6 and not already showing all)
+//         // Bottom toggle
+//         if (filteredCategories.length > 6)
+//           GestureDetector(
+//             onTap: () {
+//               setState(() {
+//                 showAllCategories = !showAllCategories;
+//               });
+//             },
+//             child: Padding(
+//               padding: const EdgeInsets.only(top: 8, bottom: 20),
+//               child: Text(
+//                 showAllCategories ? "Show Less" : "View All Categories",
+//                 style: TextStyle(
+//                   fontSize: 15,
+//                   fontWeight: FontWeight.bold,
+//                   color: kPrimaryColor,
+//                 ),
+//               ),
 //             ),
 //           ),
-//         );
-//       },
+//       ],
 //     );
 //   }
 
 //   // small helper to create image widget from url or asset or fallback icon
-//   Widget imageWidgetFor(String? imageUrl, {BoxFit fit = BoxFit.contain, double radius = 0}) {
+//   Widget imageWidgetFor(
+//     String? imageUrl, {
+//     BoxFit fit = BoxFit.contain,
+//     double radius = 0,
+//   }) {
 //     if (imageUrl == null || imageUrl.isEmpty) {
 //       return Container(
 //         color: Colors.transparent,
@@ -1099,7 +687,7 @@
 //               context,
 //               MaterialPageRoute(
 //                 builder: (_) =>
-//                     ProviderStatusScreen(providerId: widget.currentUserId),
+//                     ProviderDashboardScreen(providerId: widget.currentUserId),
 //               ),
 //             );
 //             return;
@@ -1140,10 +728,31 @@
 //                       child: Column(
 //                         crossAxisAlignment: CrossAxisAlignment.start,
 //                         children: [
+
+//                           ConfirmedTasksSection(currentUser: currentUser),
+
+//  const SizedBox(height: 12),
+
 //                           // Popular categories
-//                           buildSectionTitle('Popular categories', onViewAll: () {
-//                             showSnack('View all categories');
-//                           }),
+//                           buildSectionTitle(
+//                             'Popular categories',
+//                             action: GestureDetector(
+//                               onTap: () {
+//                                 setState(() {
+//                                   showAllPopular = !showAllPopular;
+//                                 });
+//                               },
+//                               child: Text(
+//                                 showAllPopular ? 'Show less' : 'View all',
+//                                 style: const TextStyle(
+//                                   color: Color(0xFF6A1B9A), // dark purple
+//                                   fontSize: 13,
+//                                   fontWeight: FontWeight.w700,
+//                                 ),
+//                               ),
+//                             ),
+//                           ),
+
 //                           buildPopularCategories(),
 //                           const SizedBox(height: 12),
 
@@ -1172,7 +781,7 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:http/http.dart' as http;
-
+import '../widgets/confirmedSection.dart';
 import '../helpers/coolors.dart';
 import 'dart:convert';
 import '../helpers/backend.dart';
@@ -1184,16 +793,24 @@ import '../widgets/Contact.dart';
 
 class ServicesScreen extends StatefulWidget {
   final int currentUserId;
-  const ServicesScreen({Key? key, required this.currentUserId})
-    : super(key: key);
+  final String currentUserRole;
+  final Map<String, dynamic> currentUser;
+  const ServicesScreen({
+    Key? key,
+    required this.currentUserId,
+    required this.currentUser,
+    required this.currentUserRole,
+  }) : super(key: key);
 
   @override
   ServicesScreenState createState() => ServicesScreenState();
 }
 
 class ServicesScreenState extends State<ServicesScreen> {
+  late Map<String, dynamic> currentUser;
   bool isLoading = true;
   bool showAllCategories = false;
+  bool showAllPopular = false;
 
   List<dynamic> categories = [];
   List<dynamic> filteredCategories = [];
@@ -1211,6 +828,9 @@ class ServicesScreenState extends State<ServicesScreen> {
   @override
   void initState() {
     super.initState();
+    // ✅ Use widget.currentUser directly
+    currentUser = widget.currentUser;
+    print("Profile Image URL: ${currentUser['profile_image']}");
     searchController.addListener(_onSearchChanged);
     _initialLoad();
   }
@@ -1412,7 +1032,7 @@ class ServicesScreenState extends State<ServicesScreen> {
                   fontWeight: FontWeight.w500,
                 ),
                 decoration: InputDecoration(
-                  hintText: 'Search for a category or service',
+                  hintText: 'Search for a category',
                   hintStyle: TextStyle(color: kTextSecondary, fontSize: 15),
                   border: InputBorder.none,
                 ),
@@ -1437,7 +1057,7 @@ class ServicesScreenState extends State<ServicesScreen> {
     );
   }
 
-  Widget buildSectionTitle(String title, {VoidCallback? onViewAll}) {
+  Widget buildSectionTitle(String title, {Widget? action}) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
       child: Row(
@@ -1451,127 +1071,126 @@ class ServicesScreenState extends State<ServicesScreen> {
             ),
           ),
           const Spacer(),
-          if (onViewAll != null)
-            GestureDetector(
-              onTap: onViewAll,
-              child: Text(
-                'View all',
-                style: TextStyle(
-                  color: kSecondaryColor,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
+          if (action != null) action,
         ],
       ),
     );
   }
-Widget buildPopularCategories() {
-  if (popularCategories.isEmpty) {
-    return const SizedBox.shrink();
-  }
 
-  final List<String> localImages = [
-    'assets/images/popular/one.png',
-    'assets/images/popular/three.png',
-    'assets/images/popular/seven.png',
-    'assets/images/popular/ten.png',
-    'assets/images/popular/four.png',
-    'assets/images/popular/five.png',
-    'assets/images/popular/three.png',
-    'assets/images/popular/eight.png',
-    'assets/images/popular/nine.png',
-    'assets/images/popular/six.png',
-    'assets/images/popular/two.png',
-  ];
+  Widget buildPopularCategories() {
+    if (popularCategories.isEmpty) {
+      return const SizedBox.shrink();
+    }
 
-  return SizedBox(
-    height: 140, // thoda bada box for image + text
-    child: ListView.separated(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      scrollDirection: Axis.horizontal,
-      itemCount: popularCategories.length,
-      separatorBuilder: (_, __) => const SizedBox(width: 12),
-      itemBuilder: (context, index) {
-        final item = popularCategories[index];
-        final String name = item['name'] ?? 'Unknown';
+    // Show only 6 unless View All pressed
+    final int itemCount = showAllPopular
+        ? popularCategories.length
+        : (popularCategories.length >= 6 ? 6 : popularCategories.length);
 
-        final String image = index < localImages.length
-            ? localImages[index]
-            : 'assets/images/popular/placeholder.png';
+    final List<String> localImages = [
+      'assets/images/popular/one.png',
+      'assets/images/popular/three.png',
+      'assets/images/popular/seven.png',
+      'assets/images/popular/ten.png',
+      'assets/images/popular/four.png',
+      'assets/images/popular/five.png',
+      'assets/images/popular/three.png',
+      'assets/images/popular/eight.png',
+      'assets/images/popular/nine.png',
+      'assets/images/popular/six.png',
+      'assets/images/popular/two.png',
+    ];
 
-        return GestureDetector(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => CategoryPage(
-                  categoryId: item['id'],
-                  categoryName: item['name'],
-                  currentUserId: widget.currentUserId,
+    return SizedBox(
+      height: 140,
+      child: ListView.separated(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        scrollDirection: Axis.horizontal,
+        itemCount: itemCount,
+        separatorBuilder: (_, __) => const SizedBox(width: 12),
+        itemBuilder: (context, index) {
+          final item = popularCategories[index];
+          final String name = item['name'] ?? 'Unknown';
+
+          final String image = index < localImages.length
+              ? localImages[index]
+              : 'assets/images/popular/placeholder.png';
+
+          return GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => CategoryPage(
+                    categoryId: item['id'],
+                    categoryName: item['name'],
+                    currentUserId: widget.currentUserId,
+                  ),
                 ),
+              );
+            },
+            child: Container(
+              width: 120,
+              decoration: BoxDecoration(
+                color:kCardColor, // Soft glassy purple
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 6,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
               ),
-            );
-          },
-          child: Container(
-            width: 120,
-            decoration: BoxDecoration(
-              color: kCardColor,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.06),
-                  blurRadius: 8,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                // Image at top, fits the container
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: SizedBox(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // Image with cute glassy bg
+                  Container(
                     height: 80,
                     width: double.infinity,
-                    child: Image.asset(
-                      image,
-                      fit: BoxFit.cover, // image covers entire box
+                    decoration: BoxDecoration(
+                      color: kCardColor,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.asset(image, fit: BoxFit.cover),
                     ),
                   ),
-                ),
-                const SizedBox(height: 8),
-                // Name below image
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                  child: Text(
-                    name,
-                    style: TextStyle(
-                      color: kTextPrimary,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
+
+                  const SizedBox(height: 8),
+
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                    child: Text(
+                      name,
+                      style: TextStyle(
+                        color: kTextPrimary,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        );
-      },
-    ),
-  );
-}
-
-
-
+          );
+        },
+      ),
+    );
+  }
 
   Widget buildRecentlyViewed() {
-    if (recentlyViewed.isEmpty) {
+    // Limit to max 10 categories
+    final List limitedList = recentlyViewed.length > 10
+        ? recentlyViewed.sublist(0, 10)
+        : recentlyViewed;
+
+    if (limitedList.isEmpty) {
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
         child: Text(
@@ -1582,14 +1201,14 @@ Widget buildPopularCategories() {
     }
 
     return SizedBox(
-      height: 120,
+      height: 130,
       child: ListView.separated(
         padding: const EdgeInsets.symmetric(horizontal: 16),
         scrollDirection: Axis.horizontal,
-        itemCount: recentlyViewed.length,
+        itemCount: limitedList.length,
         separatorBuilder: (_, __) => const SizedBox(width: 16),
         itemBuilder: (context, index) {
-          final item = recentlyViewed[index];
+          final item = limitedList[index];
           final String title = item['category_name'] ?? "Category";
           final String? cover = item['category_image'];
           final int categoryId = item['category_id'];
@@ -1609,20 +1228,26 @@ Widget buildPopularCategories() {
             },
             child: Column(
               children: [
-                // Circle Image (same function as grid)
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(50),
-                  child: SizedBox(
-                    width: 70,
-                    height: 70,
+                // 🔥 Cute Small Box Around Image
+                Container(
+                  width: 75,
+                  height: 75,
+                  decoration: BoxDecoration(
+                    color: kCardColor, // Light cute pink
+                    borderRadius: BorderRadius.circular(16), // Soft cute box
+                  ),
+                  padding: const EdgeInsets.all(6), // Inner spacing
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
                     child: imageWidgetFor(cover, fit: BoxFit.cover),
                   ),
                 ),
+
                 const SizedBox(height: 6),
 
                 // Category Name
                 SizedBox(
-                  width: 70,
+                  width: 75,
                   child: Text(
                     title,
                     style: TextStyle(
@@ -1780,7 +1405,7 @@ Widget buildPopularCategories() {
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.bold,
-                  color: kPrimaryColor,
+                  color: kSecondaryColor,
                 ),
               ),
             ),
@@ -1842,8 +1467,10 @@ Widget buildPopularCategories() {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) =>
-                    ProviderDashboardScreen(providerId: widget.currentUserId),
+                builder: (_) => DashboardScreen(
+                  userId: widget.currentUserId,
+                  role: widget.currentUserRole,
+                ),
               ),
             );
             return;
@@ -1884,13 +1511,30 @@ Widget buildPopularCategories() {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          ConfirmedTasksSection(currentUser: currentUser),
+
+                          const SizedBox(height: 12),
+
                           // Popular categories
                           buildSectionTitle(
                             'Popular categories',
-                            onViewAll: () {
-                              showSnack('View all categories');
-                            },
+                            action: GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  showAllPopular = !showAllPopular;
+                                });
+                              },
+                              child: Text(
+                                showAllPopular ? 'Show less' : 'View all',
+                                style: const TextStyle(
+                                  color: kSecondaryColor, // dark purple
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
                           ),
+
                           buildPopularCategories(),
                           const SizedBox(height: 12),
 
@@ -1914,90 +1558,3 @@ Widget buildPopularCategories() {
     );
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-////////////////////////////////
-///
-
-  // Widget buildPopularCategories() {
-  //   if (popularCategories.isEmpty) {
-  //     return const SizedBox.shrink();
-  //   }
-
-  //   return SizedBox(
-  //     height: 110,
-  //     child: ListView.separated(
-  //       padding: const EdgeInsets.symmetric(horizontal: 16),
-  //       scrollDirection: Axis.horizontal,
-  //       itemCount: popularCategories.length,
-  //       separatorBuilder: (_, __) => const SizedBox(width: 12),
-  //       itemBuilder: (context, index) {
-  //         final item = popularCategories[index];
-  //         final String name = item['name'] ?? 'Unknown';
-  //         final String? image = item['image_url'];
-
-  //         return GestureDetector(
-  //           onTap: () {
-  //             // open category page (keeps same behavior)
-  //             Navigator.push(
-  //               context,
-  //               MaterialPageRoute(
-  //                 builder: (_) => CategoryPage(
-  //                   categoryId: item['id'],
-  //                   categoryName: item['name'],
-  //                   currentUserId: widget.currentUserId,
-  //                 ),
-  //               ),
-  //             );
-  //           },
-  //           child: Container(
-  //             width: 120,
-  //             padding: const EdgeInsets.all(12),
-  //             decoration: BoxDecoration(
-  //               color: kCardColor,
-  //               borderRadius: BorderRadius.circular(12),
-  //               boxShadow: [
-  //                 BoxShadow(
-  //                   color: Colors.black.withOpacity(0.06),
-  //                   blurRadius: 8,
-  //                   offset: const Offset(0, 4),
-  //                 ),
-  //               ],
-  //             ),
-  //             child: Column(
-  //               children: [
-  //                 SizedBox(
-  //                   height: 44,
-  //                   width: 44,
-  //                   child: imageWidgetFor(image, radius: 8),
-  //                 ),
-  //                 const SizedBox(height: 8),
-  //                 Text(
-  //                   name,
-  //                   style: TextStyle(
-  //                     color: kTextPrimary,
-  //                     fontSize: 13,
-  //                     fontWeight: FontWeight.w600,
-  //                   ),
-  //                   textAlign: TextAlign.center,
-  //                   maxLines: 2,
-  //                   overflow: TextOverflow.ellipsis,
-  //                 ),
-  //               ],
-  //             ),
-  //           ),
-  //         );
-  //       },
-  //     ),
-  //   );
-  // }
-

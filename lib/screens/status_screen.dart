@@ -1,5 +1,3 @@
-// /////////////////////////////////
-
 // import 'package:flutter/material.dart';
 // import 'package:image_picker/image_picker.dart';
 // import 'package:provider/provider.dart';
@@ -358,75 +356,71 @@
 //             Consumer<StatusController>(
 //               builder: (context, controller, _) {
 //                 if (controller.isLoading) {
-//                   // Agar abhi load ho raha hai
 //                   return const Center(
 //                     child: CircularProgressIndicator(color: kPrimaryColor),
 //                   );
 //                 }
 
-//                 if (controller.publicStatuses.isEmpty) {
-//                   // Agar load ho gaya aur list empty hai
-//                   return Center(
-//                     child: Column(
-//                       mainAxisSize: MainAxisSize.min,
-//                       children: [
-//                         const Text(
-//                           "No status is uploaded yet",
-//                           style: TextStyle(color: kTextSecondary, fontSize: 18),
-//                         ),
-//                         const SizedBox(height: 20),
-//                         if (widget.isProvider)
-//                           Container(
-//                             decoration: BoxDecoration(
-//                               color: kPrimaryColor,
-//                               shape: BoxShape.circle,
-//                               boxShadow: [
-//                                 BoxShadow(
-//                                   color: Colors.black.withOpacity(0.3),
-//                                   blurRadius: 8,
-//                                   spreadRadius: 2,
-//                                 ),
-//                               ],
-//                             ),
-//                             child: IconButton(
-//                               icon: const Icon(
-//                                 Icons.add,
-//                                 color: kCardColor,
-//                                 size: 32,
-//                               ),
-//                               onPressed: _openAddStatusDialog,
-//                             ),
-//                           ),
-//                       ],
-//                     ),
-//                   );
-//                 }
+//                 final hasStatuses = controller.publicStatuses.isNotEmpty;
 
 //                 return PageView.builder(
 //                   controller: _pageController,
 //                   scrollDirection: Axis.vertical,
-//                   itemCount: controller.publicStatuses.length,
+//                   itemCount: hasStatuses ? controller.publicStatuses.length : 1,
 //                   onPageChanged: (index) {
 //                     final status = controller.publicStatuses[index];
 //                     if (!status.isViewed) {
-//                       controller.markStatusAsViewed(status.id); // DB update
-//                       status.isViewed = true; // ✅ immediate client update
-//                       widget.onViewed?.call(); // badge update
+//                       controller.markStatusAsViewed(
+//                         status.id,
+//                       ); // ✅ Controller ka method call karo
 //                     }
 //                   },
 
 //                   itemBuilder: (context, index) {
+//                     if (!hasStatuses) {
+//                       // Empty state screen
+//                       return Stack(
+//                         children: [
+//                           Center(
+//                             child: Text(
+//                               "No status is uploaded yet",
+//                               style: TextStyle(
+//                                 color: kTextSecondary,
+//                                 fontSize: 18,
+//                               ),
+//                             ),
+//                           ),
+//                           if (widget.isProvider)
+//                             Positioned(
+//                               bottom: 30,
+//                               right: 20,
+//                               child: FloatingActionButton(
+//                                 backgroundColor: kPrimaryColor,
+//                                 onPressed: _openAddStatusDialog,
+//                                 child: const Icon(
+//                                   Icons.add,
+//                                   color: kTextPrimary,
+//                                   size: 28,
+//                                 ),
+//                               ),
+//                             ),
+//                         ],
+//                       );
+//                     }
+
 //                     final status = controller.publicStatuses[index];
 //                     final mediaUrl = Backend.buildMediaUrl(status.url);
+
 //                     return Stack(
 //                       children: [
 //                         Positioned.fill(
 //                           child: GestureDetector(
 //                             onDoubleTap: () async {
-//                               if (status.isLikingInProgress) return;
-//                               await context.read<StatusController>().toggleLike(
-//                                 status,
-//                               );
+//                               if (!status.isLikingInProgress) {
+//                                 await context
+//                                     .read<StatusController>()
+//                                     .toggleLike(status);
+//                               }
 //                             },
 //                             child: status.type == 'image'
 //                                 ? InteractiveViewer(
@@ -444,6 +438,7 @@
 //                           ),
 //                         ),
 
+//                         // Top progress indicator placeholder
 //                         Positioned(
 //                           top: 20,
 //                           left: 0,
@@ -460,75 +455,41 @@
 //                           ),
 //                         ),
 
-//                         Positioned(
-//                           left: 20,
-//                           bottom: 50,
-//                           right: 100, // ensure text doesn't collide with icons
-//                           child: Container(
-//                             padding: const EdgeInsets.symmetric(
-//                               horizontal: 8,
-//                               vertical: 4,
-//                             ),
-//                             decoration: BoxDecoration(
-//                               color: Colors
-//                                   .black54, // semi-transparent black background
-//                               borderRadius: BorderRadius.circular(8),
-//                             ),
-//                             child: Column(
-//                               crossAxisAlignment: CrossAxisAlignment.start,
-//                               children: [
-//                                 Text(
-//                                   status.uploaderName ?? "Unknown",
-//                                   style: const TextStyle(
-//                                     color: Colors.white,
-//                                     fontWeight: FontWeight.bold,
-//                                     fontSize: 18,
-//                                     shadows: [
-//                                       Shadow(
-//                                         color: Colors.black87,
-//                                         offset: Offset(1, 1),
-//                                         blurRadius: 2,
+//                         // Caption & uploader name
+//                         if (status.caption != null ||
+//                             status.uploaderName != null)
+//                           Positioned(
+//                             left: 20,
+//                             bottom: 50,
+//                             right: 100,
+//                             child: Container(
+//                               padding: const EdgeInsets.all(8),
+//                               decoration: BoxDecoration(
+//                                 color: Colors.black54,
+//                                 borderRadius: BorderRadius.circular(8),
+//                               ),
+//                               child: Column(
+//                                 crossAxisAlignment: CrossAxisAlignment.start,
+//                                 children: [
+//                                   if (status.uploaderName != null)
+//                                     Text(
+//                                       status.uploaderName!,
+//                                       style: const TextStyle(
+//                                         color: Colors.white,
+//                                         fontWeight: FontWeight.bold,
+//                                         fontSize: 18,
+//                                         shadows: [
+//                                           Shadow(
+//                                             color: Colors.black87,
+//                                             offset: Offset(1, 1),
+//                                             blurRadius: 2,
+//                                           ),
+//                                         ],
 //                                       ),
-//                                     ],
-//                                   ),
-//                                 ),
-//                                 if (status.caption != null &&
-//                                     status.caption!.isNotEmpty)
-//                                   GestureDetector(
-//                                     onTap: () {
-//                                       // Full caption dialog
-//                                       showDialog(
-//                                         context: context,
-//                                         builder: (_) => AlertDialog(
-//                                           backgroundColor: Colors.black87,
-//                                           shape: RoundedRectangleBorder(
-//                                             borderRadius: BorderRadius.circular(
-//                                               12,
-//                                             ),
-//                                           ),
-//                                           content: Text(
-//                                             status.caption!,
-//                                             style: const TextStyle(
-//                                               color: Colors.white70,
-//                                               fontSize: 16,
-//                                             ),
-//                                           ),
-//                                           actions: [
-//                                             TextButton(
-//                                               onPressed: () =>
-//                                                   Navigator.of(context).pop(),
-//                                               child: const Text(
-//                                                 "Close",
-//                                                 style: TextStyle(
-//                                                   color: Colors.white,
-//                                                 ),
-//                                               ),
-//                                             ),
-//                                           ],
-//                                         ),
-//                                       );
-//                                     },
-//                                     child: Text(
+//                                     ),
+//                                   if (status.caption != null &&
+//                                       status.caption!.isNotEmpty)
+//                                     Text(
 //                                       status.caption!,
 //                                       maxLines: 2,
 //                                       overflow: TextOverflow.ellipsis,
@@ -544,86 +505,67 @@
 //                                         ],
 //                                       ),
 //                                     ),
-//                                   ),
-//                               ],
+//                                 ],
+//                               ),
 //                             ),
 //                           ),
-//                         ),
 
+//                         // Right side buttons
 //                         Positioned(
 //                           right: 20,
 //                           bottom: 50,
 //                           child: Column(
 //                             mainAxisSize: MainAxisSize.min,
-//                             crossAxisAlignment: CrossAxisAlignment.center,
 //                             children: [
-//                               // ❤️ Like Icon (Top)
+//                               // Like button
 //                               GestureDetector(
 //                                 onTap: () async {
-//                                   if (status.isLikingInProgress) return;
-//                                   await context
-//                                       .read<StatusController>()
-//                                       .toggleLike(status);
-
-//                                   final prevLiked = status.isLikedByCurrentUser;
-//                                   final prevCount = status.likeCount;
-
-//                                   // 💨 Optimistic change
-//                                   setState(() {
-//                                     status.isLikedByCurrentUser = !prevLiked;
-//                                     status.likeCount += prevLiked ? -1 : 1;
-//                                   });
-
-//                                   try {
+//                                   if (!status.isLikingInProgress) {
 //                                     await context
 //                                         .read<StatusController>()
 //                                         .toggleLike(status);
-//                                   } catch (_) {
-//                                     // ❌ Network error → revert
-//                                     setState(() {
-//                                       status.isLikedByCurrentUser = prevLiked;
-//                                       status.likeCount = prevCount;
-//                                     });
-//                                   } finally {
-//                                     status.isLikingInProgress = false;
 //                                   }
 //                                 },
-
-//                                 child: AnimatedScale(
-//                                   scale: status.isLikedByCurrentUser
-//                                       ? 1.3
-//                                       : 1.0,
-//                                   duration: const Duration(milliseconds: 200),
-//                                   child: Container(
-//                                     padding: const EdgeInsets.all(8),
-//                                     decoration: const BoxDecoration(
-//                                       color: Colors.black45,
-//                                       shape: BoxShape.circle,
+//                                 child: Column(
+//                                   children: [
+//                                     AnimatedScale(
+//                                       scale: status.isLikedByCurrentUser
+//                                           ? 1.3
+//                                           : 1.0,
+//                                       duration: const Duration(
+//                                         milliseconds: 200,
+//                                       ),
+//                                       child: Container(
+//                                         padding: const EdgeInsets.all(8),
+//                                         decoration: const BoxDecoration(
+//                                           color: Colors.black45,
+//                                           shape: BoxShape.circle,
+//                                         ),
+//                                         child: Icon(
+//                                           status.isLikedByCurrentUser
+//                                               ? Icons.favorite
+//                                               : Icons.favorite_border,
+//                                           color: status.isLikedByCurrentUser
+//                                               ? Colors.red
+//                                               : Colors.white,
+//                                           size: 32,
+//                                         ),
+//                                       ),
 //                                     ),
-//                                     child: Icon(
-//                                       status.isLikedByCurrentUser
-//                                           ? Icons.favorite
-//                                           : Icons.favorite_border,
-//                                       color: status.isLikedByCurrentUser
-//                                           ? Colors.red
-//                                           : Colors.white,
-//                                       size: 32,
-//                                     ),
-//                                   ),
-//                                 ),
-//                               ),
-
-//                               const SizedBox(height: 6),
-//                               Text(
-//                                 '${status.likeCount}',
-//                                 style: const TextStyle(
-//                                   color: Colors.white,
-//                                   fontSize: 14,
-//                                   shadows: [
-//                                     Shadow(
-//                                       color: Colors.black54,
-//                                       offset: Offset(1, 1),
-//                                       blurRadius: 3,
+//                                     const SizedBox(height: 6),
+//                                     Text(
+//                                       '${status.likeCount}',
+//                                       style: const TextStyle(
+//                                         color: Colors.white,
+//                                         fontSize: 14,
+//                                         shadows: [
+//                                           Shadow(
+//                                             color: Colors.black54,
+//                                             offset: Offset(1, 1),
+//                                             blurRadius: 3,
+//                                           ),
+//                                         ],
+//                                       ),
 //                                     ),
 //                                   ],
 //                                 ),
@@ -631,18 +573,16 @@
 
 //                               const SizedBox(height: 18),
 
-//                               // 👤 Profile Icon (Middle)
+//                               // Profile button
 //                               Container(
-//                                 padding: const EdgeInsets.all(
-//                                   2,
-//                                 ), // circle ke liye thodi space
+//                                 padding: const EdgeInsets.all(2),
 //                                 decoration: BoxDecoration(
 //                                   shape: BoxShape.circle,
 //                                   border: Border.all(
 //                                     color: status.isViewed
 //                                         ? Colors.grey
-//                                         : Colors.green, // ✅ color logic
-//                                     width: 3, // thickness of outer circle
+//                                         : Colors.green,
+//                                     width: 3,
 //                                   ),
 //                                 ),
 //                                 child: CircleAvatar(
@@ -655,40 +595,37 @@
 //                                       size: 28,
 //                                     ),
 //                                     onPressed: () async {
-//                                       try {
-//                                         final uploaderId =
-//                                             status.uploaderUserId;
-//                                         if (uploaderId == null) return;
-//                                         // ✅ Mark status as viewed
-//                                         if (!status.isViewed) {
-//                                           setState(() {
-//                                             status.isViewed = true;
-//                                           });
-//                                           // 🔹 Update unseen status count
-//                                           widget.onViewed?.call();
-//                                         }
-//                                         final url = Uri.parse(
-//                                           '${Backend.baseUrl}/provider/services/providers/$uploaderId',
-//                                         );
-//                                         final response = await http.get(url);
-//                                         if (response.statusCode != 200) return;
-//                                         final data = jsonDecode(response.body);
-//                                         final providerDetails =
-//                                             data['provider'] ?? {};
-//                                         final bool readOnly =
-//                                             widget.currentUserId != uploaderId;
-//                                         Navigator.push(
-//                                           context,
-//                                           MaterialPageRoute(
-//                                             builder: (_) => MyProfileScreen(
-//                                               userData: providerDetails,
-//                                               readOnly: readOnly,
-//                                               currentUserId:
-//                                                   widget.currentUserId,
-//                                             ),
+//                                       // Navigate to profile
+//                                       if (status.uploaderUserId == null) return;
+//                                       if (!status.isViewed) {
+//                                         await context
+//                                             .read<StatusController>()
+//                                             .markStatusAsViewed(
+//                                               status.id,
+//                                             ); // ✅ Controller ka method call karo
+//                                         widget.onViewed?.call();
+//                                       }
+
+//                                       final url = Uri.parse(
+//                                         '${Backend.baseUrl}/provider/services/providers/${status.uploaderUserId}',
+//                                       );
+//                                       final res = await http.get(url);
+//                                       if (res.statusCode != 200) return;
+//                                       final data =
+//                                           jsonDecode(res.body)['provider'] ??
+//                                           {};
+//                                       Navigator.push(
+//                                         context,
+//                                         MaterialPageRoute(
+//                                           builder: (_) => MyProfileScreen(
+//                                             userData: data,
+//                                             readOnly:
+//                                                 widget.currentUserId !=
+//                                                 status.uploaderUserId,
+//                                             currentUserId: widget.currentUserId,
 //                                           ),
-//                                         );
-//                                       } catch (_) {}
+//                                         ),
+//                                       );
 //                                     },
 //                                   ),
 //                                 ),
@@ -696,7 +633,7 @@
 
 //                               const SizedBox(height: 18),
 
-//                               // 💬 Comment Icon
+//                               // Comment button
 //                               Container(
 //                                 decoration: const BoxDecoration(
 //                                   color: Colors.black45,
@@ -723,27 +660,15 @@
 
 //                               const SizedBox(height: 18),
 
-//                               // ➕ Add Status (Bottom)
+//                               // Add status button bottom-right
 //                               if (widget.isProvider)
-//                                 Container(
-//                                   decoration: BoxDecoration(
-//                                     color: kPrimaryColor,
-//                                     shape: BoxShape.circle,
-//                                     boxShadow: [
-//                                       BoxShadow(
-//                                         color: Colors.black.withOpacity(0.3),
-//                                         blurRadius: 8,
-//                                         spreadRadius: 2,
-//                                       ),
-//                                     ],
-//                                   ),
-//                                   child: IconButton(
-//                                     icon: const Icon(
-//                                       Icons.add,
-//                                       color: kTextPrimary,
-//                                       size: 32,
-//                                     ),
-//                                     onPressed: _openAddStatusDialog,
+//                                 FloatingActionButton(
+//                                   backgroundColor: kPrimaryColor,
+//                                   onPressed: _openAddStatusDialog,
+//                                   child: const Icon(
+//                                     Icons.add,
+//                                     color: kTextPrimary,
+//                                     size: 28,
 //                                   ),
 //                                 ),
 //                             ],
@@ -761,8 +686,6 @@
 //     );
 //   }
 // }
-
-/////////////////////////////////
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -1283,6 +1206,80 @@ class _StatusPageState extends State<StatusPage> {
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
+                              // Profile button
+                              Container(
+                                padding: const EdgeInsets.all(2),
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: status.isViewed
+                                        ? Colors.grey
+                                        : Colors.green,
+                                    width: 3,
+                                  ),
+                                ),
+                                child: CircleAvatar(
+                                  radius: 28,
+                                  backgroundColor: Colors.black45,
+                                  backgroundImage:
+                                      (status.uploaderAvatarUrl != null &&
+                                          status.uploaderAvatarUrl!.isNotEmpty)
+                                      ? NetworkImage(
+                                          Backend.buildMediaUrl(
+                                            status.uploaderAvatarUrl!,
+                                          ),
+                                        ) // ✅ convert relative path to full URL
+                                      : null, // fallback if no image
+                                  child:
+                                      (status.uploaderAvatarUrl == null ||
+                                          status.uploaderAvatarUrl!.isEmpty)
+                                      ? IconButton(
+                                          icon: const Icon(
+                                            Icons.person,
+                                            color: Colors.white,
+                                            size: 28,
+                                          ),
+                                          onPressed: () async {
+                                            if (status.uploaderUserId == null)
+                                              return;
+                                            if (!status.isViewed) {
+                                              await context
+                                                  .read<StatusController>()
+                                                  .markStatusAsViewed(
+                                                    status.id,
+                                                  );
+                                              widget.onViewed?.call();
+                                            }
+
+                                            final url = Uri.parse(
+                                              '${Backend.baseUrl}/provider/services/providers/${status.uploaderUserId}',
+                                            );
+                                            final res = await http.get(url);
+                                            if (res.statusCode != 200) return;
+                                            final data =
+                                                jsonDecode(
+                                                  res.body,
+                                                )['provider'] ??
+                                                {};
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (_) => MyProfileScreen(
+                                                  userData: data,
+                                                  readOnly:
+                                                      widget.currentUserId !=
+                                                      status.uploaderUserId,
+                                                  currentUserId:
+                                                      widget.currentUserId,
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                        )
+                                      : null,
+                                ),
+                              ),
+                              const SizedBox(height: 18),
                               // Like button
                               GestureDetector(
                                 onTap: () async {
@@ -1334,66 +1331,6 @@ class _StatusPageState extends State<StatusPage> {
                                       ),
                                     ),
                                   ],
-                                ),
-                              ),
-
-                              const SizedBox(height: 18),
-
-                              // Profile button
-                              Container(
-                                padding: const EdgeInsets.all(2),
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: status.isViewed
-                                        ? Colors.grey
-                                        : Colors.green,
-                                    width: 3,
-                                  ),
-                                ),
-                                child: CircleAvatar(
-                                  radius: 28,
-                                  backgroundColor: Colors.black45,
-                                  child: IconButton(
-                                    icon: const Icon(
-                                      Icons.person,
-                                      color: Colors.white,
-                                      size: 28,
-                                    ),
-                                    onPressed: () async {
-                                      // Navigate to profile
-                                      if (status.uploaderUserId == null) return;
-                                      if (!status.isViewed) {
-                                        await context
-                                            .read<StatusController>()
-                                            .markStatusAsViewed(
-                                              status.id,
-                                            ); // ✅ Controller ka method call karo
-                                        widget.onViewed?.call();
-                                      }
-
-                                      final url = Uri.parse(
-                                        '${Backend.baseUrl}/provider/services/providers/${status.uploaderUserId}',
-                                      );
-                                      final res = await http.get(url);
-                                      if (res.statusCode != 200) return;
-                                      final data =
-                                          jsonDecode(res.body)['provider'] ??
-                                          {};
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (_) => MyProfileScreen(
-                                            userData: data,
-                                            readOnly:
-                                                widget.currentUserId !=
-                                                status.uploaderUserId,
-                                            currentUserId: widget.currentUserId,
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  ),
                                 ),
                               ),
 

@@ -1,6 +1,7 @@
 
 
 
+
 // import 'dart:convert';
 // import 'package:flutter/material.dart';
 // import 'package:flutter/services.dart';
@@ -12,7 +13,9 @@
 // import 'my_tasks_screen.dart';
 // import '../helpers/backend.dart';
 // import 'status_screen.dart';
-// import '../helpers/my_colors.dart';
+// import '../helpers/coolors.dart';
+// import '../widgets/status_widget.dart';
+
 // class HomeScreen extends StatefulWidget {
 //   final String role;
 //   final Map<String, dynamic> userData;
@@ -32,13 +35,17 @@
 //   bool isLoadingConversations = true;
 //   int unreadMessagesCount = 0;
 //   int unseenNotificationsCount = 0;
+//   int unseenStatusCount = 0;
+
 //   late IO.Socket socket;
-//   //late StatusController statusController;
+//   late StatusController statusController;
 //   @override
 //   void initState() {
 //     super.initState();
+//     statusController = StatusController(currentUserId: widget.userData['id']);
 //     fetchConversations();
 //     fetchUnseenNotifications();
+//     fetchUnseenCount();
 //     initSocket();
 //   }
 
@@ -62,7 +69,30 @@
 //         });
 //       }
 //     });
+//     //////---------------new
+//     socket.on('new_status', (data) {
+//       final newStatus = Status.fromJson(data);
 
+//       if (newStatus.uploaderUserId != widget.userData['id']) {
+//         final existingIndex = statusController.publicStatuses.indexWhere(
+//           (s) => s.id == newStatus.id,
+//         );
+
+//         if (existingIndex != -1) {
+//           newStatus.isViewed =
+//               statusController.publicStatuses[existingIndex].isViewed;
+//           statusController.publicStatuses[existingIndex] = newStatus;
+//         } else {
+//           statusController.publicStatuses.insert(0, newStatus);
+//         }
+
+//         setState(() {
+//           unseenStatusCount = statusController.unviewedPublicCount;
+//         });
+//       }
+//     });
+
+//     //-------------------------
 //     socket.on('update_conversation_list', (data) {
 //       fetchConversations();
 //     });
@@ -72,6 +102,38 @@
 //         setState(() => unseenNotificationsCount += 1);
 //       }
 //     });
+//   }
+
+//   //-------------
+//   void resetUnseenStatus() {
+//     setState(() => unseenStatusCount = 0);
+//   }
+
+//   // On app start / refresh, fetch unseen count
+//   void fetchUnseenCount() async {
+//     try {
+//       final response = await http.get(
+//         Uri.parse(
+//           '${Backend.baseUrl}/statuses/fetch-public?user_id=${widget.userData['id']}',
+//         ),
+//       );
+//       if (response.statusCode == 200) {
+//         final data = jsonDecode(response.body);
+//         final List<dynamic> statusesJson = data['statuses'] ?? [];
+
+//         // Convert JSON to Status objects
+//         statusController.publicStatuses = statusesJson
+//             .map((s) => Status.fromJson(s))
+//             .toList();
+
+//         setState(() {
+//           // Use getter from StatusController
+//           unseenStatusCount = statusController.unviewedPublicCount;
+//         });
+//       }
+//     } catch (e) {
+//       print("Error fetching unseen statuses: $e");
+//     }
 //   }
 
 //   Future<void> fetchConversations() async {
@@ -138,18 +200,27 @@
 //       ServicesScreen(
 //         key: _servicesKey,
 //         currentUserId: widget.userData["id"] ?? -1,
-        
+//          currentUser: {
+//           "id": widget.userData["id"] ?? -1,
+//           "username": widget.userData["username"] ?? "Username",
+//           "profile_image": widget.userData["profile_image"] ?? "",
+//         },
 //       ),
 //       MyTasksScreen(
 //         currentUserId: widget.userData["id"] ?? -1,
 //         role: widget.role,
+//         currentUser: {
+//           "id": widget.userData["id"] ?? -1,
+//           "username": widget.userData["username"] ?? "Username",
+//           "profile_image": widget.userData["profile_image"] ?? "",
+//         },
+        
 //       ),
 //       MessagesTab(
 //         //   key: ValueKey(unseenNotificationsCount), // 🔹 add this
 //         conversations: conversations,
 //         currentUserId: widget.userData['id'] ?? -1,
 //         onRefresh: fetchConversations,
-//         socket: socket,
 //         role: widget.role,
 //         unseenNotificationsCount: unseenNotificationsCount,
 //         onConversationSeen: (conversationId) {
@@ -185,6 +256,7 @@
 //       StatusPage(
 //         currentUserId: widget.userData["id"] ?? -1,
 //         isProvider: widget.role == 'provider', // ya jo role decide kar rahi ho
+//         onViewed: resetUnseenStatus,
 //       ),
 
 //       MyProfileScreen(
@@ -195,13 +267,13 @@
 //     ];
 
 //     return Scaffold(
-//       backgroundColor: MyColors.background,
+//       backgroundColor: kBackgroundColor,
 //       body: IndexedStack(index: _currentIndex, children: pages),
 //       bottomNavigationBar: Padding(
 //         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
 //         child: Container(
 //           decoration: BoxDecoration(
-//             color: MyColors.surface,
+//             color: kCardColor,
 //             borderRadius: BorderRadius.circular(30),
 //             boxShadow: [
 //               BoxShadow(
@@ -216,15 +288,16 @@
 //             child: BottomNavigationBar(
 //               currentIndex: _currentIndex,
 //               type: BottomNavigationBarType.fixed,
-//               backgroundColor: MyColors.surface,
-//               selectedItemColor: MyColors.primary,
-//               unselectedItemColor: MyColors.textSecondary,
+//               backgroundColor: kCardColor,
+//               selectedItemColor: kPrimaryColor,
+//               unselectedItemColor: kTextSecondary,
 //               showSelectedLabels: true,
 //               showUnselectedLabels: true,
 //               onTap: (index) {
 //                 setState(() => _currentIndex = index);
 //                 if (index == 2) resetUnreadMessages();
 //                 if (index == 3) resetUnseenNotifications();
+//                 if (index == 3) resetUnseenStatus();
 //               },
 //               items: [
 //                 BottomNavigationBarItem(
@@ -235,7 +308,7 @@
 //                         : EdgeInsets.all(0),
 //                     decoration: _currentIndex == 0
 //                         ? BoxDecoration(
-//                             color: MyColors.primary.withOpacity(0.15),
+//                             color: kPrimaryColor.withOpacity(0.15),
 //                             shape: BoxShape.circle,
 //                           )
 //                         : null,
@@ -251,7 +324,7 @@
 //                         : EdgeInsets.all(0),
 //                     decoration: _currentIndex == 1
 //                         ? BoxDecoration(
-//                             color: MyColors.primary.withOpacity(0.15),
+//                             color: kPrimaryColor.withOpacity(0.15),
 //                             shape: BoxShape.circle,
 //                           )
 //                         : null,
@@ -269,7 +342,7 @@
 //                             : EdgeInsets.all(0),
 //                         decoration: _currentIndex == 2
 //                             ? BoxDecoration(
-//                                 color: MyColors.primary.withOpacity(0.15),
+//                                 color: kPrimaryColor.withOpacity(0.15),
 //                                 shape: BoxShape.circle,
 //                               )
 //                             : null,
@@ -282,7 +355,7 @@
 //                           child: Container(
 //                             padding: EdgeInsets.all(4),
 //                             decoration: BoxDecoration(
-//                               color: MyColors.error,
+//                               color: redAccent,
 //                               shape: BoxShape.circle,
 //                             ),
 //                             child: Text(
@@ -300,21 +373,46 @@
 //                   label: 'Messages',
 //                 ),
 //                 BottomNavigationBarItem(
-//                   icon: AnimatedContainer(
-//                     duration: Duration(milliseconds: 250),
-//                     padding: _currentIndex == 3
-//                         ? EdgeInsets.all(6)
-//                         : EdgeInsets.all(0),
-//                     decoration: _currentIndex == 3
-//                         ? BoxDecoration(
-//                             color: MyColors.primary.withOpacity(0.15),
-//                             shape: BoxShape.circle,
-//                           )
-//                         : null,
-//                     child: Icon(Icons.star),
+//                   icon: Stack(
+//                     children: [
+//                       AnimatedContainer(
+//                         duration: Duration(milliseconds: 250),
+//                         padding: _currentIndex == 3
+//                             ? EdgeInsets.all(6)
+//                             : EdgeInsets.all(0),
+//                         decoration: _currentIndex == 3
+//                             ? BoxDecoration(
+//                                 color: kPrimaryColor.withOpacity(0.15),
+//                                 shape: BoxShape.circle,
+//                               )
+//                             : null,
+//                         child: Icon(Icons.star),
+//                       ),
+//                       if (unseenStatusCount > 0)
+//                         Positioned(
+//                           right: 0,
+//                           top: 0,
+//                           child: Container(
+//                             padding: EdgeInsets.all(4),
+//                             decoration: BoxDecoration(
+//                               color: redAccent,
+//                               shape: BoxShape.circle,
+//                             ),
+//                             child: Text(
+//                               '$unseenStatusCount',
+//                               style: TextStyle(
+//                                 color: Colors.white,
+//                                 fontSize: 10,
+//                                 fontWeight: FontWeight.bold,
+//                               ),
+//                             ),
+//                           ),
+//                         ),
+//                     ],
 //                   ),
 //                   label: 'Status',
 //                 ),
+
 //                 BottomNavigationBarItem(
 //                   icon: AnimatedContainer(
 //                     duration: Duration(milliseconds: 250),
@@ -323,7 +421,7 @@
 //                         : EdgeInsets.all(0),
 //                     decoration: _currentIndex == 4
 //                         ? BoxDecoration(
-//                             color: MyColors.primary.withOpacity(0.15),
+//                             color: kPrimaryColor.withOpacity(0.15),
 //                             shape: BoxShape.circle,
 //                           )
 //                         : null,
@@ -357,10 +455,6 @@
 
 
 
-
-
-
-
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -374,6 +468,7 @@ import '../helpers/backend.dart';
 import 'status_screen.dart';
 import '../helpers/coolors.dart';
 import '../widgets/status_widget.dart';
+
 class HomeScreen extends StatefulWidget {
   final String role;
   final Map<String, dynamic> userData;
@@ -395,12 +490,13 @@ class _HomeScreenState extends State<HomeScreen> {
   int unseenNotificationsCount = 0;
   int unseenStatusCount = 0;
 
-
   late IO.Socket socket;
   late StatusController statusController;
   @override
   void initState() {
     super.initState();
+    // 👇 Add this
+  print("HomeScreen - userData: ${widget.userData}");
     statusController = StatusController(currentUserId: widget.userData['id']);
     fetchConversations();
     fetchUnseenNotifications();
@@ -428,34 +524,30 @@ class _HomeScreenState extends State<HomeScreen> {
         });
       }
     });
-//////---------------new
-socket.on('new_status', (data) {
-  final newStatus = Status.fromJson(data);
+    //////---------------new
+    socket.on('new_status', (data) {
+      final newStatus = Status.fromJson(data);
 
-  if (newStatus.uploaderUserId != widget.userData['id']) {
-    final existingIndex =
-        statusController.publicStatuses.indexWhere((s) => s.id == newStatus.id);
+      if (newStatus.uploaderUserId != widget.userData['id']) {
+        final existingIndex = statusController.publicStatuses.indexWhere(
+          (s) => s.id == newStatus.id,
+        );
 
-    if (existingIndex != -1) {
-      newStatus.isViewed = statusController.publicStatuses[existingIndex].isViewed;
-      statusController.publicStatuses[existingIndex] = newStatus;
-    } else {
-      statusController.publicStatuses.insert(0, newStatus);
-    }
+        if (existingIndex != -1) {
+          newStatus.isViewed =
+              statusController.publicStatuses[existingIndex].isViewed;
+          statusController.publicStatuses[existingIndex] = newStatus;
+        } else {
+          statusController.publicStatuses.insert(0, newStatus);
+        }
 
-    setState(() {
-      unseenStatusCount = statusController.unviewedPublicCount;
+        setState(() {
+          unseenStatusCount = statusController.unviewedPublicCount;
+        });
+      }
     });
-  }
-});
 
-
-
-
-
-
-
-//-------------------------
+    //-------------------------
     socket.on('update_conversation_list', (data) {
       fetchConversations();
     });
@@ -466,35 +558,38 @@ socket.on('new_status', (data) {
       }
     });
   }
-//-------------
-void resetUnseenStatus() {
-  setState(() => unseenStatusCount = 0);
-}
-// On app start / refresh, fetch unseen count
-void fetchUnseenCount() async {
-  try {
-    final response = await http.get(Uri.parse(
-        '${Backend.baseUrl}/statuses/fetch-public?user_id=${widget.userData['id']}'));
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      final List<dynamic> statusesJson = data['statuses'] ?? [];
 
-      // Convert JSON to Status objects
-      statusController.publicStatuses = statusesJson
-          .map((s) => Status.fromJson(s))
-          .toList();
-
-      setState(() {
-        // Use getter from StatusController
-        unseenStatusCount = statusController.unviewedPublicCount;
-      });
-    }
-  } catch (e) {
-    print("Error fetching unseen statuses: $e");
+  //-------------
+  void resetUnseenStatus() {
+    setState(() => unseenStatusCount = 0);
   }
-}
 
+  // On app start / refresh, fetch unseen count
+  void fetchUnseenCount() async {
+    try {
+      final response = await http.get(
+        Uri.parse(
+          '${Backend.baseUrl}/statuses/fetch-public?user_id=${widget.userData['id']}',
+        ),
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final List<dynamic> statusesJson = data['statuses'] ?? [];
 
+        // Convert JSON to Status objects
+        statusController.publicStatuses = statusesJson
+            .map((s) => Status.fromJson(s))
+            .toList();
+
+        setState(() {
+          // Use getter from StatusController
+          unseenStatusCount = statusController.unviewedPublicCount;
+        });
+      }
+    } catch (e) {
+      print("Error fetching unseen statuses: $e");
+    }
+  }
 
   Future<void> fetchConversations() async {
     setState(() => isLoadingConversations = true);
@@ -560,19 +655,31 @@ void fetchUnseenCount() async {
       ServicesScreen(
         key: _servicesKey,
         currentUserId: widget.userData["id"] ?? -1,
-        
+         currentUser: {
+          "id": widget.userData["id"] ?? -1,
+          "username": widget.userData["username"] ?? "Username",
+          "profile_image": widget.userData["profile_image"] ?? "",
+        },
+        currentUserRole: widget.userData["role"] ?? "user",
+
       ),
       MyTasksScreen(
         currentUserId: widget.userData["id"] ?? -1,
         role: widget.role,
+        currentUser: {
+          "id": widget.userData["id"] ?? -1,
+          "username": widget.userData["username"] ?? "Username",
+          "profile_image": widget.userData["profile_image"] ?? "",
+        },
+        
       ),
       MessagesTab(
         //   key: ValueKey(unseenNotificationsCount), // 🔹 add this
-         conversations: conversations,
-  currentUserId: widget.userData['id'] ?? -1,
-  onRefresh: fetchConversations,
-  role: widget.role,
-  unseenNotificationsCount: unseenNotificationsCount,
+        conversations: conversations,
+        currentUserId: widget.userData['id'] ?? -1,
+        onRefresh: fetchConversations,
+        role: widget.role,
+        unseenNotificationsCount: unseenNotificationsCount,
         onConversationSeen: (conversationId) {
           // 🔹 Add this
           setState(() {
@@ -647,7 +754,7 @@ void fetchUnseenCount() async {
                 setState(() => _currentIndex = index);
                 if (index == 2) resetUnreadMessages();
                 if (index == 3) resetUnseenNotifications();
-               if (index == 3) resetUnseenStatus(); 
+                if (index == 3) resetUnseenStatus();
               },
               items: [
                 BottomNavigationBarItem(
@@ -722,44 +829,46 @@ void fetchUnseenCount() async {
                   ),
                   label: 'Messages',
                 ),
-               BottomNavigationBarItem(
-  icon: Stack(
-    children: [
-      AnimatedContainer(
-        duration: Duration(milliseconds: 250),
-        padding: _currentIndex == 3 ? EdgeInsets.all(6) : EdgeInsets.all(0),
-        decoration: _currentIndex == 3
-            ? BoxDecoration(
-                color: kPrimaryColor.withOpacity(0.15),
-                shape: BoxShape.circle,
-              )
-            : null,
-        child: Icon(Icons.star),
-      ),
-      if (unseenStatusCount > 0)
-        Positioned(
-          right: 0,
-          top: 0,
-          child: Container(
-            padding: EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              color:  redAccent,
-              shape: BoxShape.circle,
-            ),
-            child: Text(
-              '$unseenStatusCount',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 10,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ),
-    ],
-  ),
-  label: 'Status',
-),
+                BottomNavigationBarItem(
+                  icon: Stack(
+                    children: [
+                      AnimatedContainer(
+                        duration: Duration(milliseconds: 250),
+                        padding: _currentIndex == 3
+                            ? EdgeInsets.all(6)
+                            : EdgeInsets.all(0),
+                        decoration: _currentIndex == 3
+                            ? BoxDecoration(
+                                color: kPrimaryColor.withOpacity(0.15),
+                                shape: BoxShape.circle,
+                              )
+                            : null,
+                        child: Icon(Icons.star),
+                      ),
+                      if (unseenStatusCount > 0)
+                        Positioned(
+                          right: 0,
+                          top: 0,
+                          child: Container(
+                            padding: EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: redAccent,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Text(
+                              '$unseenStatusCount',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  label: 'Status',
+                ),
 
                 BottomNavigationBarItem(
                   icon: AnimatedContainer(
