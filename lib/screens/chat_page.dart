@@ -5,7 +5,10 @@
 // import 'package:http/http.dart' as http;
 // import '../helpers/backend.dart';
 // import '../helpers/coolors.dart';
+// import '../widgets/chat_file_helper_picker.dart';
 // import '../helpers/socket_manager.dart';
+// import 'dart:io';
+// import '../widgets/attachment_bubble.dart';
 
 // class ChatPage extends StatefulWidget {
 //   final int conversationId;
@@ -32,6 +35,8 @@
 //   String otherName = 'Unknown';
 //   String? otherAvatar;
 //   int? _conversationId;
+//   File? _selectedAttachment;
+//   String? _attachmentType; // image | video | doc
 
 //   StreamSubscription? _messageSub;
 //   StreamSubscription? _typingSub;
@@ -178,6 +183,72 @@
 //     _deleteSub?.cancel();
 //     _editSub?.cancel();
 //     super.dispose();
+//   }
+
+//   void _openAttachmentSheet(BuildContext context) {
+//     showModalBottomSheet(
+//       context: context,
+//       backgroundColor: Colors.transparent,
+//       builder: (_) {
+//         return Container(
+//           padding: const EdgeInsets.all(16),
+//           decoration: const BoxDecoration(
+//             color: Colors.white,
+//             borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+//           ),
+//           child: Column(
+//             mainAxisSize: MainAxisSize.min,
+//             children: [
+//               _attachmentTile(
+//                 icon: Icons.image,
+//                 label: "Image",
+//                 color: Colors.blue,
+//                 onTap: () async {
+//                   Navigator.pop(context);
+//                   final file = await ChatFileHelper.pickMedia(isVideo: false);
+//                   if (file != null) {
+//                     setState(() {
+//                       _selectedAttachment = file;
+//                       _attachmentType = "image";
+//                     });
+//                   }
+//                 },
+//               ),
+//               _attachmentTile(
+//                 icon: Icons.videocam,
+//                 label: "Video",
+//                 color: Colors.purple,
+//                 onTap: () async {
+//                   Navigator.pop(context);
+//                   final file = await ChatFileHelper.pickMedia(isVideo: true);
+//                   if (file != null) {
+//                     setState(() {
+//                       _selectedAttachment = file;
+//                       _attachmentType = "video";
+//                     });
+//                   }
+//                 },
+//               ),
+//               _attachmentTile(
+//                 icon: Icons.picture_as_pdf,
+//                 label: "PDF / DOC",
+//                 color: Colors.red,
+//                 onTap: () async {
+//                   Navigator.pop(context);
+//                   final file = await ChatFileHelper.pickDocument();
+//                   if (file != null) {
+//                     setState(() {
+//                       _selectedAttachment = file;
+//                       _attachmentType = "doc";
+//                     });
+//                   }
+//                 },
+//               ),
+//             ],
+//           ),
+//         );
+//       },
+//     );
 //   }
 
 //   Future<void> markMessagesSeen() async {
@@ -536,8 +607,17 @@
 //   }
 
 //   Widget buildMessageBubble(dynamic message) {
+//     // 🔥 STEP-6: Attachment message check (ADD THIS)
+//   if (message['type'] != null && message['type'] != 'text') {
+//     return AttachmentBubble(
+//       message: {
+//         ...message,
+//         "currentUserId": widget.currentUserId,
+//       },
+//     );
+//   }
 //     final isMe = message['sender_id'] == widget.currentUserId;
-//    // final messageText = message['message'] ?? '';
+//     // final messageText = message['message'] ?? '';
 //     final createdAt = message['created_at'] != null
 //         ? DateTime.tryParse(message['created_at'])?.toLocal()
 //         : null;
@@ -641,7 +721,7 @@
 //                   ),
 //                   child: Text(
 //                     'Typing...',
-//                     style: TextStyle(color:  kTextSecondary),
+//                     style: TextStyle(color: kTextSecondary),
 //                   ),
 //                 ),
 //               ],
@@ -655,22 +735,45 @@
 //     return Scaffold(
 //       backgroundColor: kBackgroundColor,
 //       appBar: AppBar(
-//         backgroundColor: kCardColor,
+//         backgroundColor: navbarColor,
+//         // ya light variant of kPrimaryColor
 //         elevation: 1,
 //         titleSpacing: 0,
+//         toolbarHeight: 80, // 👈 magic fix
+
 //         title: Row(
 //           children: [
-//             CircleAvatar(
-//               radius: 20,
-//               backgroundImage: otherAvatar != null
-//                   ? NetworkImage(otherAvatar!)
-//                   : null,
-//               child: otherAvatar == null
-//                   ? Icon(Icons.person, color: Colors.white)
-//                   : null,
-//               backgroundColor: kPrimaryColor,
+//             Container(
+//               padding: const EdgeInsets.all(2.5),
+//               decoration: BoxDecoration(
+//                 shape: BoxShape.circle,
+//                 gradient: LinearGradient(
+//                   colors: [
+//                     kPrimaryColor,
+//                     kPrimaryColor,
+//                   ],
+//                 ),
+//               ),
+//               child: ClipOval(
+//                 child: Container(
+//                   width: 56,
+//                   height: 56,
+//                   color: navbarTextColor,
+//                   //  color: _getColorFromName(otherName),
+//                   child: (otherAvatar != null && otherAvatar!.isNotEmpty)
+//                       ? Image.network(
+//                           otherAvatar!,
+//                           fit: BoxFit.cover,
+//                           errorBuilder: (context, error, stackTrace) =>
+//                               _buildInitialAvatar(otherName),
+//                         )
+//                       : _buildInitialAvatar(otherName),
+//                 ),
+//               ),
 //             ),
+
 //             SizedBox(width: 10),
+
 //             Flexible(
 //               child: Column(
 //                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -681,7 +784,7 @@
 //                     style: TextStyle(
 //                       fontSize: 16,
 //                       fontWeight: FontWeight.bold,
-//                       color: kTextPrimary,
+//                       color: navbarTextColor,
 //                     ),
 //                     overflow: TextOverflow.ellipsis,
 //                   ),
@@ -689,9 +792,7 @@
 //                     otherOnline ? 'Active' : 'Offline',
 //                     style: TextStyle(
 //                       fontSize: 12,
-//                       color: otherOnline
-//                           ? kPrimaryColor
-//                           : kTextSecondary,
+//                       color: otherOnline ? kSuccessColor : kTextHint,
 //                     ),
 //                   ),
 //                 ],
@@ -700,6 +801,7 @@
 //           ],
 //         ),
 //       ),
+
 //       body: Column(
 //         children: [
 //           Expanded(
@@ -713,61 +815,194 @@
 //             ),
 //           ),
 //           SafeArea(
-//             child: Container(
-//               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-//               decoration: BoxDecoration(
-//                 color: kCardColor,
-//                 boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 3)],
-//               ),
-//               child: Row(
-//                 children: [
-//                   Expanded(
-//                     child: TextField(
-//                       controller: _controller,
-//                       minLines: 1,
-//                       maxLines: 5,
-//                       keyboardType: TextInputType.multiline,
-//                       textInputAction: TextInputAction.newline,
-//                       decoration: InputDecoration(
-//                         hintText: 'Type a message...',
-//                         hintStyle: TextStyle(color: kTextSecondary),
-//                         border: OutlineInputBorder(
-//                           borderRadius: BorderRadius.circular(25),
-//                           borderSide: BorderSide.none,
+//             child: Column(
+//               mainAxisSize: MainAxisSize.min,
+//               children: [
+//                 // 🔹 Attachment Preview (conditionally)
+//                 if (_selectedAttachment != null)
+//                   Container(
+//                     margin: const EdgeInsets.symmetric(
+//                       horizontal: 12,
+//                       vertical: 6,
+//                     ),
+//                     padding: const EdgeInsets.all(10),
+//                     decoration: BoxDecoration(
+//                       color: kCardColor,
+//                       borderRadius: BorderRadius.circular(16),
+//                       boxShadow: const [
+//                         BoxShadow(color: Colors.black12, blurRadius: 6),
+//                       ],
+//                     ),
+//                     child: Row(
+//                       children: [
+//                         _buildAttachmentPreview(),
+//                         const SizedBox(width: 10),
+//                         Expanded(
+//                           child: Text(
+//                             _selectedAttachment!.path.split('/').last,
+//                             maxLines: 2,
+//                             overflow: TextOverflow.ellipsis,
+//                           ),
 //                         ),
-//                         fillColor:kCardColor,
-//                         filled: true,
-//                         contentPadding: EdgeInsets.symmetric(
-//                           horizontal: 16,
-//                           vertical: 12,
+//                         IconButton(
+//                           icon: const Icon(
+//                             Icons.close,
+//                             color: Colors.redAccent,
+//                           ),
+//                           onPressed: () {
+//                             setState(() {
+//                               _selectedAttachment = null;
+//                               _attachmentType = null;
+//                             });
+//                           },
+//                         ),
+//                       ],
+//                     ),
+//                   ),
+
+//                 // 🔹 Input Bar
+//                 Container(
+//                   padding: const EdgeInsets.symmetric(
+//                     horizontal: 8,
+//                     vertical: 6,
+//                   ),
+//                   decoration: BoxDecoration(
+//                     color: kCardColor,
+//                     boxShadow: const [
+//                       BoxShadow(color: Colors.black12, blurRadius: 3),
+//                     ],
+//                   ),
+//                   child: Row(
+//                     children: [
+//                       // 📎 Attachment button
+//                       IconButton(
+//                         icon: Icon(Icons.attach_file, color: kTextSecondary),
+//                         onPressed: () => _openAttachmentSheet(context),
+//                       ),
+
+//                       // 💬 TextField
+//                       Expanded(
+//                         child: TextField(
+//                           controller: _controller,
+//                           minLines: 1,
+//                           maxLines: 5,
+//                           keyboardType: TextInputType.multiline,
+//                           decoration: InputDecoration(
+//                             hintText: 'Type a message...',
+//                             border: OutlineInputBorder(
+//                               borderRadius: BorderRadius.circular(25),
+//                               borderSide: BorderSide.none,
+//                             ),
+//                             fillColor: kCardColor,
+//                             filled: true,
+//                             contentPadding: const EdgeInsets.symmetric(
+//                               horizontal: 16,
+//                               vertical: 12,
+//                             ),
+//                           ),
 //                         ),
 //                       ),
-//                       style: TextStyle(color:kTextPrimary),
-//                       onChanged: (_) {
-//                         SocketManager().setTyping(
-//                           widget.currentUserId,
-//                           _controller.text.trim().isNotEmpty,
-//                         );
-//                         setState(() {});
-//                       },
-//                     ),
+
+//                       // 🚀 Send
+//                       IconButton(
+//                         icon: Icon(
+//                           Icons.send,
+//                           color: _controller.text.trim().isEmpty
+//                               ? kTextSecondary
+//                               : kPrimaryColor,
+//                         ),
+//                         onPressed: _controller.text.trim().isEmpty
+//                             ? null
+//                             : () => sendMessage(_controller.text),
+//                       ),
+//                     ],
 //                   ),
-//                   IconButton(
-//                     icon: Icon(
-//                       Icons.send,
-//                       color: _controller.text.trim().isEmpty
-//                           ? kTextSecondary
-//                           :kPrimaryColor,
-//                     ),
-//                     onPressed: _controller.text.trim().isEmpty
-//                         ? null
-//                         : () => sendMessage(_controller.text),
-//                   ),
-//                 ],
-//               ),
+//                 ),
+//               ],
 //             ),
 //           ),
 //         ],
+//       ),
+//     );
+//   }
+
+//   Widget _buildAttachmentPreview() {
+//     if (_attachmentType == "image") {
+//       return ClipRRect(
+//         borderRadius: BorderRadius.circular(10),
+//         child: Image.file(
+//           _selectedAttachment!,
+//           width: 50,
+//           height: 50,
+//           fit: BoxFit.cover,
+//         ),
+//       );
+//     }
+
+//     IconData icon = Icons.insert_drive_file;
+//     Color color = Colors.orange;
+
+//     if (_attachmentType == "video") {
+//       icon = Icons.videocam;
+//       color = Colors.purple;
+//     } else if (_attachmentType == "doc") {
+//       icon = Icons.picture_as_pdf;
+//       color = Colors.red;
+//     }
+
+//     return CircleAvatar(
+//       backgroundColor: color.withOpacity(0.15),
+//       child: Icon(icon, color: color),
+//     );
+//   }
+
+//   Widget _attachmentTile({
+//     required IconData icon,
+//     required String label,
+//     required Color color,
+//     required VoidCallback onTap,
+//   }) {
+//     return ListTile(
+//       leading: CircleAvatar(
+//         backgroundColor: color.withOpacity(0.15),
+//         child: Icon(icon, color: color),
+//       ),
+//       title: Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
+//       onTap: onTap,
+//     );
+//   }
+
+//   // Add these helper methods inside your ChatPage widget class:
+
+//   Color _getColorFromName(String name) {
+//     final colors = [
+//       Colors.deepPurple,
+//       Colors.teal,
+//       Colors.indigo,
+//       Colors.orange,
+//       Colors.pinkAccent,
+//       Colors.cyan,
+//       Colors.blueGrey,
+//       Colors.deepOrangeAccent,
+//       Colors.green,
+//       Colors.redAccent,
+//     ];
+//     if (name.isEmpty) return Colors.grey;
+//     int hash = name.codeUnits.fold(0, (prev, elem) => prev + elem);
+//     return colors[hash % colors.length];
+//   }
+
+//   Widget _buildInitialAvatar(String name) {
+//     final initial = name.isNotEmpty ? name.trim()[0].toUpperCase() : '?';
+//     final letterColor = _getColorFromName(name);
+//     return Center(
+//       child: Text(
+//         initial,
+//         style: TextStyle(
+//           color: letterColor,
+//           fontWeight: FontWeight.bold,
+//           fontSize: 24,
+//         ),
 //       ),
 //     );
 //   }
@@ -784,7 +1019,11 @@ import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import '../helpers/backend.dart';
 import '../helpers/coolors.dart';
+import '../widgets/chat_file_helper_picker.dart';
 import '../helpers/socket_manager.dart';
+import 'dart:io';
+import '../widgets/attachment_bubble.dart';
+//import '../models/message.dart'; // 👈 Adjust the path to where your Message class lives
 
 class ChatPage extends StatefulWidget {
   final int conversationId;
@@ -811,6 +1050,10 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
   String otherName = 'Unknown';
   String? otherAvatar;
   int? _conversationId;
+  File? _selectedAttachment;
+  String? _attachmentType; // image | video | doc
+  double _uploadProgress = 0.0;
+  bool _isUploading = false;
 
   StreamSubscription? _messageSub;
   StreamSubscription? _typingSub;
@@ -956,7 +1199,95 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
     _statusSub?.cancel();
     _deleteSub?.cancel();
     _editSub?.cancel();
+    _selectedAttachment = null;
+    _isUploading = false;
     super.dispose();
+  }
+
+  void _openAttachmentSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (_) {
+        return Container(
+          padding: const EdgeInsets.all(16),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _attachmentTile(
+                icon: Icons.image,
+                label: "Image",
+                color: Colors.blue,
+                onTap: () async {
+                  Navigator.pop(context);
+                  final file = await ChatFileHelper.pickMedia(isVideo: false);
+                  if (file != null) {
+                    setState(() {
+                      _selectedAttachment = file;
+                      _attachmentType = "image";
+                    });
+                  }
+                },
+              ),
+              _attachmentTile(
+                icon: Icons.videocam,
+                label: "Video",
+                color: Colors.purple,
+                onTap: () async {
+                  Navigator.pop(context);
+                  final file = await ChatFileHelper.pickMedia(isVideo: true);
+                  if (file != null) {
+                    setState(() {
+                      _selectedAttachment = file;
+                      _attachmentType = "video";
+                    });
+                  }
+                },
+              ),
+              _attachmentTile(
+                icon: Icons.picture_as_pdf,
+                label: "PDF / DOC",
+                color: Colors.red,
+                onTap: () async {
+                  Navigator.pop(context);
+                  final file = await ChatFileHelper.pickDocument();
+                  if (file != null) {
+                    setState(() {
+                      _selectedAttachment = file;
+                      _attachmentType = "doc";
+                    });
+                  }
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _handleUploadFailure(int tempId) {
+    setState(() {
+      _isUploading = false;
+      _uploadProgress = 0;
+      messages.removeWhere((m) => m['tempId'] == tempId);
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("Upload failed"),
+        action: SnackBarAction(
+          label: "Retry",
+          onPressed: () {
+            sendAttachmentMessage();
+          },
+        ),
+      ),
+    );
   }
 
   Future<void> markMessagesSeen() async {
@@ -1019,7 +1350,9 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
           messages = (data['messages'] as List<dynamic>? ?? [])
               .where(
                 (m) =>
-                    m != null && m['sender_id'] != null && m['message'] != null,
+                    m != null &&
+                    m['sender_id'] != null &&
+                    (m['message'] != null || m['type'] != null),
               )
               .toList();
         });
@@ -1040,6 +1373,131 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
         );
       }
     });
+  }
+
+  Future<void> sendChat() async {
+    String textToSend = _controller.text.trim();
+
+    if (_selectedAttachment != null) {
+      // If there is a file, use the upload function (we pass the text too!)
+      await sendAttachmentMessage(textToSend);
+    } else if (textToSend.isNotEmpty) {
+      // If text only
+      sendMessage(textToSend);
+    }
+  }
+
+  // Add [String? text] here so it can accept the message
+  Future<void> sendAttachmentMessage([String? text]) async {
+    if (_selectedAttachment == null || _attachmentType == null) return;
+
+    final tempId = DateTime.now().millisecondsSinceEpoch;
+
+    // Use the passed text, or the controller text, or a default string
+    final String displayMsg = (text != null && text.isNotEmpty)
+        ? text
+        : (_controller.text.trim().isNotEmpty
+              ? _controller.text.trim()
+              : "Sent an attachment");
+
+    setState(() {
+      messages.add({
+        "id": null,
+        "tempId": tempId,
+        "conversation_id": _conversationId,
+        "sender_id": widget.currentUserId,
+        "type": _attachmentType,
+        "message": displayMsg,
+        "fileUrl": _selectedAttachment!.path,
+        "file": _selectedAttachment,
+        "created_at": DateTime.now().toIso8601String(),
+        "isNew": true,
+        "status": 'sending',
+      });
+
+      _isUploading = true;
+      _uploadProgress = 0;
+      _controller.clear();
+    });
+
+    try {
+      final uri = Uri.parse("${Backend.baseUrl}/messages/upload");
+      final request = http.MultipartRequest("POST", uri);
+
+      request.fields.addAll({
+        'conversation_id': _conversationId.toString(),
+        'sender_id': widget.currentUserId.toString(),
+        'senderId': widget.currentUserId.toString(),
+        'receiver_id': widget.otherUserId.toString(),
+        'message': displayMsg, // Sending the text to DB
+        'tempId': tempId.toString(),
+      });
+
+      final file = _selectedAttachment!;
+      final totalBytes = await file.length();
+
+      final stream = http.ByteStream(
+        Stream.castFrom(
+          file.openRead().transform(
+            StreamTransformer.fromHandlers(
+              handleData: (data, sink) {
+                sink.add(data);
+                setState(() {
+                  _uploadProgress += data.length / totalBytes;
+                });
+              },
+            ),
+          ),
+        ),
+      );
+
+      final multipartFile = http.MultipartFile(
+        'file',
+        stream,
+        totalBytes,
+        filename: file.path.split('/').last,
+      );
+
+      request.files.add(multipartFile);
+
+      final response = await request.send();
+      final body = await response.stream.bytesToString();
+      final data = jsonDecode(body);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final savedMsg = data['savedMessage'];
+
+        // Send both text and fileUrl to Socket
+        SocketManager().sendMessage(
+          _conversationId!,
+          widget.currentUserId,
+          widget.otherUserId,
+          displayMsg,
+          tempId,
+          type: _attachmentType,
+          fileUrl: savedMsg['file_url'],
+        );
+
+        setState(() {
+          final index = messages.indexWhere((m) => m['tempId'] == tempId);
+          if (index != -1) {
+            messages[index]['fileUrl'] = savedMsg['file_url'];
+            messages[index]['status'] = 'sent';
+            messages[index]['id'] = savedMsg['id'];
+          }
+
+          _selectedAttachment = null;
+          _attachmentType = null;
+          _uploadProgress = 0;
+          _isUploading = false;
+        });
+        scrollToBottom();
+      } else {
+        throw Exception("Upload failed");
+      }
+    } catch (e) {
+      _handleUploadFailure(tempId);
+    }
   }
 
   Future<void> sendMessage(String text) async {
@@ -1315,8 +1773,23 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
   }
 
   Widget buildMessageBubble(dynamic message) {
+    // 1️⃣ CHECK FOR ATTACHMENT
+    // We check if 'type' exists and is not 'text'
+    final bool hasAttachment =
+        message.containsKey('type') &&
+        message['type'] != null &&
+        message['type'] != 'text';
+
+    if (hasAttachment) {
+      // If it has a file, we delegate EVERYTHING to AttachmentBubble.
+      // This includes the 'message' field which now contains your text/caption.
+      return AttachmentBubble(
+        message: {...message, "currentUserId": widget.currentUserId},
+      );
+    }
+
+    // 2️⃣ TEXT-ONLY LOGIC (Standard Bubble)
     final isMe = message['sender_id'] == widget.currentUserId;
-    // final messageText = message['message'] ?? '';
     final createdAt = message['created_at'] != null
         ? DateTime.tryParse(message['created_at'])?.toLocal()
         : null;
@@ -1329,13 +1802,17 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
 
     final Color bubbleColor = isMe ? myMessageColor : otherMessageColor;
     final Color textColor = isMe ? myTextColor : otherTextColor;
+
+    // Handle Deletion Logic
     final isDeleted =
         message['deleted_for_everyone'] == true ||
         (message['deleted_for'] != null &&
             (message['deleted_for'] as List).contains(widget.currentUserId));
+
     final messageTextToShow = isDeleted
         ? 'This message was deleted'
         : (message['message'] ?? '');
+
     final textColorToShow = isDeleted ? Colors.grey : textColor;
 
     final BorderRadius borderRadius = BorderRadius.only(
@@ -1433,75 +1910,70 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: kBackgroundColor,
-    appBar: AppBar(
- backgroundColor: const Color(0xFF4A90E2).withOpacity(0.1) 
-// ya light variant of kPrimaryColor
-,
-  elevation: 1,
-  titleSpacing: 0,
-  toolbarHeight: 80, // 👈 magic fix
+      appBar: AppBar(
+        backgroundColor: navbarColor,
+        // ya light variant of kPrimaryColor
+        elevation: 1,
+        titleSpacing: 0,
+        toolbarHeight: 80, // 👈 magic fix
 
-  title: Row(
-    children: [
-      Container(
-        padding: const EdgeInsets.all(2.5),
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: LinearGradient(
-            colors: [
-              kPrimaryColor.withOpacity(0.9),
-              kPrimaryColor.withOpacity(0.9),
-            ],
-          ),
-        ),
-        child: ClipOval(
-          child: Container(
-            width: 56,
-            height: 56,
-                color: Colors.white,
-          //  color: _getColorFromName(otherName),
-            child: (otherAvatar != null && otherAvatar!.isNotEmpty)
-                ? Image.network(
-                    otherAvatar!,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) =>
-                        _buildInitialAvatar(otherName),
-                  )
-                : _buildInitialAvatar(otherName),
-          ),
-        ),
-      ),
-
-      SizedBox(width: 10),
-
-      Flexible(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
+        title: Row(
           children: [
-            Text(
-              otherName,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: kTextPrimary,
+            Container(
+              padding: const EdgeInsets.all(2.5),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  colors: [kPrimaryColor, kPrimaryColor],
+                ),
               ),
-              overflow: TextOverflow.ellipsis,
+              child: ClipOval(
+                child: Container(
+                  width: 56,
+                  height: 56,
+                  color: navbarTextColor,
+                  //  color: _getColorFromName(otherName),
+                  child: (otherAvatar != null && otherAvatar!.isNotEmpty)
+                      ? Image.network(
+                          otherAvatar!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) =>
+                              _buildInitialAvatar(otherName),
+                        )
+                      : _buildInitialAvatar(otherName),
+                ),
+              ),
             ),
-            Text(
-              otherOnline ? 'Active' : 'Offline',
-              style: TextStyle(
-                fontSize: 12,
-                color: otherOnline ? kPrimaryColor : kTextSecondary,
+
+            SizedBox(width: 10),
+
+            Flexible(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    otherName,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: navbarTextColor,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    otherOnline ? 'Active' : 'Offline',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: otherOnline ? kSuccessColor : kTextHint,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
         ),
       ),
-    ],
-  ),
-),
-
 
       body: Column(
         children: [
@@ -1511,67 +1983,231 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
               itemCount: messages.length + 1,
               itemBuilder: (context, index) {
                 if (index == messages.length) return typingIndicator();
-                return buildMessageBubble(messages[index]);
+
+                // 1. Safely handle the data
+                final dynamic rawData = messages[index];
+
+                // 2. Map the data to variables (Works for both local Map and Model)
+                // We use '??' to check both the Model properties and Map keys
+                final String? type = rawData is Map
+                    ? rawData['type']
+                    : (rawData.type);
+                final String text = rawData is Map
+                    ? (rawData['message'] ?? '')
+                    : (rawData.text);
+                final dynamic fileUrl = rawData is Map
+                    ? (rawData['fileUrl'] ?? rawData['file_url'])
+                    : (rawData.fileUrl);
+                final int? senderId = rawData is Map
+                    ? rawData['sender_id']
+                    : (rawData.senderId);
+                final dynamic msgId = rawData is Map
+                    ? rawData['id']
+                    : (rawData.id);
+
+                final bool isAttachment = type != null && type != 'text';
+
+                if (isAttachment) {
+                  return AttachmentBubble(
+                    message: {
+                      'id': msgId,
+                      'sender_id': senderId,
+                      'currentUserId': widget.currentUserId,
+                      'type': type,
+                      'message': text,
+                      'fileUrl': fileUrl,
+                      // Keep local file reference if it exists in the Map
+                      'file': rawData is Map ? rawData['file'] : null,
+                      'status': (msgId == 0 || msgId == null)
+                          ? 'sending'
+                          : 'sent',
+                      'created_at': rawData is Map
+                          ? rawData['created_at']
+                          : rawData.createdAt?.toIso8601String(),
+                    },
+                  );
+                }
+
+                // 3. For standard text messages
+                // If rawData is already a Map, pass it. If not, wrap the values in a Map.
+                return buildMessageBubble(
+                  rawData is Map
+                      ? rawData
+                      : {
+                          'id': msgId,
+                          'sender_id': senderId,
+                          'message': text,
+                          'created_at': rawData.createdAt?.toIso8601String(),
+                        },
+                );
               },
             ),
           ),
           SafeArea(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-              decoration: BoxDecoration(
-                color: kCardColor,
-                boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 3)],
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _controller,
-                      minLines: 1,
-                      maxLines: 5,
-                      keyboardType: TextInputType.multiline,
-                      textInputAction: TextInputAction.newline,
-                      decoration: InputDecoration(
-                        hintText: 'Type a message...',
-                        hintStyle: TextStyle(color: kTextSecondary),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(25),
-                          borderSide: BorderSide.none,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // 🔹 Attachment Preview (conditionally)
+                if (_selectedAttachment != null)
+                  Container(
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: kCardColor,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: const [
+                        BoxShadow(color: Colors.black12, blurRadius: 6),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        _buildAttachmentPreview(),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            _selectedAttachment!.path.split('/').last,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
-                        fillColor: kCardColor,
-                        filled: true,
-                        contentPadding: EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
+                        IconButton(
+                          icon: const Icon(
+                            Icons.close,
+                            color: Colors.redAccent,
+                          ),
+                          onPressed: () {
+                            if (_isUploading)
+                              return; // prevent cancel mid-upload
+
+                            setState(() {
+                              _selectedAttachment = null;
+                              _attachmentType = null;
+                              _uploadProgress = 0;
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+
+                // 🔹 Input Bar
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: kCardColor,
+                    boxShadow: const [
+                      BoxShadow(color: Colors.black12, blurRadius: 3),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      // 📎 Attachment button
+                      IconButton(
+                        icon: Icon(Icons.attach_file, color: kTextSecondary),
+                        onPressed: () => _openAttachmentSheet(context),
+                      ),
+
+                      // 💬 TextField
+                      Expanded(
+                        child: TextField(
+                          controller: _controller,
+                          minLines: 1,
+                          maxLines: 5,
+                          keyboardType: TextInputType.multiline,
+                          onChanged: (_) => setState(() {}),
+                          decoration: InputDecoration(
+                            hintText: 'Type a message...',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(25),
+                              borderSide: BorderSide.none,
+                            ),
+                            fillColor: kCardColor,
+                            filled: true,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                          ),
                         ),
                       ),
-                      style: TextStyle(color: kTextPrimary),
-                      onChanged: (_) {
-                        SocketManager().setTyping(
-                          widget.currentUserId,
-                          _controller.text.trim().isNotEmpty,
-                        );
-                        setState(() {});
-                      },
-                    ),
+
+                      // 🚀 Send
+                      IconButton(
+                        icon: Icon(
+                          Icons.send,
+                          color: _controller.text.trim().isEmpty
+                              ? kTextSecondary
+                              : kPrimaryColor,
+                        ),
+                        onPressed:
+                            (_controller.text.trim().isEmpty &&
+                                _selectedAttachment == null)
+                            ? null
+                            : () => sendChat(),
+                      ),
+                    ],
                   ),
-                  IconButton(
-                    icon: Icon(
-                      Icons.send,
-                      color: _controller.text.trim().isEmpty
-                          ? kTextSecondary
-                          : kPrimaryColor,
-                    ),
-                    onPressed: _controller.text.trim().isEmpty
-                        ? null
-                        : () => sendMessage(_controller.text),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildAttachmentPreview() {
+    if (_attachmentType == "image") {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(10),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: 120, maxHeight: 120),
+          child: Image.file(
+            _selectedAttachment!,
+            width: 100,
+            height: 100,
+            fit: BoxFit.cover,
+          ),
+        ),
+      );
+    }
+
+    IconData icon = Icons.insert_drive_file;
+    Color color = Colors.orange;
+
+    if (_attachmentType == "video") {
+      icon = Icons.videocam;
+      color = Colors.purple;
+    } else if (_attachmentType == "doc") {
+      icon = Icons.picture_as_pdf;
+      color = Colors.red;
+    }
+
+    return CircleAvatar(
+      backgroundColor: color.withOpacity(0.15),
+      child: Icon(icon, color: color),
+    );
+  }
+
+  Widget _attachmentTile({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return ListTile(
+      leading: CircleAvatar(
+        backgroundColor: color.withOpacity(0.15),
+        child: Icon(icon, color: color),
+      ),
+      title: Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
+      onTap: onTap,
     );
   }
 
@@ -1614,7 +2250,23 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
 
 
 
-////////////////////////////////
-///
-///
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// “Main aik service-based app bana rahi hoon, Fiverr jaisi.
+// International payments ke liye Stripe chahiye hota hai, jo Pakistan mein direct available nahi.
+// Is liye mujhe bahir ka Stripe account chahiye hoga.
+// Account aapke naam pe hoga, lekin app aur business mera hoga.
+// Main aapko full transparency aur security ke sath handle karungi.”

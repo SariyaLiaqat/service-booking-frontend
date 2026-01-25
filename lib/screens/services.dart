@@ -13,18 +13,22 @@
 // import '../widgets/Contact.dart';
 
 // class ServicesScreen extends StatefulWidget {
-
 //   final int currentUserId;
+//   final String currentUserRole;
 //   final Map<String, dynamic> currentUser;
-//   const ServicesScreen({Key? key, required this.currentUserId,  required this.currentUser,})
-//     : super(key: key);
+//   const ServicesScreen({
+//     Key? key,
+//     required this.currentUserId,
+//     required this.currentUser,
+//     required this.currentUserRole,
+//   }) : super(key: key);
 
 //   @override
 //   ServicesScreenState createState() => ServicesScreenState();
 // }
 
 // class ServicesScreenState extends State<ServicesScreen> {
-//     late Map<String, dynamic> currentUser;
+//   late Map<String, dynamic> currentUser;
 //   bool isLoading = true;
 //   bool showAllCategories = false;
 //   bool showAllPopular = false;
@@ -45,7 +49,7 @@
 //   @override
 //   void initState() {
 //     super.initState();
-//      // ✅ Use widget.currentUser directly
+//     // ✅ Use widget.currentUser directly
 //     currentUser = widget.currentUser;
 //     print("Profile Image URL: ${currentUser['profile_image']}");
 //     searchController.addListener(_onSearchChanged);
@@ -249,7 +253,7 @@
 //                   fontWeight: FontWeight.w500,
 //                 ),
 //                 decoration: InputDecoration(
-//                   hintText: 'Search for a category or service',
+//                   hintText: 'Search for a category',
 //                   hintStyle: TextStyle(color: kTextSecondary, fontSize: 15),
 //                   border: InputBorder.none,
 //                 ),
@@ -349,9 +353,7 @@
 //             child: Container(
 //               width: 120,
 //               decoration: BoxDecoration(
-//                 color: const Color(
-//                   0xFFB799F2,
-//                 ).withOpacity(0.30), // Soft glassy purple
+//                 color:kCardColor, // Soft glassy purple
 //                 borderRadius: BorderRadius.circular(12),
 //                 boxShadow: [
 //                   BoxShadow(
@@ -369,7 +371,7 @@
 //                     height: 80,
 //                     width: double.infinity,
 //                     decoration: BoxDecoration(
-//                       color: const Color(0xFFB799F2).withOpacity(0.55),
+//                       color: kCardColor,
 //                       borderRadius: BorderRadius.circular(12),
 //                     ),
 //                     child: ClipRRect(
@@ -452,7 +454,7 @@
 //                   width: 75,
 //                   height: 75,
 //                   decoration: BoxDecoration(
-//                     color: const Color(0xFFF8D7DA), // Light cute pink
+//                     color: kCardColor, // Light cute pink
 //                     borderRadius: BorderRadius.circular(16), // Soft cute box
 //                   ),
 //                   padding: const EdgeInsets.all(6), // Inner spacing
@@ -562,7 +564,7 @@
 //               },
 //               child: Container(
 //                 decoration: BoxDecoration(
-//                   color: Color(0xFFD1E7DD),
+//                   color: kCardColor,
 //                   borderRadius: BorderRadius.circular(14),
 //                   boxShadow: [
 //                     BoxShadow(
@@ -624,7 +626,7 @@
 //                 style: TextStyle(
 //                   fontSize: 15,
 //                   fontWeight: FontWeight.bold,
-//                   color: kPrimaryColor,
+//                   color: kSecondaryColor,
 //                 ),
 //               ),
 //             ),
@@ -686,8 +688,10 @@
 //             Navigator.push(
 //               context,
 //               MaterialPageRoute(
-//                 builder: (_) =>
-//                     ProviderDashboardScreen(providerId: widget.currentUserId),
+//                 builder: (_) => DashboardScreen(
+//                   userId: widget.currentUserId,
+//                   role: widget.currentUserRole,
+//                 ),
 //               ),
 //             );
 //             return;
@@ -728,10 +732,9 @@
 //                       child: Column(
 //                         crossAxisAlignment: CrossAxisAlignment.start,
 //                         children: [
-
 //                           ConfirmedTasksSection(currentUser: currentUser),
 
-//  const SizedBox(height: 12),
+//                           const SizedBox(height: 12),
 
 //                           // Popular categories
 //                           buildSectionTitle(
@@ -745,7 +748,7 @@
 //                               child: Text(
 //                                 showAllPopular ? 'Show less' : 'View all',
 //                                 style: const TextStyle(
-//                                   color: Color(0xFF6A1B9A), // dark purple
+//                                   color: kSecondaryColor, // dark purple
 //                                   fontSize: 13,
 //                                   fontWeight: FontWeight.w700,
 //                                 ),
@@ -786,20 +789,18 @@ import '../helpers/coolors.dart';
 import 'dart:convert';
 import '../helpers/backend.dart';
 import 'category_page.dart';
-import 'side_menu.dart';
-import 'dashboard.dart';
-import '../widgets/settings.dart';
-import '../widgets/Contact.dart';
 
 class ServicesScreen extends StatefulWidget {
   final int currentUserId;
   final String currentUserRole;
   final Map<String, dynamic> currentUser;
+  final GlobalKey<ScaffoldState> scaffoldKey;
   const ServicesScreen({
     Key? key,
     required this.currentUserId,
     required this.currentUser,
     required this.currentUserRole,
+    required this.scaffoldKey,
   }) : super(key: key);
 
   @override
@@ -819,7 +820,6 @@ class ServicesScreenState extends State<ServicesScreen> {
   List<dynamic> allServices = [];
 
   TextEditingController searchController = TextEditingController();
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   // small helpers to avoid magic numbers
   static const double kNavbarHeight = 60.0;
@@ -978,7 +978,6 @@ class ServicesScreenState extends State<ServicesScreen> {
       color: kBackgroundColor,
       child: Row(
         children: [
-          // App name left
           Text(
             'Servyx',
             style: TextStyle(
@@ -989,12 +988,17 @@ class ServicesScreenState extends State<ServicesScreen> {
             ),
           ),
           const Spacer(),
-          // Menu icon right
-          IconButton(
-            icon: Icon(Icons.menu, color: kTextPrimary),
-            onPressed: () {
-              _scaffoldKey.currentState?.openDrawer();
-            },
+
+          // ✅ Builder added
+          Builder(
+            builder: (context) => IconButton(
+              icon: Icon(Icons.menu, color: kTextPrimary),
+              onPressed: () {
+                print("Menu button pressed");
+                widget.scaffoldKey.currentState
+                    ?.openDrawer(); // ✅ use widget.scaffoldKey
+              },
+            ),
           ),
         ],
       ),
@@ -1132,7 +1136,7 @@ class ServicesScreenState extends State<ServicesScreen> {
             child: Container(
               width: 120,
               decoration: BoxDecoration(
-                color:kCardColor, // Soft glassy purple
+                color: kCardColor, // Soft glassy purple
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
@@ -1453,46 +1457,8 @@ class ServicesScreenState extends State<ServicesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      key: _scaffoldKey,
+      // key: _scaffoldKey,
       backgroundColor: kBackgroundColor,
-      drawer: SideMenu(
-        logoPath: "assets/images/bglogo.png",
-        primaryColor: kPrimaryColor,
-        secondaryColor: kCardColor,
-        highlightColor: kSecondaryColor,
-        selectedMenu: "Dashboard",
-        onMenuSelected: (menu) {
-          // preserve behavior — open provider screen OR settings/contact
-          if (menu == "Dashboard") {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => DashboardScreen(
-                  userId: widget.currentUserId,
-                  role: widget.currentUserRole,
-                ),
-              ),
-            );
-            return;
-          }
-          if (menu == "Settings") {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) =>
-                    SettingsScreen(currentUserId: widget.currentUserId),
-              ),
-            );
-            return;
-          } else if (menu == "Contact Us") {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => ContactUsPage()),
-            );
-            return;
-          }
-        },
-      ),
 
       body: SafeArea(
         child: Column(

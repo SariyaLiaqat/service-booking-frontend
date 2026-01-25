@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-
+import 'dart:ui';
+import '../helpers/coolors.dart';
 class MenuItemModel {
   final String title;
   final IconData icon;
@@ -51,122 +52,160 @@ class SideMenu extends StatelessWidget {
           onTap: () => onMenuSelected('Exit')),
     ];
 
-    return Drawer(
-      width: MediaQuery.of(context).size.width * 0.7,
-      backgroundColor: secondaryColor,
-      child: SafeArea(
-        child: Column(
-          children: [
-            // 🔹 Compact header (less spacing)
-           // 🔹 Better centered header
-Padding(
-  padding: const EdgeInsets.symmetric(vertical: 24),
-  child: Column(
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      // 👇 Centered logo
-      Center(
+   return Drawer(
+  width: MediaQuery.of(context).size.width * 0.62, // 👈 slim & premium
+  backgroundColor: Colors.transparent,
+  child: SafeArea(
+    child: ClipRRect(
+      borderRadius: const BorderRadius.only(
+        topRight: Radius.circular(28),
+        bottomRight: Radius.circular(28),
+      ),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
         child: Container(
-          width: 120,
-          height: 120,
           decoration: BoxDecoration(
-            shape: BoxShape.circle,
+            gradient: LinearGradient(
+              colors: [
+                secondaryColor.withOpacity(0.85),
+                secondaryColor.withOpacity(0.65),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            border: Border.all(
+              color: Colors.white.withOpacity(0.25),
+            ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black26,
-                blurRadius: 6,
-                offset: Offset(0, 3),
+                color: Colors.black.withOpacity(0.25),
+                blurRadius: 30,
+                offset: const Offset(10, 0),
               ),
             ],
           ),
-          child: ClipOval(
-            child: Image.asset(
-              logoPath,
-              fit: BoxFit.cover,
-            ),
+          child: Column(
+            children: [
+              // 🔹 Glassy Header
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 26),
+                child: Column(
+                  children: [
+                    Container(
+                      width: 110,
+                      height: 110,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.5),
+                          width: 2,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: primaryColor.withOpacity(0.35),
+                            blurRadius: 18,
+                          ),
+                        ],
+                      ),
+                      child: ClipOval(
+                        child: Image.asset(
+                          logoPath,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Connect Pro',
+                      style: TextStyle(
+                        color: primaryColor,
+                        fontSize: 19,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.4,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Your service simplified',
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.75),
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              Divider(
+                color: Colors.white.withOpacity(0.2),
+                thickness: 1,
+              ),
+
+              // 🔹 Menu items
+              Expanded(
+                child: ListView.builder(
+                  itemCount: menuItems.length,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  itemBuilder: (context, index) {
+                    final item = menuItems[index];
+                    final isSelected = item.title == selectedMenu;
+
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 6),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 250),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? primaryColor.withOpacity(0.25)
+                              : Colors.white.withOpacity(0.08),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.2),
+                          ),
+                        ),
+                        child: ListTile(
+                          leading: Icon(
+                            item.icon,
+                            color: isSelected
+                                ? primaryColor
+                                : kSecondaryColor,
+                          ),
+                          title: Text(
+                            item.title,
+                            style: TextStyle(
+                              color: isSelected
+                                  ? primaryColor
+                                  : kSecondaryColor,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          onTap: item.onTap,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+
+              // 🔹 Footer
+              Padding(
+                padding: const EdgeInsets.only(bottom: 14),
+                child: Text(
+                  "Made with ❤️ by Sariya",
+                  style: TextStyle(
+                    color: kSecondaryColor,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
-
-      const SizedBox(height: 10), // space between logo and title
-
-      // 👇 Text just below logo
-      Text(
-        'Connect Pro',
-        textAlign: TextAlign.center,
-        style: TextStyle(
-          color: primaryColor,
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      Text(
-        'Your service simplified',
-        textAlign: TextAlign.center,
-        style: TextStyle(
-          color: Colors.grey[400],
-          fontSize: 13,
-          fontWeight: FontWeight.w500,
-        ),
-      ),
-    ],
+    ),
   ),
-),
+);
 
-
-            const Divider(height: 1, color: Colors.white24),
-
-            // 🔹 Menu list (expand to take space)
-            Expanded(
-              child: ListView.builder(
-                itemCount: menuItems.length,
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                itemBuilder: (context, index) {
-                  final item = menuItems[index];
-                  final isSelected = item.title == selectedMenu;
-
-                  return Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    child: Material(
-                      color: isSelected
-                          ? primaryColor.withOpacity(0.15)
-                          : Colors.transparent,
-                      borderRadius: BorderRadius.circular(12),
-                      child: ListTile(
-                        leading: Icon(item.icon,
-                            color: isSelected ? primaryColor : highlightColor),
-                        title: Text(
-                          item.title,
-                          style: TextStyle(
-                            color: isSelected ? primaryColor : highlightColor,
-                            fontWeight: isSelected
-                                ? FontWeight.bold
-                                : FontWeight.w500,
-                          ),
-                        ),
-                        onTap: item.onTap,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                        hoverColor: primaryColor.withOpacity(0.1),
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-
-            // 🔹 Footer fixed at bottom
-            Padding(
-              padding: const EdgeInsets.only(bottom: 12, top: 4),
-              child: Text(
-                "Made With ❤️",
-                style: TextStyle(color: highlightColor, fontSize: 12),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 }

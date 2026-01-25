@@ -9,6 +9,7 @@
 // import 'package:http/http.dart' as http;
 // import '../models/status_comments_widget.dart';
 // import '../helpers/coolors.dart';
+// import 'package:flutter/services.dart';
 
 // class StatusPage extends StatefulWidget {
 //   final int currentUserId;
@@ -39,312 +40,247 @@
 //     });
 //   }
 
-//   Future<void> _openAddStatusDialog() async {
-//     final picker = ImagePicker();
-//     XFile? pickedFile;
-//     String? type;
+// Future<void> _openAddStatusDialog() async {
+//   final picker = ImagePicker();
+//   XFile? pickedFile;
+//   String? type;
 
-//     // 🌆 Step 1: Pick Image or Video (Stylish Dialog)
-//     await showDialog(
-//       context: context,
-//       barrierDismissible: true,
-//       builder: (_) => Dialog(
-//         backgroundColor: Colors.transparent,
-//         insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-//         child: Container(
-//           decoration: BoxDecoration(
-//             color: kCardColor,
-//             borderRadius: BorderRadius.circular(20),
-//             boxShadow: [
-//               BoxShadow(
-//                 color: Colors.black.withOpacity(0.3),
-//                 blurRadius: 10,
-//                 offset: const Offset(0, 5),
-//               ),
-//             ],
-//           ),
-//           padding: const EdgeInsets.all(20),
-//           child: Column(
-//             mainAxisSize: MainAxisSize.min,
-//             children: [
-//               Text(
-//                 "Add Status",
-//                 style: TextStyle(
-//                   fontSize: 20,
-//                   color: kTextPrimary,
-//                   fontWeight: FontWeight.bold,
+//   // 🌆 Step 1: Pick Image or Video
+//   await showDialog(
+//     context: context,
+//     barrierDismissible: true,
+//     builder: (_) => Dialog(
+//       backgroundColor: Colors.transparent,
+//       insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+//       child: Container(
+//         decoration: BoxDecoration(
+//           color: kCardColor,
+//           borderRadius: BorderRadius.circular(20),
+//         ),
+//         padding: const EdgeInsets.all(20),
+//         child: Column(
+//           mainAxisSize: MainAxisSize.min,
+//           children: [
+//             Text("Add Status", style: TextStyle(fontSize: 20, color: kTextPrimary, fontWeight: FontWeight.bold)),
+//             const SizedBox(height: 16),
+//             Text("Choose what you want to share:", style: TextStyle(color: kTextSecondary)),
+//             const SizedBox(height: 20),
+//             Row(
+//               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+//               children: [
+//                 ElevatedButton.icon(
+//                   style: ElevatedButton.styleFrom(backgroundColor: kSecondaryColor, foregroundColor: kTextPrimary),
+//                   icon: const Icon(Icons.image),
+//                   label: const Text("Image"),
+//                   onPressed: () async {
+//                     pickedFile = await picker.pickImage(source: ImageSource.gallery);
+//                     type = 'image';
+//                     Navigator.pop(context);
+//                   },
 //                 ),
-//               ),
-//               const SizedBox(height: 16),
-//               Text(
-//                 "Choose what you want to share:",
-//                 style: TextStyle(color: kTextSecondary),
-//               ),
-//               const SizedBox(height: 20),
-//               Row(
-//                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-//                 children: [
-//                   ElevatedButton.icon(
-//                     style: ElevatedButton.styleFrom(
-//                       backgroundColor: kSecondaryColor,
-//                       foregroundColor: kBackgroundColor,
-//                       shape: RoundedRectangleBorder(
-//                         borderRadius: BorderRadius.circular(14),
-//                       ),
-//                       padding: const EdgeInsets.symmetric(
-//                         horizontal: 16,
-//                         vertical: 12,
-//                       ),
-//                     ),
-//                     icon: const Icon(Icons.image, size: 22),
-//                     label: const Text("Image"),
-//                     onPressed: () async {
-//                       pickedFile = await picker.pickImage(
-//                         source: ImageSource.gallery,
-//                       );
-//                       type = 'image';
-//                       if (Navigator.of(context).canPop())
-//                         Navigator.of(context).pop();
-//                     },
+//                 ElevatedButton.icon(
+//                   style: ElevatedButton.styleFrom(backgroundColor: kSecondaryColor, foregroundColor: kTextPrimary),
+//                   icon: const Icon(Icons.videocam),
+//                   label: const Text("Video"),
+//                   onPressed: () async {
+//                     pickedFile = await picker.pickVideo(source: ImageSource.gallery);
+//                     type = 'video';
+//                     Navigator.pop(context);
+//                   },
+//                 ),
+//               ],
+//             ),
+//           ],
+//         ),
+//       ),
+//     ),
+//   );
+
+//   // 🚀 Step 2: Add Caption (Corrected for Keyboard)
+//   if (pickedFile != null && type != null) {
+//     TextEditingController captionController = TextEditingController();
+//     ValueNotifier<int> wordCount = ValueNotifier<int>(0);
+
+//     await showGeneralDialog(
+//       context: context,
+//       barrierDismissible: false,
+//       pageBuilder: (context, anim1, anim2) {
+//         return Scaffold(
+//           backgroundColor: Colors.black.withOpacity(0.5),
+//           body: Center(
+//             child: SingleChildScrollView(
+//               padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+//               child: Dialog(
+//                 backgroundColor: Colors.transparent,
+//                 insetPadding: const EdgeInsets.symmetric(horizontal: 16),
+//                 child: Container(
+//                   decoration: BoxDecoration(
+//                     color: kCardColor,
+//                     borderRadius: BorderRadius.circular(20),
 //                   ),
-//                   ElevatedButton.icon(
-//                     style: ElevatedButton.styleFrom(
-//                       backgroundColor: kSecondaryColor.withOpacity(0.9),
-//                       foregroundColor: kTextPrimary,
-//                       shape: RoundedRectangleBorder(
-//                         borderRadius: BorderRadius.circular(14),
+//                   padding: const EdgeInsets.all(20),
+//                   child: Column(
+//                     mainAxisSize: MainAxisSize.min,
+//                     children: [
+//                       Row(
+//                         children: [
+//                           Icon(Icons.edit_note, color: kSecondaryColor, size: 26),
+//                           const SizedBox(width: 8),
+//                           Text("Add Caption", style: TextStyle(color: kTextPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
+//                         ],
 //                       ),
-//                       padding: const EdgeInsets.symmetric(
-//                         horizontal: 16,
-//                         vertical: 12,
-//                       ),
-//                     ),
-//                     icon: const Icon(Icons.videocam, size: 22),
-//                     label: const Text("Video"),
-//                     onPressed: () async {
-//                       pickedFile = await picker.pickVideo(
-//                         source: ImageSource.gallery,
-//                       );
-//                       type = 'video';
-//                       if (Navigator.of(context).canPop())
-//                         Navigator.of(context).pop();
-//                     },
-//                   ),
-//                 ],
-//               ),
-//             ],
+//                       const SizedBox(height: 12),
+//                      // ... inside showGeneralDialog builder ...
+// ValueListenableBuilder<int>(
+//   valueListenable: wordCount,
+//   builder: (context, value, _) => TextField(
+//     controller: captionController,
+//     maxLines: 4,
+//     maxLength: 2000, // Character limit safety
+//     style: TextStyle(color: kTextPrimary),
+//     decoration: InputDecoration(
+//       hintText: "Write your caption...",
+//       hintStyle: TextStyle(color: kTextSecondary),
+//       filled: true,
+//       counterText: "", // Hides the default character counter
+//       fillColor: kCardColor.withOpacity(0.9),
+//       border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+//       suffixIcon: Padding(
+//         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+//         child: Text(
+//           "$value/300 words", // Your specific word limit
+//           style: TextStyle(
+//             color: value > 300 ? Colors.red : kSecondaryColor,
+//             fontSize: 12,
+//             fontWeight: FontWeight.bold,
 //           ),
 //         ),
 //       ),
+//     ),
+//     onChanged: (text) {
+//       // Logic to count actual words
+//       wordCount.value = text.trim().isEmpty
+//           ? 0
+//           : text.trim().split(RegExp(r'\s+')).length;
+//     },
+//   ),
+// ),
+// // ... rest of the code ...
+//                       const SizedBox(height: 16),
+//                       Row(
+//                         mainAxisAlignment: MainAxisAlignment.end,
+//                         children: [
+//                           TextButton(
+//                             onPressed: () => Navigator.pop(context),
+//                             child: Text("Cancel", style: TextStyle(color: kTextSecondary)),
+//                           ),
+//                           const SizedBox(width: 8),
+//                           ElevatedButton.icon(
+//                             style: ElevatedButton.styleFrom(backgroundColor: kSecondaryColor, foregroundColor: kTextPrimary),
+//                             icon: const Icon(Icons.cloud_upload),
+//                             label: const Text("Upload"),
+//                             onPressed: () async {
+//   // 1. Close the Caption Dialog
+//   Navigator.pop(context);
+
+//   // 2. Show the Progress Dialog
+//   _showProgressDialog(context, statusController);
+
+//   try {
+//     // 3. Wait for the actual upload to finish
+//     await statusController.uploadStatusWithMeta(
+//       pickedFile!.path,
+//       type!,
+//       captionController.text,
+//       true,
 //     );
 
-//     // 🚀 Step 2: Add Caption (only if file chosen)
-//     if (pickedFile != null && type != null) {
-//       TextEditingController captionController = TextEditingController();
+//     // 4. IMPORTANT: Wait for half a second so the user actually sees "100%"
+//     await Future.delayed(const Duration(milliseconds: 500));
+//   } catch (e) {
+//     print("Upload error: $e");
+//   } finally {
+//     // 5. Close the Progress Dialog using rootNavigator
+//     if (mounted) {
+//        Navigator.of(context, rootNavigator: true).pop();
+//     }
 
-//       await showDialog(
-//         context: context,
-//         barrierDismissible: false,
-//         builder: (context) => Dialog(
-//           backgroundColor: Colors.transparent,
-//           insetPadding: const EdgeInsets.symmetric(
-//             horizontal: 24,
-//             vertical: 24,
-//           ),
-//           child: Container(
-//             decoration: BoxDecoration(
-//               color: kCardColor,
-//               borderRadius: BorderRadius.circular(20),
-//               boxShadow: [
-//                 BoxShadow(
-//                   color: Colors.black.withOpacity(0.3),
-//                   blurRadius: 12,
-//                   offset: const Offset(0, 6),
-//                 ),
-//               ],
-//             ),
-//             padding: const EdgeInsets.all(20),
-//             child: Column(
-//               mainAxisSize: MainAxisSize.min,
-//               crossAxisAlignment: CrossAxisAlignment.start,
-//               children: [
-//                 Row(
-//                   children: [
-//                     Icon(Icons.edit_note, color: kSecondaryColor, size: 26),
-//                     const SizedBox(width: 8),
-//                     Text(
-//                       "Add Caption",
-//                       style: TextStyle(
-//                         color: kTextPrimary,
-//                         fontSize: 20,
-//                         fontWeight: FontWeight.w700,
+//     // 6. Reset progress ONLY AFTER the dialog is gone
+//     Future.delayed(const Duration(milliseconds: 200), () {
+//       statusController.uploadProgress.value = 0.0;
+//     });
+//   }
+// },
+//                           ),
+//                         ],
 //                       ),
-//                     ),
-//                   ],
-//                 ),
-//                 const SizedBox(height: 8),
-//                 Text(
-//                   "You are going to upload a public story.",
-//                   style: TextStyle(color: kTextSecondary, fontSize: 14),
-//                 ),
-//                 const SizedBox(height: 16),
-//                 TextField(
-//                   controller: captionController,
-//                   maxLines: 3,
-
-//                   textInputAction: TextInputAction.newline,
-//                   style: TextStyle(color: kTextPrimary),
-//                   decoration: InputDecoration(
-//                     hintText: "Write your caption...",
-//                     hintStyle: TextStyle(color: kTextSecondary),
-//                     filled: true,
-//                     fillColor: kCardColor.withOpacity(0.9),
-//                     contentPadding: const EdgeInsets.symmetric(
-//                       horizontal: 16,
-//                       vertical: 12,
-//                     ),
-//                     border: OutlineInputBorder(
-//                       borderRadius: BorderRadius.circular(14),
-//                       borderSide: BorderSide(
-//                         color: kSecondaryColor.withOpacity(0.4),
-//                       ),
-//                     ),
-//                     focusedBorder: OutlineInputBorder(
-//                       borderRadius: BorderRadius.circular(14),
-//                       borderSide: BorderSide(
-//                         color: kSecondaryColor,
-//                         width: 1.5,
-//                       ),
-//                     ),
+//                     ],
 //                   ),
 //                 ),
-//                 const SizedBox(height: 20),
-//                 Row(
-//                   mainAxisAlignment: MainAxisAlignment.end,
-//                   children: [
-//                     TextButton(
-//                       onPressed: () => Navigator.of(context).pop(),
-//                       child: Text(
-//                         "Cancel",
-//                         style: TextStyle(color: kTextSecondary),
-//                       ),
-//                     ),
-//                     const SizedBox(width: 8),
-//                     ElevatedButton.icon(
-//                       style: ElevatedButton.styleFrom(
-//                         backgroundColor: kSecondaryColor,
-//                         foregroundColor: kTextPrimary,
-//                         shape: RoundedRectangleBorder(
-//                           borderRadius: BorderRadius.circular(12),
-//                         ),
-//                         padding: const EdgeInsets.symmetric(
-//                           horizontal: 20,
-//                           vertical: 12,
-//                         ),
-//                       ),
-//                       icon: const Icon(Icons.cloud_upload, size: 20),
-//                       label: const Text(
-//                         "Upload",
-//                         style: TextStyle(
-//                           fontWeight: FontWeight.bold,
-//                           color: kTextPrimary,
-//                         ),
-//                       ),
-//                       onPressed: () async {
-//                         Navigator.of(context).pop(); // Close caption dialog
-
-//                         // 🌠 Step 3: Upload progress dialog
-//                         showDialog(
-//                           context: context,
-//                           barrierDismissible: false,
-//                           builder: (_) => WillPopScope(
-//                             onWillPop: () async => false,
-//                             child: Dialog(
-//                               backgroundColor: Colors.transparent,
-//                               insetPadding: EdgeInsets.all(0),
-//                               child: Center(
-//                                 child: ValueListenableBuilder<double>(
-//                                   valueListenable:
-//                                       statusController.uploadProgress,
-//                                   builder: (context, progress, _) {
-//                                     if (progress >= 1.0) {
-//                                       Future.delayed(
-//                                         const Duration(seconds: 1),
-//                                         () {
-//                                           if (Navigator.of(
-//                                             context,
-//                                             rootNavigator: true,
-//                                           ).canPop()) {
-//                                             Navigator.of(
-//                                               context,
-//                                               rootNavigator: true,
-//                                             ).pop();
-//                                           }
-//                                         },
-//                                       );
-//                                     }
-
-//                                     return Container(
-//                                       padding: const EdgeInsets.all(20),
-//                                       decoration: BoxDecoration(
-//                                         color: kTextPrimary,
-//                                         borderRadius: BorderRadius.circular(16),
-//                                       ),
-//                                       child: Column(
-//                                         mainAxisSize: MainAxisSize.min,
-//                                         children: [
-//                                           CircularProgressIndicator(
-//                                             value: progress.clamp(0.0, 1.0),
-//                                             color: kPrimaryColor,
-//                                           ),
-//                                           const SizedBox(height: 12),
-//                                           Text(
-//                                             progress < 1.0
-//                                                 ? "Uploading... ${(progress * 100).toStringAsFixed(0)}%"
-//                                                 : "Upload Complete",
-//                                             style: TextStyle(
-//                                               color: kTextPrimary,
-//                                               fontWeight: FontWeight.w500,
-//                                             ),
-//                                           ),
-//                                         ],
-//                                       ),
-//                                     );
-//                                   },
-//                                 ),
-//                               ),
-//                             ),
-//                           ),
-//                         );
-
-//                         // 🌍 Step 4: Upload Logic (original intact)
-//                         await statusController.uploadStatusWithMeta(
-//                           pickedFile!.path,
-//                           type!,
-//                           captionController.text,
-//                           true, // Always public
-//                         );
-
-//                         // ✅ Step 5: Reset and Close
-//                         statusController.uploadProgress.value = 0.0;
-//                         if (Navigator.of(
-//                           context,
-//                           rootNavigator: true,
-//                         ).canPop()) {
-//                           Navigator.of(context, rootNavigator: true).pop();
-//                         }
-//                       },
-//                     ),
-//                   ],
-//                 ),
-//               ],
+//               ),
 //             ),
 //           ),
-//         ),
-//       );
-//     }
+//         );
+//       },
+//     );
 //   }
+// }
 
+// // Separate helper for cleaner code
+// // 📍 Updated helper with controller parameter
+// void _showProgressDialog(BuildContext context, StatusController controller) {
+//   showDialog(
+//     context: context,
+//     barrierDismissible: false,
+//     builder: (_) => WillPopScope(
+//       onWillPop: () async => false,
+//       child: Center(
+//         child: ValueListenableBuilder<double>(
+//           valueListenable: controller.uploadProgress,
+//           builder: (context, progress, _) {
+//             return Container(
+//               padding: const EdgeInsets.all(25),
+//               decoration: BoxDecoration(
+//                 color: kCardColor,
+//                 borderRadius: BorderRadius.circular(16)
+//               ),
+//               child: Column(
+//                 mainAxisSize: MainAxisSize.min,
+//                 children: [
+//                   // 👑 Percentage inside the circle
+//                   Stack(
+//                     alignment: Alignment.center,
+//                     children: [
+//                       CircularProgressIndicator(
+//                         value: progress.clamp(0.01, 1.0), // 0.01 keeps it visible at start
+//                         color: kPrimaryColor,
+//                         strokeWidth: 5,
+//                       ),
+//                       Text(
+//                         "${(progress * 100).toInt()}%",
+//                         style: TextStyle(
+//                           color: kTextPrimary,
+//                           fontSize: 10,
+//                           fontWeight: FontWeight.bold
+//                         ),
+//                       ),
+//                     ],
+//                   ),
+//                   const SizedBox(height: 15),
+//                   Text(
+//   progress >= 1.0 ? "Uploaded ✅" : "Uploading...",
+//   style: TextStyle(color: kTextPrimary),
+// ),
+
+//                 ],
+//               ),
+//             );
+//           },
+//         ),
+//       ),
+//     ),
+//   );
+// }
 //   @override
 //   Widget build(BuildContext context) {
 //     return ChangeNotifierProvider.value(
@@ -458,58 +394,78 @@
 //                         // Caption & uploader name
 //                         if (status.caption != null ||
 //                             status.uploaderName != null)
-//                           Positioned(
-//                             left: 20,
-//                             bottom: 50,
-//                             right: 100,
-//                             child: Container(
-//                               padding: const EdgeInsets.all(8),
-//                               decoration: BoxDecoration(
-//                                 color: Colors.black54,
-//                                 borderRadius: BorderRadius.circular(8),
-//                               ),
-//                               child: Column(
-//                                 crossAxisAlignment: CrossAxisAlignment.start,
-//                                 children: [
-//                                   if (status.uploaderName != null)
-//                                     Text(
-//                                       status.uploaderName!,
-//                                       style: const TextStyle(
-//                                         color: Colors.white,
-//                                         fontWeight: FontWeight.bold,
-//                                         fontSize: 18,
-//                                         shadows: [
-//                                           Shadow(
-//                                             color: Colors.black87,
-//                                             offset: Offset(1, 1),
-//                                             blurRadius: 2,
-//                                           ),
-//                                         ],
-//                                       ),
-//                                     ),
-//                                   if (status.caption != null &&
-//                                       status.caption!.isNotEmpty)
-//                                     Text(
-//                                       status.caption!,
-//                                       maxLines: 2,
-//                                       overflow: TextOverflow.ellipsis,
-//                                       style: const TextStyle(
-//                                         color: Colors.white70,
-//                                         fontSize: 16,
-//                                         shadows: [
-//                                           Shadow(
-//                                             color: Colors.black87,
-//                                             offset: Offset(1, 1),
-//                                             blurRadius: 2,
-//                                           ),
-//                                         ],
-//                                       ),
-//                                     ),
-//                                 ],
-//                               ),
-//                             ),
-//                           ),
+//                          // 📍 UPDATE THIS SECTION: Caption & uploader name
+//    // 📍 UPDATE YOUR POSITIONED WIDGET HERE
+// Positioned(
+//   left: 20,
+//   bottom: 50,
+//   right: 80, // Giving it a bit more width
+//   child: StatefulBuilder(
+//     builder: (context, setElementState) {
+//       final String captionText = status.caption ?? "";
+//       final bool isLongText = captionText.length > 60;
 
+//       return Container(
+//         padding: const EdgeInsets.all(10),
+//         decoration: BoxDecoration(
+//           color: Colors.black54,
+//           borderRadius: BorderRadius.circular(12),
+//         ),
+//         child: Column(
+//           crossAxisAlignment: CrossAxisAlignment.start,
+//           mainAxisSize: MainAxisSize.min,
+//           children: [
+//             if (status.uploaderName != null)
+//               Text(
+//                 status.uploaderName!,
+//                 style: const TextStyle(
+//                   color: Colors.white,
+//                   fontWeight: FontWeight.bold,
+//                   fontSize: 16,
+//                 ),
+//               ),
+//             if (captionText.isNotEmpty) ...[
+//               const SizedBox(height: 4),
+//               GestureDetector(
+//                 onTap: () {
+//                   if (isLongText) {
+//                     setElementState(() => status.isExpanded = !status.isExpanded);
+//                   }
+//                 },
+//                 child: Column(
+//                   crossAxisAlignment: CrossAxisAlignment.start,
+//                   children: [
+//                     Text(
+//                       captionText,
+//                       // Removed the ?? false because isExpanded is non-nullable
+//                       maxLines: status.isExpanded ? 10 : 2,
+//                       overflow: status.isExpanded
+//                           ? TextOverflow.visible
+//                           : TextOverflow.ellipsis,
+//                       style: const TextStyle(color: Colors.white70, fontSize: 14),
+//                     ),
+//                     if (isLongText)
+//                       Padding(
+//                        padding: const EdgeInsets.only(top: 4),
+//                         child: Text(
+//                           status.isExpanded ? "Show less" : "Show more",
+//                           style: TextStyle(
+//                             color: kSecondaryColor,
+//                             fontWeight: FontWeight.bold,
+//                             fontSize: 12,
+//                           ),
+//                         ),
+//                       ),
+//                   ],
+//                 ),
+//               ),
+//             ],
+//           ],
+//         ),
+//       );
+//     },
+//   ),
+// ),
 //                         // Right side buttons
 //                         Positioned(
 //                           right: 20,
@@ -517,6 +473,82 @@
 //                           child: Column(
 //                             mainAxisSize: MainAxisSize.min,
 //                             children: [
+//                               // Profile button
+//                             Material(
+//   color: Colors.transparent,
+//   shape: const CircleBorder(),
+//   child: InkWell(
+//     customBorder: const CircleBorder(),
+//     splashColor: Colors.white24,
+//     highlightColor: Colors.white10,
+//     onTap: () async {
+//       if (status.uploaderUserId == null) return;
+
+//       if (!status.isViewed) {
+//         await context
+//             .read<StatusController>()
+//             .markStatusAsViewed(status.id);
+//         widget.onViewed?.call();
+//       }
+
+//       final url = Uri.parse(
+//         '${Backend.baseUrl}/provider/services/providers/${status.uploaderUserId}',
+//       );
+
+//       final res = await http.get(url);
+//       if (res.statusCode != 200) return;
+
+//       final data = jsonDecode(res.body)['provider'] ?? {};
+
+//       Navigator.push(
+//         context,
+//         MaterialPageRoute(
+//           builder: (_) => MyProfileScreen(
+//             userData: data,
+//             readOnly:
+//                 widget.currentUserId != status.uploaderUserId,
+//             currentUserId: widget.currentUserId,
+//           ),
+//         ),
+//       );
+//     },
+//     child: Container(
+//       padding: const EdgeInsets.all(2),
+//       decoration: BoxDecoration(
+//         shape: BoxShape.circle,
+//         border: Border.all(
+//           color: status.isViewed
+//               ? Colors.grey
+//               : Colors.green,
+//           width: 3,
+//         ),
+//       ),
+//       child: CircleAvatar(
+//         radius: 28,
+//         backgroundColor: Colors.black45,
+//         backgroundImage:
+//             (status.uploaderAvatarUrl != null &&
+//                     status.uploaderAvatarUrl!.isNotEmpty)
+//                 ? NetworkImage(
+//                     Backend.buildMediaUrl(
+//                       status.uploaderAvatarUrl!,
+//                     ),
+//                   )
+//                 : null,
+//         child: (status.uploaderAvatarUrl == null ||
+//                 status.uploaderAvatarUrl!.isEmpty)
+//             ? const Icon(
+//                 Icons.person,
+//                 color: Colors.white,
+//                 size: 28,
+//               )
+//             : null,
+//       ),
+//     ),
+//   ),
+// ),
+
+//                               const SizedBox(height: 18),
 //                               // Like button
 //                               GestureDetector(
 //                                 onTap: () async {
@@ -568,66 +600,6 @@
 //                                       ),
 //                                     ),
 //                                   ],
-//                                 ),
-//                               ),
-
-//                               const SizedBox(height: 18),
-
-//                               // Profile button
-//                               Container(
-//                                 padding: const EdgeInsets.all(2),
-//                                 decoration: BoxDecoration(
-//                                   shape: BoxShape.circle,
-//                                   border: Border.all(
-//                                     color: status.isViewed
-//                                         ? Colors.grey
-//                                         : Colors.green,
-//                                     width: 3,
-//                                   ),
-//                                 ),
-//                                 child: CircleAvatar(
-//                                   radius: 28,
-//                                   backgroundColor: Colors.black45,
-//                                   child: IconButton(
-//                                     icon: const Icon(
-//                                       Icons.person,
-//                                       color: Colors.white,
-//                                       size: 28,
-//                                     ),
-//                                     onPressed: () async {
-//                                       // Navigate to profile
-//                                       if (status.uploaderUserId == null) return;
-//                                       if (!status.isViewed) {
-//                                         await context
-//                                             .read<StatusController>()
-//                                             .markStatusAsViewed(
-//                                               status.id,
-//                                             ); // ✅ Controller ka method call karo
-//                                         widget.onViewed?.call();
-//                                       }
-
-//                                       final url = Uri.parse(
-//                                         '${Backend.baseUrl}/provider/services/providers/${status.uploaderUserId}',
-//                                       );
-//                                       final res = await http.get(url);
-//                                       if (res.statusCode != 200) return;
-//                                       final data =
-//                                           jsonDecode(res.body)['provider'] ??
-//                                           {};
-//                                       Navigator.push(
-//                                         context,
-//                                         MaterialPageRoute(
-//                                           builder: (_) => MyProfileScreen(
-//                                             userData: data,
-//                                             readOnly:
-//                                                 widget.currentUserId !=
-//                                                 status.uploaderUserId,
-//                                             currentUserId: widget.currentUserId,
-//                                           ),
-//                                         ),
-//                                       );
-//                                     },
-//                                   ),
 //                                 ),
 //                               ),
 
@@ -698,6 +670,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/status_comments_widget.dart';
 import '../helpers/coolors.dart';
+import 'package:flutter/services.dart';
 
 class StatusPage extends StatefulWidget {
   final int currentUserId;
@@ -733,7 +706,7 @@ class _StatusPageState extends State<StatusPage> {
     XFile? pickedFile;
     String? type;
 
-    // 🌆 Step 1: Pick Image or Video (Stylish Dialog)
+    // 🌆 Step 1: Pick Image or Video
     await showDialog(
       context: context,
       barrierDismissible: true,
@@ -744,13 +717,6 @@ class _StatusPageState extends State<StatusPage> {
           decoration: BoxDecoration(
             color: kCardColor,
             borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.3),
-                blurRadius: 10,
-                offset: const Offset(0, 5),
-              ),
-            ],
           ),
           padding: const EdgeInsets.all(20),
           child: Column(
@@ -776,47 +742,31 @@ class _StatusPageState extends State<StatusPage> {
                   ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: kSecondaryColor,
-                      foregroundColor: kBackgroundColor,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
+                      foregroundColor: kTextPrimary,
                     ),
-                    icon: const Icon(Icons.image, size: 22),
+                    icon: const Icon(Icons.image),
                     label: const Text("Image"),
                     onPressed: () async {
                       pickedFile = await picker.pickImage(
                         source: ImageSource.gallery,
                       );
                       type = 'image';
-                      if (Navigator.of(context).canPop())
-                        Navigator.of(context).pop();
+                      Navigator.pop(context);
                     },
                   ),
                   ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: kSecondaryColor.withOpacity(0.9),
+                      backgroundColor: kSecondaryColor,
                       foregroundColor: kTextPrimary,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
                     ),
-                    icon: const Icon(Icons.videocam, size: 22),
+                    icon: const Icon(Icons.videocam),
                     label: const Text("Video"),
                     onPressed: () async {
                       pickedFile = await picker.pickVideo(
                         source: ImageSource.gallery,
                       );
                       type = 'video';
-                      if (Navigator.of(context).canPop())
-                        Navigator.of(context).pop();
+                      Navigator.pop(context);
                     },
                   ),
                 ],
@@ -827,212 +777,227 @@ class _StatusPageState extends State<StatusPage> {
       ),
     );
 
-    // 🚀 Step 2: Add Caption (only if file chosen)
+    // 🚀 Step 2: Add Caption (Corrected for Keyboard)
     if (pickedFile != null && type != null) {
       TextEditingController captionController = TextEditingController();
+      ValueNotifier<int> wordCount = ValueNotifier<int>(0);
 
-      await showDialog(
+      await showGeneralDialog(
         context: context,
         barrierDismissible: false,
-        builder: (context) => Dialog(
-          backgroundColor: Colors.transparent,
-          insetPadding: const EdgeInsets.symmetric(
-            horizontal: 24,
-            vertical: 24,
-          ),
-          child: Container(
-            decoration: BoxDecoration(
-              color: kCardColor,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.3),
-                  blurRadius: 12,
-                  offset: const Offset(0, 6),
+        pageBuilder: (context, anim1, anim2) {
+          return Scaffold(
+            backgroundColor: Colors.black.withOpacity(0.5),
+            body: Center(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).viewInsets.bottom,
                 ),
-              ],
-            ),
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(Icons.edit_note, color: kSecondaryColor, size: 26),
-                    const SizedBox(width: 8),
-                    Text(
-                      "Add Caption",
-                      style: TextStyle(
-                        color: kTextPrimary,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                      ),
+                child: Dialog(
+                  backgroundColor: Colors.transparent,
+                  insetPadding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: kCardColor,
+                      borderRadius: BorderRadius.circular(20),
                     ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  "You are going to upload a public story.",
-                  style: TextStyle(color: kTextSecondary, fontSize: 14),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: captionController,
-                  maxLines: 3,
-
-                  textInputAction: TextInputAction.newline,
-                  style: TextStyle(color: kTextPrimary),
-                  decoration: InputDecoration(
-                    hintText: "Write your caption...",
-                    hintStyle: TextStyle(color: kTextSecondary),
-                    filled: true,
-                    fillColor: kCardColor.withOpacity(0.9),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14),
-                      borderSide: BorderSide(
-                        color: kSecondaryColor.withOpacity(0.4),
-                      ),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14),
-                      borderSide: BorderSide(
-                        color: kSecondaryColor,
-                        width: 1.5,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: Text(
-                        "Cancel",
-                        style: TextStyle(color: kTextSecondary),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: kSecondaryColor,
-                        foregroundColor: kTextPrimary,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.edit_note,
+                              color: kSecondaryColor,
+                              size: 26,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              "Add Caption",
+                              style: TextStyle(
+                                color: kTextPrimary,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
                         ),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 12,
-                        ),
-                      ),
-                      icon: const Icon(Icons.cloud_upload, size: 20),
-                      label: const Text(
-                        "Upload",
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: kTextPrimary,
-                        ),
-                      ),
-                      onPressed: () async {
-                        Navigator.of(context).pop(); // Close caption dialog
-
-                        // 🌠 Step 3: Upload progress dialog
-                        showDialog(
-                          context: context,
-                          barrierDismissible: false,
-                          builder: (_) => WillPopScope(
-                            onWillPop: () async => false,
-                            child: Dialog(
-                              backgroundColor: Colors.transparent,
-                              insetPadding: EdgeInsets.all(0),
-                              child: Center(
-                                child: ValueListenableBuilder<double>(
-                                  valueListenable:
-                                      statusController.uploadProgress,
-                                  builder: (context, progress, _) {
-                                    if (progress >= 1.0) {
-                                      Future.delayed(
-                                        const Duration(seconds: 1),
-                                        () {
-                                          if (Navigator.of(
-                                            context,
-                                            rootNavigator: true,
-                                          ).canPop()) {
-                                            Navigator.of(
-                                              context,
-                                              rootNavigator: true,
-                                            ).pop();
-                                          }
-                                        },
-                                      );
-                                    }
-
-                                    return Container(
-                                      padding: const EdgeInsets.all(20),
-                                      decoration: BoxDecoration(
-                                        color: kTextPrimary,
-                                        borderRadius: BorderRadius.circular(16),
-                                      ),
-                                      child: Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          CircularProgressIndicator(
-                                            value: progress.clamp(0.0, 1.0),
-                                            color: kPrimaryColor,
-                                          ),
-                                          const SizedBox(height: 12),
-                                          Text(
-                                            progress < 1.0
-                                                ? "Uploading... ${(progress * 100).toStringAsFixed(0)}%"
-                                                : "Upload Complete",
-                                            style: TextStyle(
-                                              color: kTextPrimary,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    );
-                                  },
+                        const SizedBox(height: 12),
+                        // ... inside showGeneralDialog builder ...
+                        ValueListenableBuilder<int>(
+                          valueListenable: wordCount,
+                          builder: (context, value, _) => TextField(
+                            controller: captionController,
+                            maxLines: 4,
+                            maxLength: 2000, // Character limit safety
+                            style: TextStyle(color: kTextPrimary),
+                            decoration: InputDecoration(
+                              hintText: "Write your caption...",
+                              hintStyle: TextStyle(color: kTextSecondary),
+                              filled: true,
+                              counterText:
+                                  "", // Hides the default character counter
+                              fillColor: kCardColor.withOpacity(0.9),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              suffixIcon: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 8,
+                                ),
+                                child: Text(
+                                  "$value/300 words", // Your specific word limit
+                                  style: TextStyle(
+                                    color: value > 300
+                                        ? Colors.red
+                                        : kSecondaryColor,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ),
                             ),
+                            onChanged: (text) {
+                              // Logic to count actual words
+                              wordCount.value = text.trim().isEmpty
+                                  ? 0
+                                  : text.trim().split(RegExp(r'\s+')).length;
+                            },
                           ),
-                        );
+                        ),
+                        // ... rest of the code ...
+                        const SizedBox(height: 16),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: Text(
+                                "Cancel",
+                                style: TextStyle(color: kTextSecondary),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: kSecondaryColor,
+                                foregroundColor: kTextPrimary,
+                              ),
+                              icon: const Icon(Icons.cloud_upload),
+                              label: const Text("Upload"),
+                              onPressed: () async {
+                                Navigator.pop(context); // Close caption dialog
+                                //  _showProgressDialog(context, statusController);
 
-                        // 🌍 Step 4: Upload Logic (original intact)
-                        await statusController.uploadStatusWithMeta(
-                          pickedFile!.path,
-                          type!,
-                          captionController.text,
-                          true, // Always public
-                        );
+                                try {
+                                  await statusController.uploadStatusWithMeta(
+                                    pickedFile!.path,
+                                    type!,
+                                    captionController.text,
+                                    true,
+                                  );
 
-                        // ✅ Step 5: Reset and Close
-                        statusController.uploadProgress.value = 0.0;
-                        if (Navigator.of(
-                          context,
-                          rootNavigator: true,
-                        ).canPop()) {
-                          Navigator.of(context, rootNavigator: true).pop();
-                        }
-                      },
+                                  // Give user time to see the 100%
+                                  await Future.delayed(
+                                    const Duration(milliseconds: 800),
+                                  );
+                                } catch (e) {
+                                  print("Upload error: $e");
+                                } finally {
+                                  if (mounted) {
+                                    // 1. Close the Progress Dialog first
+                                    Navigator.of(
+                                      context,
+                                      rootNavigator: true,
+                                    ).pop();
+
+                                    // 2. WAIT for the closing animation to finish before resetting to 0%
+                                    // This prevents the "jump" back to 0 while the circle is still on screen
+                                    Future.delayed(
+                                      const Duration(milliseconds: 300),
+                                      () {
+                                        statusController.uploadProgress.value =
+                                            0.0;
+                                      },
+                                    );
+                                  }
+                                }
+                              },
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
-              ],
+              ),
             ),
-          ),
-        ),
+          );
+        },
       );
     }
   }
+
+  // // Separate helper for cleaner code
+  // // 📍 Updated helper with controller parameter
+  // void _showProgressDialog(BuildContext context, StatusController controller) {
+  //   showDialog(
+  //     context: context,
+  //     barrierDismissible: false,
+  //     builder: (_) => PopScope(
+  //       // 👑 canPop: false prevents the back button from closing the dialog while uploading
+  //       canPop: false,
+  //       onPopInvoked: (didPop) {
+  //         if (didPop) return;
+  //         // Optionally show a toast: "Please wait for upload to finish"
+  //       },
+  //       child: Center(
+  //         child: ValueListenableBuilder<double>(
+  //           valueListenable: controller.uploadProgress,
+  //           builder: (context, progress, _) {
+  //             return Container(
+  //               padding: const EdgeInsets.all(25),
+  //               decoration: BoxDecoration(
+  //                 color: kCardColor,
+  //                 borderRadius: BorderRadius.circular(16),
+  //               ),
+  //               child: Column(
+  //                 mainAxisSize: MainAxisSize.min,
+  //                 children: [
+  //                   Stack(
+  //                     alignment: Alignment.center,
+  //                     children: [
+  //                       CircularProgressIndicator(
+  //                         value: progress.clamp(0.01, 1.0),
+  //                         color: kPrimaryColor,
+  //                         strokeWidth: 5,
+  //                       ),
+  //                       Text(
+  //                         "${(progress * 100).toInt()}%",
+  //                         style: TextStyle(
+  //                           color: kTextPrimary,
+  //                           fontSize: 10,
+  //                           fontWeight: FontWeight.bold,
+  //                         ),
+  //                       ),
+  //                     ],
+  //                   ),
+  //                   const SizedBox(height: 15),
+  //                   Text(
+  //                     progress >= 1.0 ? "Uploaded ✅" : "Uploading...",
+  //                     style: TextStyle(color: kTextPrimary),
+  //                   ),
+  //                 ],
+  //               ),
+  //             );
+  //           },
+  //         ),
+  //       ),
+  //     ),
+  //   );
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -1042,6 +1007,24 @@ class _StatusPageState extends State<StatusPage> {
         backgroundColor: kTextPrimary,
         body: Stack(
           children: [
+            // 👑 Add this at the very top of the Stack
+            ValueListenableBuilder<double>(
+              valueListenable: statusController.uploadProgress,
+              builder: (context, progress, _) {
+                return progress > 0 && progress < 1.0
+                    ? Positioned(
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        child: LinearProgressIndicator(
+                          value: progress,
+                          backgroundColor: Colors.white24,
+                          color: kPrimaryColor,
+                        ),
+                      )
+                    : const SizedBox.shrink();
+              },
+            ),
             Consumer<StatusController>(
               builder: (context, controller, _) {
                 if (controller.isLoading) {
@@ -1147,58 +1130,94 @@ class _StatusPageState extends State<StatusPage> {
                         // Caption & uploader name
                         if (status.caption != null ||
                             status.uploaderName != null)
+                          // 📍 UPDATE THIS SECTION: Caption & uploader name
+                          // 📍 UPDATE YOUR POSITIONED WIDGET HERE
                           Positioned(
                             left: 20,
                             bottom: 50,
-                            right: 100,
-                            child: Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: Colors.black54,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  if (status.uploaderName != null)
-                                    Text(
-                                      status.uploaderName!,
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 18,
-                                        shadows: [
-                                          Shadow(
-                                            color: Colors.black87,
-                                            offset: Offset(1, 1),
-                                            blurRadius: 2,
+                            right: 80, // Giving it a bit more width
+                            child: StatefulBuilder(
+                              builder: (context, setElementState) {
+                                final String captionText = status.caption ?? "";
+                                final bool isLongText = captionText.length > 60;
+
+                                return Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: Colors.black54,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      if (status.uploaderName != null)
+                                        Text(
+                                          status.uploaderName!,
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
                                           ),
-                                        ],
-                                      ),
-                                    ),
-                                  if (status.caption != null &&
-                                      status.caption!.isNotEmpty)
-                                    Text(
-                                      status.caption!,
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                        color: Colors.white70,
-                                        fontSize: 16,
-                                        shadows: [
-                                          Shadow(
-                                            color: Colors.black87,
-                                            offset: Offset(1, 1),
-                                            blurRadius: 2,
+                                        ),
+                                      if (captionText.isNotEmpty) ...[
+                                        const SizedBox(height: 4),
+                                        GestureDetector(
+                                          onTap: () {
+                                            if (isLongText) {
+                                              setElementState(
+                                                () => status.isExpanded =
+                                                    !status.isExpanded,
+                                              );
+                                            }
+                                          },
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                captionText,
+                                                // Removed the ?? false because isExpanded is non-nullable
+                                                maxLines: status.isExpanded
+                                                    ? 10
+                                                    : 2,
+                                                overflow: status.isExpanded
+                                                    ? TextOverflow.visible
+                                                    : TextOverflow.ellipsis,
+                                                style: const TextStyle(
+                                                  color: Colors.white70,
+                                                  fontSize: 14,
+                                                ),
+                                              ),
+                                              if (isLongText)
+                                                Padding(
+                                                  padding:
+                                                      const EdgeInsets.only(
+                                                        top: 4,
+                                                      ),
+                                                  child: Text(
+                                                    status.isExpanded
+                                                        ? "Show less"
+                                                        : "Show more",
+                                                    style: TextStyle(
+                                                      color: kSecondaryColor,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      fontSize: 12,
+                                                    ),
+                                                  ),
+                                                ),
+                                            ],
                                           ),
-                                        ],
-                                      ),
-                                    ),
-                                ],
-                              ),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                );
+                              },
                             ),
                           ),
-
                         // Right side buttons
                         Positioned(
                           right: 20,
@@ -1207,78 +1226,85 @@ class _StatusPageState extends State<StatusPage> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               // Profile button
-                              Container(
-                                padding: const EdgeInsets.all(2),
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: status.isViewed
-                                        ? Colors.grey
-                                        : Colors.green,
-                                    width: 3,
+                              Material(
+                                color: Colors.transparent,
+                                shape: const CircleBorder(),
+                                child: InkWell(
+                                  customBorder: const CircleBorder(),
+                                  splashColor: Colors.white24,
+                                  highlightColor: Colors.white10,
+                                  onTap: () async {
+                                    if (status.uploaderUserId == null) return;
+
+                                    if (!status.isViewed) {
+                                      await context
+                                          .read<StatusController>()
+                                          .markStatusAsViewed(status.id);
+                                      widget.onViewed?.call();
+                                    }
+
+                                    final url = Uri.parse(
+                                      '${Backend.baseUrl}/provider/services/providers/${status.uploaderUserId}',
+                                    );
+
+                                    final res = await http.get(url);
+                                    if (res.statusCode != 200) return;
+
+                                    final data =
+                                        jsonDecode(res.body)['provider'] ?? {};
+
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => MyProfileScreen(
+                                          userData: data,
+                                          readOnly:
+                                              widget.currentUserId !=
+                                              status.uploaderUserId,
+                                          currentUserId: widget.currentUserId,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.all(2),
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: status.isViewed
+                                            ? Colors.grey
+                                            : Colors.green,
+                                        width: 3,
+                                      ),
+                                    ),
+                                    child: CircleAvatar(
+                                      radius: 28,
+                                      backgroundColor: Colors.black45,
+                                      backgroundImage:
+                                          (status.uploaderAvatarUrl != null &&
+                                              status
+                                                  .uploaderAvatarUrl!
+                                                  .isNotEmpty)
+                                          ? NetworkImage(
+                                              Backend.buildMediaUrl(
+                                                status.uploaderAvatarUrl!,
+                                              ),
+                                            )
+                                          : null,
+                                      child:
+                                          (status.uploaderAvatarUrl == null ||
+                                              status.uploaderAvatarUrl!.isEmpty)
+                                          ? const Icon(
+                                              Icons.person,
+                                              color: Colors.white,
+                                              size: 28,
+                                            )
+                                          : null,
+                                    ),
                                   ),
                                 ),
-                                child: CircleAvatar(
-                                  radius: 28,
-                                  backgroundColor: Colors.black45,
-                                  backgroundImage:
-                                      (status.uploaderAvatarUrl != null &&
-                                          status.uploaderAvatarUrl!.isNotEmpty)
-                                      ? NetworkImage(
-                                          Backend.buildMediaUrl(
-                                            status.uploaderAvatarUrl!,
-                                          ),
-                                        ) // ✅ convert relative path to full URL
-                                      : null, // fallback if no image
-                                  child:
-                                      (status.uploaderAvatarUrl == null ||
-                                          status.uploaderAvatarUrl!.isEmpty)
-                                      ? IconButton(
-                                          icon: const Icon(
-                                            Icons.person,
-                                            color: Colors.white,
-                                            size: 28,
-                                          ),
-                                          onPressed: () async {
-                                            if (status.uploaderUserId == null)
-                                              return;
-                                            if (!status.isViewed) {
-                                              await context
-                                                  .read<StatusController>()
-                                                  .markStatusAsViewed(
-                                                    status.id,
-                                                  );
-                                              widget.onViewed?.call();
-                                            }
-
-                                            final url = Uri.parse(
-                                              '${Backend.baseUrl}/provider/services/providers/${status.uploaderUserId}',
-                                            );
-                                            final res = await http.get(url);
-                                            if (res.statusCode != 200) return;
-                                            final data =
-                                                jsonDecode(
-                                                  res.body,
-                                                )['provider'] ??
-                                                {};
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (_) => MyProfileScreen(
-                                                  userData: data,
-                                                  readOnly:
-                                                      widget.currentUserId !=
-                                                      status.uploaderUserId,
-                                                  currentUserId:
-                                                      widget.currentUserId,
-                                                ),
-                                              ),
-                                            );
-                                          },
-                                        )
-                                      : null,
-                                ),
                               ),
+
                               const SizedBox(height: 18),
                               // Like button
                               GestureDetector(

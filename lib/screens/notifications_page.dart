@@ -1,56 +1,45 @@
 
+
+
+
+
+
+
+
 // import 'package:flutter/material.dart';
 // import 'package:http/http.dart' as http;
 // import 'dart:convert';
 // import 'package:socket_io_client/socket_io_client.dart' as IO;
+// import 'package:provider/provider.dart';
 // import '../helpers/backend.dart';
-// import 'chat_page.dart';
 // import '../helpers/coolors.dart';
+// import '../providers/NotificationProvider.dart';
+// import 'chat_page.dart';
+
 // class NotificationsPage extends StatefulWidget {
 //   final int userId;
 //   final String role;
 
 //   const NotificationsPage({Key? key, required this.userId, required this.role})
-//     : super(key: key);
+//       : super(key: key);
 
 //   @override
 //   _NotificationsPageState createState() => _NotificationsPageState();
 // }
 
 // class _NotificationsPageState extends State<NotificationsPage> {
-//   bool isLoading = true;
-//   List<dynamic> notifications = [];
-//   int unseenCount = 0;
-
 //   IO.Socket? socket;
 
 //   @override
 //   void initState() {
 //     super.initState();
 //     connectSocket();
-//     fetchNotifications();
+//     // Fetch notifications via Provider
+//     WidgetsBinding.instance.addPostFrameCallback((_) {
+//       fetchNotifications(context);
+//     });
 //   }
 
-//   Color getCardColor(dynamic notif) {
-//   if (notif['title'] != null) {
-//     if (notif['title'].contains("Accepted")) return  Color(0xFFDDE6F5);
-//     if (notif['title'].contains("Rejected")) return  Color(0xFFDDE6F5);
-//     if (notif['title'].contains("Completed")) return  Color(0xFFDDE6F5);
-//   }
-
-//   // 🔹 If it's a chat message (conversation_id present)
-//   if (notif['conversation_id'] != null) {
-//     return notif['is_seen'] ? kCardColor : kSecondaryColor.withOpacity(0.15);
-//   }
-
-//   // 🔹 If it's a task notification (no conversation_id)
-//   return notif['is_seen']
-//       ? kCardColor
-//       : const Color(0xFFDDE6F5); // soft blueish background for unseen tasks
-// }
-
-
-//   // ---------------- SOCKET.IO ----------------
 //   void connectSocket() {
 //     socket = IO.io(Backend.socketUrl, <String, dynamic>{
 //       'transports': ['websocket'],
@@ -60,15 +49,12 @@
 //     socket?.connect();
 
 //     socket?.onConnect((_) {
-//       // join user room
 //       socket?.emit('join', "user_${widget.userId}");
 //     });
 
 //     socket?.on('new_notification', (data) {
-//       setState(() {
-//         notifications.insert(0, data); // Add on top
-//         unseenCount += 1;
-//       });
+//       Provider.of<NotificationProvider>(context, listen: false)
+//           .addNotification(data);
 //     });
 
 //     socket?.onDisconnect((_) {});
@@ -81,118 +67,69 @@
 //   }
 
 //   // ---------------- FETCH NOTIFICATIONS ----------------
-//   Future<void> fetchNotifications() async {
-//     setState(() => isLoading = true);
+//   Future<void> fetchNotifications(BuildContext context) async {
+//     final notifProvider =
+//         Provider.of<NotificationProvider>(context, listen: false);
+//     notifProvider.setLoading(true);
+
 //     try {
-//       final url = Uri.parse(
-//         "${Backend.baseUrl}/notifications?user_id=${widget.userId}",
-//       );
+//       final url =
+//           Uri.parse("${Backend.baseUrl}/notifications?user_id=${widget.userId}");
 //       final response = await http.get(url);
 
 //       if (response.statusCode == 200) {
 //         final data = jsonDecode(response.body);
-//         setState(() {
-//           notifications = (data['notifications'] as List<dynamic>?) ?? [];
-//           unseenCount = data['unseen_count'] ?? 0;
-//         });
-//         if (notifications.isNotEmpty) {
-//           // Group chat messages by conversation_id
-//           Map<String, dynamic> grouped = {};
-//           for (var notif in notifications) {
-//             if (notif['conversation_id'] != null) {
-//               String key = notif['conversation_id'].toString();
-//               if (!grouped.containsKey(key)) {
-//                 grouped[key] = {...notif, 'count': 1};
-//               } else {
-//                 grouped[key]['count'] += 1; // increment message count
-//                 // optional: update last message
-//                 grouped[key]['message'] = notif['message'];
-//                 grouped[key]['created_at'] = notif['created_at'];
-//               }
-//             } else {
-//               // Task notification
-//               grouped[notif['id'].toString()] = notif;
-//             }
-//           }
-//           notifications = grouped.values.toList();
-//         }
+//         notifProvider.setNotifications(
+//           (data['notifications'] as List<dynamic>?) ?? [],
+//           data['unseen_count'] ?? 0,
+//         );
 
-//         if (unseenCount > 0) await markNotificationsSeen();
+//         if (notifProvider.unseenCount > 0) {
+//           await markNotificationsSeen(context);
+//         }
 //       }
 //     } catch (e) {
 //       ScaffoldMessenger.of(context).showSnackBar(
 //         SnackBar(content: Text('Error fetching notifications: $e')),
 //       );
 //     } finally {
-//       setState(() => isLoading = false);
+//       notifProvider.setLoading(false);
 //     }
 //   }
 
 //   // ---------------- MARK SEEN ----------------
-//   Future<void> markNotificationsSeen() async {
+//   Future<void> markNotificationsSeen(BuildContext context) async {
 //     try {
 //       final url = Uri.parse("${Backend.baseUrl}/notifications/mark_seen");
 //       await http.post(url, body: {'user_id': widget.userId.toString()});
-//       setState(() {
-//       unseenCount = 0;
-//       // ✅ Update all local notifications to seen
-//       for (var notif in notifications) {
-//         notif['is_seen'] = true;
-//       }
-//     });
+//       Provider.of<NotificationProvider>(context, listen: false).markAllSeen();
 //     } catch (e) {
 //       debugPrint("Error marking notifications seen: $e");
 //     }
 //   }
 
 //   // ---------------- DELETE SINGLE ----------------
-//   Future<void> deleteNotification(int notifId) async {
+//   Future<void> deleteNotification(BuildContext context, int notifId) async {
+//     final notifProvider =
+//         Provider.of<NotificationProvider>(context, listen: false);
+
 //     final confirm = await showDialog<bool>(
 //       context: context,
 //       builder: (_) => AlertDialog(
-//         backgroundColor: const Color(0xFFD9E1F0), // Soft background
+//         backgroundColor: const Color(0xFFD9E1F0),
 //         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-//         title: const Text(
-//           'Confirm Delete',
-//           style: TextStyle(
-//             color: kPrimaryColor,
-//             fontWeight: FontWeight.bold,
-//           ),
-//         ),
-//         content: const Text(
-//           'Are you sure you want to delete this notification?',
-//           style: TextStyle(color: Color(0xFF2A3A69)),
-//         ),
+//         title: const Text('Confirm Delete',
+//             style: TextStyle(color: kPrimaryColor, fontWeight: FontWeight.bold)),
+//         content: const Text('Are you sure you want to delete this notification?',
+//             style: TextStyle(color: Color(0xFF2A3A69))),
 //         actions: [
 //           TextButton(
-//             style: TextButton.styleFrom(
-//               backgroundColor: Colors.white,
-//               foregroundColor: kPrimaryColor,
-//               shape: RoundedRectangleBorder(
-//                 borderRadius: BorderRadius.circular(12),
-//               ),
-//               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-//             ),
 //             onPressed: () => Navigator.pop(context, false),
-//             child: const Text(
-//               'Cancel',
-//               style: TextStyle(fontWeight: FontWeight.w600),
-//             ),
+//             child: const Text('Cancel'),
 //           ),
 //           TextButton(
-//             style: TextButton.styleFrom(
-//               backgroundColor: redAccent, // Red delete button
-//               foregroundColor: Colors.white,
-//               shape: RoundedRectangleBorder(
-//                 borderRadius: BorderRadius.circular(12),
-//               ),
-//               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-//             ),
 //             onPressed: () => Navigator.pop(context, true),
-//             child: const Text(
-//               'Delete',
-//               style: TextStyle(fontWeight: FontWeight.bold),
-//             ),
+//             child: const Text('Delete'),
 //           ),
 //         ],
 //       ),
@@ -204,98 +141,40 @@
 //       final url = Uri.parse("${Backend.baseUrl}/notifications/$notifId");
 //       final response = await http.delete(url);
 //       if (response.statusCode == 200) {
-//         setState(() {
-//           notifications.removeWhere((n) => n['id'] == notifId);
-//         });
+//         notifProvider.deleteNotification(notifId);
 //         ScaffoldMessenger.of(context).showSnackBar(
-//           SnackBar(
-//             content: const Text('Notification deleted successfully ✅'),
-//             backgroundColor: kPrimaryColor,
-//             behavior: SnackBarBehavior.floating,
-//             shape: RoundedRectangleBorder(
-//               borderRadius: BorderRadius.circular(12),
-//             ),
-//             margin: const EdgeInsets.all(16),
-//           ),
+//           const SnackBar(content: Text('Notification deleted successfully ✅')),
 //         );
 //       } else {
 //         throw Exception('Failed to delete notification');
 //       }
 //     } catch (e) {
 //       debugPrint("Error deleting notification: $e");
-//       ScaffoldMessenger.of(context).showSnackBar(
-//         SnackBar(
-//           content: Row(
-//             children: [
-//               const Icon(Icons.error_outline, color: Colors.white),
-//               const SizedBox(width: 8),
-//               Expanded(
-//                 child: Text(
-//                   'Error deleting notification: $e',
-//                   style: const TextStyle(color: Colors.white),
-//                 ),
-//               ),
-//             ],
-//           ),
-//           backgroundColor: redAccent,
-//           behavior: SnackBarBehavior.floating,
-//           shape: RoundedRectangleBorder(
-//             borderRadius: BorderRadius.circular(12),
-//           ),
-//           margin: const EdgeInsets.all(16),
-//         ),
-//       );
 //     }
 //   }
 
 //   // ---------------- DELETE ALL ----------------
-//   Future<void> deleteAllNotifications() async {
+//   Future<void> deleteAllNotifications(BuildContext context) async {
+//     final notifProvider =
+//         Provider.of<NotificationProvider>(context, listen: false);
+
 //     final confirm = await showDialog<bool>(
 //       context: context,
 //       builder: (_) => AlertDialog(
-//         backgroundColor: kBackgroundColor, // Soft background
+//         backgroundColor: kBackgroundColor,
 //         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-//         title: const Text(
-//           'Confirm Delete All',
-//           style: TextStyle(
-//             color: kPrimaryColor,
-//             fontWeight: FontWeight.bold,
-//           ),
-//         ),
-//         content: const Text(
-//           'Are you sure you want to delete all notifications?',
-//           style: TextStyle(color: kTextPrimary),
-//         ),
+//         title: const Text('Confirm Delete All',
+//             style: TextStyle(color: kPrimaryColor, fontWeight: FontWeight.bold)),
+//         content: const Text('Are you sure you want to delete all notifications?',
+//             style: TextStyle(color: kTextPrimary)),
 //         actions: [
 //           TextButton(
-//             style: TextButton.styleFrom(
-//               backgroundColor: Colors.white,
-//               foregroundColor: kPrimaryColor,
-//               shape: RoundedRectangleBorder(
-//                 borderRadius: BorderRadius.circular(12),
-//               ),
-//               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-//             ),
 //             onPressed: () => Navigator.pop(context, false),
-//             child: const Text(
-//               'Cancel',
-//               style: TextStyle(fontWeight: FontWeight.w600),
-//             ),
+//             child: const Text('Cancel'),
 //           ),
 //           TextButton(
-//             style: TextButton.styleFrom(
-//               backgroundColor: redAccent, // Red delete button
-//               foregroundColor: Colors.white,
-//               shape: RoundedRectangleBorder(
-//                 borderRadius: BorderRadius.circular(12),
-//               ),
-//               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-//             ),
 //             onPressed: () => Navigator.pop(context, true),
-//             child: const Text(
-//               'Delete All',
-//               style: TextStyle(fontWeight: FontWeight.bold),
-//             ),
+//             child: const Text('Delete All'),
 //           ),
 //         ],
 //       ),
@@ -311,76 +190,55 @@
 //       );
 
 //       if (response.statusCode == 200) {
-//         setState(() => notifications.clear());
+//         notifProvider.clearAll();
 //         ScaffoldMessenger.of(context).showSnackBar(
-//           SnackBar(
-//             content: const Text('All notifications deleted successfully ✅'),
-//             backgroundColor: kPrimaryColor,
-//             behavior: SnackBarBehavior.floating,
-//             shape: RoundedRectangleBorder(
-//               borderRadius: BorderRadius.circular(12),
-//             ),
-//             margin: const EdgeInsets.all(16),
-//           ),
+//           const SnackBar(content: Text('All notifications deleted successfully ✅')),
 //         );
 //       } else {
 //         throw Exception('Failed to delete all notifications');
 //       }
 //     } catch (e) {
 //       debugPrint("Error deleting all notifications: $e");
-//       ScaffoldMessenger.of(context).showSnackBar(
-//         SnackBar(
-//           content: Row(
-//             children: [
-//               const Icon(Icons.error_outline, color: Colors.white),
-//               const SizedBox(width: 8),
-//               Expanded(
-//                 child: Text(
-//                   'Error deleting all notifications: $e',
-//                   style: const TextStyle(color: Colors.white),
-//                 ),
-//               ),
-//             ],
-//           ),
-//           backgroundColor: redAccent,
-//           behavior: SnackBarBehavior.floating,
-//           shape: RoundedRectangleBorder(
-//             borderRadius: BorderRadius.circular(12),
-//           ),
-//           margin: const EdgeInsets.all(16),
-//         ),
-//       );
 //     }
 //   }
 
 //   // ---------------- CARD WIDGET ----------------
+//   Color getCardColor(dynamic notif) {
+//     if (notif['title'] != null) {
+//       if (notif['title'].contains("Accepted") ||
+//           notif['title'].contains("Rejected") ||
+//           notif['title'].contains("Completed")) {
+//         return const Color(0xFFDDE6F5);
+//       }
+//     }
+
+//     if (notif['conversation_id'] != null) {
+//       return notif['is_seen'] ? kCardColor : kSecondaryColor.withOpacity(0.15);
+//     }
+
+//     return notif['is_seen'] ? kCardColor : const Color(0xFFDDE6F5);
+//   }
+
 //   Widget buildNotificationCard(dynamic notif) {
-//     final senderName =
-//         (notif['sender_name'] != null &&
+//     // final notifProvider =
+//     //     Provider.of<NotificationProvider>(context, listen: false);
+//     final senderName = (notif['sender_name'] != null &&
 //             notif['sender_name'].toString().trim().isNotEmpty)
 //         ? notif['sender_name']
 //         : 'Unknown User';
-
-//     // final message = notif['message'] ?? '';
 //     final avatar = notif['sender_avatar'];
 //     final createdAt = notif['created_at'] != null
 //         ? DateTime.tryParse(notif['created_at'])?.toLocal()
 //         : null;
-//     // final isSeen = notif['is_seen'] ?? false;
 //     final otherUserId = notif['sender_id'];
-//     Color cardColor = getCardColor(notif);
-//     bool isDarkCard =
-//         cardColor != kTextPrimary && cardColor != kTextPrimary;
+
 //     return Card(
 //       color: getCardColor(notif),
-
 //       margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
-//       elevation: 3,
 //       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
 //       child: ListTile(
 //         onTap: () {
 //           if (notif['conversation_id'] != null && otherUserId != null) {
-//             // Chat notification
 //             Navigator.push(
 //               context,
 //               MaterialPageRoute(
@@ -391,118 +249,23 @@
 //                 ),
 //               ),
 //             );
-//           } else {
-//             // Task notification
-//             showDialog(
-//               context: context,
-//               builder: (_) => AlertDialog(
-//                 backgroundColor: const Color(
-//                   0xFFD9E1F0,
-//                 ), // Soft pastel background
-//                 shape: RoundedRectangleBorder(
-//                   borderRadius: BorderRadius.circular(20), // Rounded corners
-//                 ),
-//                 elevation: 8, // Subtle shadow for depth
-//                 title: Row(
-//                   children: const [
-//                     Icon(Icons.notifications, color: kPrimaryColor),
-//                     SizedBox(width: 8),
-//                     Text(
-//                       "Notification",
-//                       style: TextStyle(
-//                         color: kPrimaryColor,
-//                         fontWeight: FontWeight.bold,
-//                       ),
-//                     ),
-//                   ],
-//                 ),
-//                 content: Text(
-//                   notif['message'] ?? 'No details',
-//                   style: const TextStyle(
-//                     color:kPrimaryColor,
-//                     fontSize: 15,
-//                   ),
-//                 ),
-//                 actions: [
-//                   TextButton(
-//                     style: TextButton.styleFrom(
-//                       backgroundColor:kPrimaryColor,
-//                       foregroundColor: Colors.white,
-//                       shape: RoundedRectangleBorder(
-//                         borderRadius: BorderRadius.circular(12),
-//                       ),
-//                       padding: const EdgeInsets.symmetric(
-//                         horizontal: 20,
-//                         vertical: 10,
-//                       ),
-//                     ),
-//                     onPressed: () => Navigator.pop(context),
-//                     child: const Text(
-//                       "OK",
-//                       style: TextStyle(fontWeight: FontWeight.bold),
-//                     ),
-//                   ),
-//                 ],
-//               ),
-//             );
 //           }
 //         },
-
-//         leading: Container(
-//   padding: const EdgeInsets.all(2.5), // border width
-//   decoration: BoxDecoration(
-//     shape: BoxShape.circle,
-//     gradient: LinearGradient(
-//       colors: [kPrimaryColor, kPrimaryColor], // gold → blue gradient
-//       begin: Alignment.topLeft,
-//       end: Alignment.bottomRight,
-//     ),
-//   ),
-//   child: CircleAvatar(
-//     radius: 22,
-//     backgroundImage: (avatar != null && avatar.toString().isNotEmpty)
-//         ? NetworkImage("${Backend.baseUrl}/$avatar")
-//         : null,
-//     backgroundColor: kCardColor,
-//     child: (avatar == null || avatar.toString().isEmpty)
-//         ? Text(
-//             senderName.isNotEmpty
-//                 ? senderName[0].toUpperCase()
-//                 : '?',
-//             style: TextStyle(
-//               color: kTextPrimary,
-//               fontWeight: FontWeight.bold,
-//               fontSize: 18,
-//             ),
-//           )
-//         : null,
-//   ),
-// ),
-
-//         title: Flexible(
-//           child: Text(
-//             senderName,
-//             maxLines: 1, // ✅ Single line
-//             overflow: TextOverflow.ellipsis, // ✅ Agar lamba ho to ...
-//             style: TextStyle(
-//               fontWeight: FontWeight.bold,
-//               color: isDarkCard ? kTextPrimary : kTextPrimary,
-//             ),
-//           ),
+//         leading: CircleAvatar(
+//           radius: 22,
+//           backgroundImage: (avatar != null && avatar.toString().isNotEmpty)
+//               ? NetworkImage("${Backend.baseUrl}/$avatar")
+//               : null,
+//           child: (avatar == null || avatar.toString().isEmpty)
+//               ? Text(senderName[0].toUpperCase())
+//               : null,
 //         ),
+//         title: Text(senderName, maxLines: 1, overflow: TextOverflow.ellipsis),
 //         subtitle: Text(
-//           (notif['conversation_id'] != null ? 'Chat from $senderName: ' : '') +
-//               notif['message'] +
-//               ((notif['count'] ?? 1) > 1
-//                   ? ' (+${notif['count'] - 1} more)'
-//                   : ''),
+//           notif['message'] ?? '',
 //           maxLines: 1,
 //           overflow: TextOverflow.ellipsis,
-//           style: TextStyle(
-//             color: isDarkCard ? kTextPrimary : kTextPrimary,
-//           ),
 //         ),
-
 //         trailing: Row(
 //           mainAxisSize: MainAxisSize.min,
 //           children: [
@@ -514,7 +277,8 @@
 //               ),
 //             IconButton(
 //               icon: const Icon(Icons.delete, color: redAccent),
-//               onPressed: () => deleteNotification(notif['id']),
+//               onPressed: () =>
+//                   deleteNotification(context, notif['id'] as int),
 //             ),
 //           ],
 //         ),
@@ -525,66 +289,42 @@
 //   // ---------------- BUILD ----------------
 //   @override
 //   Widget build(BuildContext context) {
+//     final notifProvider = Provider.of<NotificationProvider>(context);
 //     return Scaffold(
 //       backgroundColor: kBackgroundColor,
-
 //       appBar: AppBar(
-//         backgroundColor:kBackgroundColor,
-//         elevation: 4, // subtle shadow for depth
-//         shape: const RoundedRectangleBorder(
-//           borderRadius: BorderRadius.vertical(
-//             bottom: Radius.circular(16), // rounded bottom corners
-//           ),
-//         ),
-//         toolbarHeight: 60, // slightly taller for premium feel
-//         titleSpacing: 16, // padding from left
-//         title: const Text(
-//           'Notifications',
-//           style: TextStyle(
-//             color: kTextPrimary,
-//             fontSize: 18,
-//             fontWeight: FontWeight.bold,
-//           ),
-//         ),
+//         backgroundColor: kBackgroundColor,
+//         elevation: 4,
+//         title: const Text('Notifications',
+//             style: TextStyle(
+//               color: kTextPrimary,
+//               fontWeight: FontWeight.bold,
+//             )),
 //         actions: [
 //           IconButton(
 //             icon: const Icon(Icons.delete_sweep, color: kTextPrimary),
-//             onPressed: () => deleteAllNotifications(),
+//             onPressed: () => deleteAllNotifications(context),
 //           ),
 //         ],
 //       ),
-
-//       body: isLoading
-//           ? const Center(
-//               child: CircularProgressIndicator(color: kPrimaryColor),
-//             )
-//           : notifications.isEmpty
-//           ? const Center(
-//               child: Text(
-//                 'No notifications yet',
-//                 style: TextStyle(
-//                   fontSize: 16,
-//                   color: kTextSecondary,
-//                   fontWeight: FontWeight.w500,
+//       body: notifProvider.isLoading
+//           ? const Center(child: CircularProgressIndicator(color: kPrimaryColor))
+//           : notifProvider.notifications.isEmpty
+//               ? const Center(
+//                   child: Text('No notifications yet'),
+//                 )
+//               : RefreshIndicator(
+//                   onRefresh: () => fetchNotifications(context),
+//                   color: kPrimaryColor,
+//                   child: ListView.builder(
+//                     itemCount: notifProvider.notifications.length,
+//                     itemBuilder: (context, index) =>
+//                         buildNotificationCard(notifProvider.notifications[index]),
+//                   ),
 //                 ),
-//               ),
-//             )
-//           : RefreshIndicator(
-//               onRefresh: fetchNotifications,
-//               color: kPrimaryColor,
-//               child: ListView.builder(
-//                 itemCount: notifications.length,
-//                 itemBuilder: (context, index) =>
-//                     buildNotificationCard(notifications[index]),
-//               ),
-//             ),
 //     );
 //   }
 // }
-
-
-
-
 
 
 
@@ -614,8 +354,9 @@ import 'chat_page.dart';
 class NotificationsPage extends StatefulWidget {
   final int userId;
   final String role;
+  final String tab; // 'messages' or 'tasks'
 
-  const NotificationsPage({Key? key, required this.userId, required this.role})
+  const NotificationsPage({Key? key, required this.userId, required this.role, required this.tab})
       : super(key: key);
 
   @override
@@ -629,7 +370,6 @@ class _NotificationsPageState extends State<NotificationsPage> {
   void initState() {
     super.initState();
     connectSocket();
-    // Fetch notifications via Provider
     WidgetsBinding.instance.addPostFrameCallback((_) {
       fetchNotifications(context);
     });
@@ -642,14 +382,12 @@ class _NotificationsPageState extends State<NotificationsPage> {
     });
 
     socket?.connect();
-
     socket?.onConnect((_) {
       socket?.emit('join', "user_${widget.userId}");
     });
 
     socket?.on('new_notification', (data) {
-      Provider.of<NotificationProvider>(context, listen: false)
-          .addNotification(data);
+      Provider.of<NotificationProvider>(context, listen: false).addNotification(data);
     });
 
     socket?.onDisconnect((_) {});
@@ -661,15 +399,12 @@ class _NotificationsPageState extends State<NotificationsPage> {
     super.dispose();
   }
 
-  // ---------------- FETCH NOTIFICATIONS ----------------
   Future<void> fetchNotifications(BuildContext context) async {
-    final notifProvider =
-        Provider.of<NotificationProvider>(context, listen: false);
+    final notifProvider = Provider.of<NotificationProvider>(context, listen: false);
     notifProvider.setLoading(true);
 
     try {
-      final url =
-          Uri.parse("${Backend.baseUrl}/notifications?user_id=${widget.userId}");
+      final url = Uri.parse("${Backend.baseUrl}/notifications?user_id=${widget.userId}");
       final response = await http.get(url);
 
       if (response.statusCode == 200) {
@@ -679,8 +414,11 @@ class _NotificationsPageState extends State<NotificationsPage> {
           data['unseen_count'] ?? 0,
         );
 
-        if (notifProvider.unseenCount > 0) {
-          await markNotificationsSeen(context);
+        // Mark only relevant tab notifications seen
+        if (widget.tab == 'messages') {
+          if (notifProvider.unseenMessageCount > 0) notifProvider.markMessagesSeen();
+        } else if (widget.tab == 'tasks') {
+          if (notifProvider.unseenTaskCount > 0) notifProvider.markTasksSeen();
         }
       }
     } catch (e) {
@@ -692,40 +430,19 @@ class _NotificationsPageState extends State<NotificationsPage> {
     }
   }
 
-  // ---------------- MARK SEEN ----------------
-  Future<void> markNotificationsSeen(BuildContext context) async {
-    try {
-      final url = Uri.parse("${Backend.baseUrl}/notifications/mark_seen");
-      await http.post(url, body: {'user_id': widget.userId.toString()});
-      Provider.of<NotificationProvider>(context, listen: false).markAllSeen();
-    } catch (e) {
-      debugPrint("Error marking notifications seen: $e");
-    }
-  }
-
-  // ---------------- DELETE SINGLE ----------------
   Future<void> deleteNotification(BuildContext context, int notifId) async {
-    final notifProvider =
-        Provider.of<NotificationProvider>(context, listen: false);
+    final notifProvider = Provider.of<NotificationProvider>(context, listen: false);
 
     final confirm = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
         backgroundColor: const Color(0xFFD9E1F0),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Confirm Delete',
-            style: TextStyle(color: kPrimaryColor, fontWeight: FontWeight.bold)),
-        content: const Text('Are you sure you want to delete this notification?',
-            style: TextStyle(color: Color(0xFF2A3A69))),
+        title: const Text('Confirm Delete', style: TextStyle(color: kPrimaryColor, fontWeight: FontWeight.bold)),
+        content: const Text('Are you sure you want to delete this notification?', style: TextStyle(color: Color(0xFF2A3A69))),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete'),
-          ),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Delete')),
         ],
       ),
     );
@@ -748,29 +465,19 @@ class _NotificationsPageState extends State<NotificationsPage> {
     }
   }
 
-  // ---------------- DELETE ALL ----------------
   Future<void> deleteAllNotifications(BuildContext context) async {
-    final notifProvider =
-        Provider.of<NotificationProvider>(context, listen: false);
+    final notifProvider = Provider.of<NotificationProvider>(context, listen: false);
 
     final confirm = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
         backgroundColor: kBackgroundColor,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Confirm Delete All',
-            style: TextStyle(color: kPrimaryColor, fontWeight: FontWeight.bold)),
-        content: const Text('Are you sure you want to delete all notifications?',
-            style: TextStyle(color: kTextPrimary)),
+        title: const Text('Confirm Delete All', style: TextStyle(color: kPrimaryColor, fontWeight: FontWeight.bold)),
+        content: const Text('Are you sure you want to delete all notifications?', style: TextStyle(color: kTextPrimary)),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete All'),
-          ),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Delete All')),
         ],
       ),
     );
@@ -779,11 +486,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
 
     try {
       final url = Uri.parse("${Backend.baseUrl}/notifications/delete_all");
-      final response = await http.post(
-        url,
-        body: {'user_id': widget.userId.toString()},
-      );
-
+      final response = await http.post(url, body: {'user_id': widget.userId.toString()});
       if (response.statusCode == 200) {
         notifProvider.clearAll();
         ScaffoldMessenger.of(context).showSnackBar(
@@ -797,34 +500,24 @@ class _NotificationsPageState extends State<NotificationsPage> {
     }
   }
 
-  // ---------------- CARD WIDGET ----------------
   Color getCardColor(dynamic notif) {
     if (notif['title'] != null) {
-      if (notif['title'].contains("Accepted") ||
-          notif['title'].contains("Rejected") ||
-          notif['title'].contains("Completed")) {
+      if (notif['title'].contains("Accepted") || notif['title'].contains("Rejected") || notif['title'].contains("Completed")) {
         return const Color(0xFFDDE6F5);
       }
     }
-
     if (notif['conversation_id'] != null) {
       return notif['is_seen'] ? kCardColor : kSecondaryColor.withOpacity(0.15);
     }
-
     return notif['is_seen'] ? kCardColor : const Color(0xFFDDE6F5);
   }
 
   Widget buildNotificationCard(dynamic notif) {
-    // final notifProvider =
-    //     Provider.of<NotificationProvider>(context, listen: false);
-    final senderName = (notif['sender_name'] != null &&
-            notif['sender_name'].toString().trim().isNotEmpty)
+    final senderName = (notif['sender_name'] != null && notif['sender_name'].toString().trim().isNotEmpty)
         ? notif['sender_name']
         : 'Unknown User';
     final avatar = notif['sender_avatar'];
-    final createdAt = notif['created_at'] != null
-        ? DateTime.tryParse(notif['created_at'])?.toLocal()
-        : null;
+    final createdAt = notif['created_at'] != null ? DateTime.tryParse(notif['created_at'])?.toLocal() : null;
     final otherUserId = notif['sender_id'];
 
     return Card(
@@ -848,32 +541,21 @@ class _NotificationsPageState extends State<NotificationsPage> {
         },
         leading: CircleAvatar(
           radius: 22,
-          backgroundImage: (avatar != null && avatar.toString().isNotEmpty)
-              ? NetworkImage("${Backend.baseUrl}/$avatar")
-              : null,
-          child: (avatar == null || avatar.toString().isEmpty)
-              ? Text(senderName[0].toUpperCase())
-              : null,
+          backgroundImage: (avatar != null && avatar.toString().isNotEmpty) ? NetworkImage("${Backend.baseUrl}/$avatar") : null,
+          child: (avatar == null || avatar.toString().isEmpty) ? Text(senderName[0].toUpperCase()) : null,
         ),
         title: Text(senderName, maxLines: 1, overflow: TextOverflow.ellipsis),
-        subtitle: Text(
-          notif['message'] ?? '',
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
+        subtitle: Text(notif['message'] ?? '', maxLines: 1, overflow: TextOverflow.ellipsis),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             if (createdAt != null)
-              Text(
-                '${createdAt.year}-${createdAt.month.toString().padLeft(2, '0')}-${createdAt.day.toString().padLeft(2, '0')} '
-                '${createdAt.hour.toString().padLeft(2, '0')}:${createdAt.minute.toString().padLeft(2, '0')}',
-                style: const TextStyle(fontSize: 11, color: Colors.grey),
-              ),
+              Text('${createdAt.year}-${createdAt.month.toString().padLeft(2, '0')}-${createdAt.day.toString().padLeft(2, '0')} '
+                  '${createdAt.hour.toString().padLeft(2, '0')}:${createdAt.minute.toString().padLeft(2, '0')}',
+                  style: const TextStyle(fontSize: 11, color: Colors.grey)),
             IconButton(
               icon: const Icon(Icons.delete, color: redAccent),
-              onPressed: () =>
-                  deleteNotification(context, notif['id'] as int),
+              onPressed: () => deleteNotification(context, notif['id'] as int),
             ),
           ],
         ),
@@ -881,20 +563,23 @@ class _NotificationsPageState extends State<NotificationsPage> {
     );
   }
 
-  // ---------------- BUILD ----------------
   @override
   Widget build(BuildContext context) {
     final notifProvider = Provider.of<NotificationProvider>(context);
+
+    // 🔹 Choose correct tab notifications
+    final List<dynamic> tabNotifications =
+        widget.tab == 'messages' ? notifProvider.messageNotifications : notifProvider.taskNotifications;
+
     return Scaffold(
       backgroundColor: kBackgroundColor,
       appBar: AppBar(
         backgroundColor: kBackgroundColor,
         elevation: 4,
-        title: const Text('Notifications',
-            style: TextStyle(
-              color: kTextPrimary,
-              fontWeight: FontWeight.bold,
-            )),
+        title: Text(
+          widget.tab == 'messages' ? 'Messages' : 'Tasks',
+          style: const TextStyle(color: kTextPrimary, fontWeight: FontWeight.bold),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.delete_sweep, color: kTextPrimary),
@@ -904,17 +589,14 @@ class _NotificationsPageState extends State<NotificationsPage> {
       ),
       body: notifProvider.isLoading
           ? const Center(child: CircularProgressIndicator(color: kPrimaryColor))
-          : notifProvider.notifications.isEmpty
-              ? const Center(
-                  child: Text('No notifications yet'),
-                )
+          : tabNotifications.isEmpty
+              ? Center(child: Text('No ${widget.tab} notifications yet'))
               : RefreshIndicator(
                   onRefresh: () => fetchNotifications(context),
                   color: kPrimaryColor,
                   child: ListView.builder(
-                    itemCount: notifProvider.notifications.length,
-                    itemBuilder: (context, index) =>
-                        buildNotificationCard(notifProvider.notifications[index]),
+                    itemCount: tabNotifications.length,
+                    itemBuilder: (context, index) => buildNotificationCard(tabNotifications[index]),
                   ),
                 ),
     );

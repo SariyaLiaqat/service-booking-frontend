@@ -1,7 +1,3 @@
-
-
-
-
 // import 'dart:convert';
 // import 'package:flutter/material.dart';
 // import 'package:flutter/services.dart';
@@ -14,6 +10,10 @@
 // import '../helpers/backend.dart';
 // import 'status_screen.dart';
 // import '../helpers/coolors.dart';
+// import 'side_menu.dart';
+
+// import '../widgets/settings.dart';
+// import '../widgets/Contact.dart';
 // import '../widgets/status_widget.dart';
 
 // class HomeScreen extends StatefulWidget {
@@ -30,6 +30,7 @@
 //   int _currentIndex = 0;
 //   final GlobalKey<ServicesScreenState> _servicesKey =
 //       GlobalKey<ServicesScreenState>();
+//  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
 //   List<dynamic> conversations = [];
 //   bool isLoadingConversations = true;
@@ -42,6 +43,8 @@
 //   @override
 //   void initState() {
 //     super.initState();
+//     // 👇 Add this
+//   print("HomeScreen - userData: ${widget.userData}");
 //     statusController = StatusController(currentUserId: widget.userData['id']);
 //     fetchConversations();
 //     fetchUnseenNotifications();
@@ -205,6 +208,8 @@
 //           "username": widget.userData["username"] ?? "Username",
 //           "profile_image": widget.userData["profile_image"] ?? "",
 //         },
+//         currentUserRole: widget.userData["role"] ?? "user",
+//  scaffoldKey: _scaffoldKey,
 //       ),
 //       MyTasksScreen(
 //         currentUserId: widget.userData["id"] ?? -1,
@@ -214,7 +219,7 @@
 //           "username": widget.userData["username"] ?? "Username",
 //           "profile_image": widget.userData["profile_image"] ?? "",
 //         },
-        
+
 //       ),
 //       MessagesTab(
 //         //   key: ValueKey(unseenNotificationsCount), // 🔹 add this
@@ -267,9 +272,48 @@
 //     ];
 
 //     return Scaffold(
-//       backgroundColor: kBackgroundColor,
-//       body: IndexedStack(index: _currentIndex, children: pages),
-//       bottomNavigationBar: Padding(
+//   backgroundColor: kBackgroundColor,
+//  key:_scaffoldKey,
+//   // ✅ YAHAN DRAWER RAKHNA HAI
+//   drawer: SideMenu(
+//     logoPath: "assets/images/bglogo.png",
+//     primaryColor: kPrimaryColor,
+//     secondaryColor: kCardColor,
+//     highlightColor: kSecondaryColor,
+//     selectedMenu: "Dashboard",
+//     onMenuSelected: (menu) {
+//       Navigator.pop(context); // 👈 pehle drawer close
+
+//       if (menu == "Dashboard") {
+//         setState(() => _currentIndex = 0); // Services tab
+//       }
+//       else if (menu == "Settings") {
+//         Navigator.push(
+//           context,
+//           MaterialPageRoute(
+//             builder: (_) => SettingsScreen(
+//               currentUserId: widget.userData["id"],
+//             ),
+//           ),
+//         );
+//       }
+//       else if (menu == "Contact Us") {
+//         Navigator.push(
+//           context,
+//           MaterialPageRoute(builder: (_) => ContactUsPage()),
+//         );
+//       }
+//     },
+//   ),
+
+//   // 🔽 body SAME rahegi
+//   body: IndexedStack(
+//     index: _currentIndex,
+//     children: pages,
+//   ),
+
+//   bottomNavigationBar: Padding(
+
 //         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
 //         child: Container(
 //           decoration: BoxDecoration(
@@ -438,23 +482,6 @@
 //   }
 // }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -467,6 +494,12 @@ import 'my_tasks_screen.dart';
 import '../helpers/backend.dart';
 import 'status_screen.dart';
 import '../helpers/coolors.dart';
+import 'side_menu.dart';
+import 'package:provider/provider.dart';
+import '../providers/NotificationProvider.dart';
+import 'dashboard.dart';
+import '../widgets/settings.dart';
+import '../widgets/Contact.dart';
 import '../widgets/status_widget.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -483,11 +516,12 @@ class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
   final GlobalKey<ServicesScreenState> _servicesKey =
       GlobalKey<ServicesScreenState>();
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   List<dynamic> conversations = [];
   bool isLoadingConversations = true;
   int unreadMessagesCount = 0;
-  int unseenNotificationsCount = 0;
+  //int unseenNotificationsCount = 0;
   int unseenStatusCount = 0;
 
   late IO.Socket socket;
@@ -496,7 +530,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     // 👇 Add this
-  print("HomeScreen - userData: ${widget.userData}");
+    print("HomeScreen - userData: ${widget.userData}");
     statusController = StatusController(currentUserId: widget.userData['id']);
     fetchConversations();
     fetchUnseenNotifications();
@@ -554,7 +588,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
     socket.on('notification_received', (data) {
       if (data['userId'] == widget.userData['id']) {
-        setState(() => unseenNotificationsCount += 1);
+        final notifProvider = Provider.of<NotificationProvider>(
+          context,
+          listen: false,
+        );
+
+        notifProvider.addNotification(data);
       }
     });
   }
@@ -632,9 +671,15 @@ class _HomeScreenState extends State<HomeScreen> {
       final response = await http.get(url);
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        setState(() {
-          unseenNotificationsCount = data['unseen_count'] ?? 0;
-        });
+        final notifProvider = Provider.of<NotificationProvider>(
+          context,
+          listen: false,
+        );
+
+        notifProvider.setNotifications(
+          data['notifications'] ?? [],
+          data['unseen_count'] ?? 0,
+        );
       }
     } catch (e) {
       print("Error fetching unseen notifications: $e");
@@ -645,23 +690,21 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() => unreadMessagesCount = 0);
   }
 
-  void resetUnseenNotifications() {
-    setState(() => unseenNotificationsCount = 0);
-  }
-
   @override
   Widget build(BuildContext context) {
+    final notifProvider = context.watch<NotificationProvider>();
+
     final pages = [
       ServicesScreen(
         key: _servicesKey,
         currentUserId: widget.userData["id"] ?? -1,
-         currentUser: {
+        currentUser: {
           "id": widget.userData["id"] ?? -1,
           "username": widget.userData["username"] ?? "Username",
           "profile_image": widget.userData["profile_image"] ?? "",
         },
         currentUserRole: widget.userData["role"] ?? "user",
-
+        scaffoldKey: _scaffoldKey,
       ),
       MyTasksScreen(
         currentUserId: widget.userData["id"] ?? -1,
@@ -671,7 +714,6 @@ class _HomeScreenState extends State<HomeScreen> {
           "username": widget.userData["username"] ?? "Username",
           "profile_image": widget.userData["profile_image"] ?? "",
         },
-        
       ),
       MessagesTab(
         //   key: ValueKey(unseenNotificationsCount), // 🔹 add this
@@ -679,7 +721,8 @@ class _HomeScreenState extends State<HomeScreen> {
         currentUserId: widget.userData['id'] ?? -1,
         onRefresh: fetchConversations,
         role: widget.role,
-        unseenNotificationsCount: unseenNotificationsCount,
+        unseenNotificationsCount: notifProvider.unseenCount,
+
         onConversationSeen: (conversationId) {
           // 🔹 Add this
           setState(() {
@@ -725,7 +768,48 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       backgroundColor: kBackgroundColor,
+      key: _scaffoldKey,
+
+      // ✅ YAHAN DRAWER RAKHNA HAI
+      drawer: SideMenu(
+        logoPath: "assets/images/bglogo.png",
+        primaryColor: kPrimaryColor,
+        secondaryColor: kCardColor,
+        highlightColor: kSecondaryColor,
+        selectedMenu: "Dashboard",
+        onMenuSelected: (menu) {
+          Navigator.pop(context); // 👈 pehle drawer close
+
+          if (menu == "Dashboard") {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => DashboardScreen(
+                  userId: widget.userData["id"], // ✅ correct name
+                  role: widget.role,
+                ),
+              ),
+            );
+          } else if (menu == "Settings") {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) =>
+                    SettingsScreen(currentUserId: widget.userData["id"]),
+              ),
+            );
+          } else if (menu == "Contact Us") {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => ContactUsPage()),
+            );
+          }
+        },
+      ),
+
+      // 🔽 body SAME rahegi
       body: IndexedStack(index: _currentIndex, children: pages),
+
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         child: Container(
@@ -753,7 +837,10 @@ class _HomeScreenState extends State<HomeScreen> {
               onTap: (index) {
                 setState(() => _currentIndex = index);
                 if (index == 2) resetUnreadMessages();
-                if (index == 3) resetUnseenNotifications();
+                if (index == 3) {
+                  context.read<NotificationProvider>().markAllSeen();
+                }
+
                 if (index == 3) resetUnseenStatus();
               },
               items: [

@@ -988,13 +988,13 @@ class _CategoryPageState extends State<CategoryPage> {
         title: Text(
           widget.categoryName,
           style: const TextStyle(
-            color: kPrimaryColor, // White text on primary background
+            color: navbarTextColor, // White text on primary background
             fontWeight: FontWeight.bold,
           ),
         ),
         centerTitle: true,
         elevation: 0,
-        backgroundColor: kPrimaryColor.withOpacity(0.1),
+        backgroundColor: navbarColor,
       ),
 
       body: Column(

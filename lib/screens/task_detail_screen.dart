@@ -550,7 +550,7 @@ request.fields['provider_id'] = providerId.toString();
         title: const Text(
           "Task Details",
           style: TextStyle(
-            color: heaidng,
+            color: navbarTextColor,
             fontWeight: FontWeight.bold,
             fontSize: 22,
           ),
@@ -565,8 +565,8 @@ request.fields['provider_id'] = providerId.toString();
           decoration: const BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                kBackgroundColor, // royal indigo
-                kBackgroundColor, // violet glow
+                navbarColor, // royal indigo
+                navbarColor, // violet glow
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,

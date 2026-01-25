@@ -352,6 +352,35 @@ class _ContactUsPageState extends State<ContactUsPage> {
                 ),
               ),
               const SizedBox(height: 35),
+              const SizedBox(height: 30),
+
+              // Mock image below button
+              SizedBox(
+                height: 200,
+                child: Lottie.asset(
+                  'assets/lottie/Contact Us.json',
+                  fit: BoxFit.contain,
+                  repeat: true,
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              // Paragraph below image
+              Text(
+                "We are always here to help you! Whether you have questions, suggestions, or need support, "
+                "our team is just a message away. Feel free to reach out anytime, and we'll make sure your "
+                "queries are answered promptly. Your feedback helps us improve and serve you better. "
+                "Contact us with confidence and let's make great things happen together. "
+                "We value every message and strive to respond within 24 hours. Thank you for connecting with us!",
+                style: TextStyle(
+                  color: kTextSecondary,
+                  fontSize: 14,
+                  height: 1.5,
+                ),
+                textAlign: TextAlign.justify,
+              ),
+              const SizedBox(height: 40),
 
               _buildTextField(nameController, "Name"),
               const SizedBox(height: 16),
@@ -382,36 +411,6 @@ class _ContactUsPageState extends State<ContactUsPage> {
                         ),
                 ),
               ),
-
-              const SizedBox(height: 30),
-
-              // Mock image below button
-              SizedBox(
-                height: 200,
-                child: Lottie.asset(
-                  'assets/lottie/Contact Us.json',
-                  fit: BoxFit.contain,
-                  repeat: true,
-                ),
-              ),
-
-              const SizedBox(height: 20),
-
-              // Paragraph below image
-              Text(
-                "We are always here to help you! Whether you have questions, suggestions, or need support, "
-                "our team is just a message away. Feel free to reach out anytime, and we'll make sure your "
-                "queries are answered promptly. Your feedback helps us improve and serve you better. "
-                "Contact us with confidence and let's make great things happen together. "
-                "We value every message and strive to respond within 24 hours. Thank you for connecting with us!",
-                style: TextStyle(
-                  color: kTextSecondary,
-                  fontSize: 14,
-                  height: 1.5,
-                ),
-                textAlign: TextAlign.justify,
-              ),
-              const SizedBox(height: 40),
             ],
           ),
         ),

@@ -84,14 +84,15 @@ class SocketManager {
     }
   }
 
-  // ------------------ EMIT ------------------
-  void sendMessage(int conversationId, int senderId, int receiverId, String message, int tempId) {
+  void sendMessage(int conversationId, int senderId, int receiverId, String message, int tempId, {String? type, String? fileUrl}) {
     emit('send_message', {
       "conversationId": conversationId,
       "senderId": senderId,
       "receiverId": receiverId,
       "message": message,
       "tempId": tempId,
+      "type": type ?? "text",      // 👈 ADD THIS
+      "fileUrl": fileUrl,          // 👈 ADD THIS
     });
   }
 

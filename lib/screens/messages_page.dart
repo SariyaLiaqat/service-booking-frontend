@@ -1244,6 +1244,7 @@ class _MessagesTabState extends State<MessagesTab> {
                             builder: (_) => NotificationsPage(
                               userId: widget.currentUserId,
                               role: widget.role,
+                               tab: 'messages',
                             ),
                           ),
                         ).then((_) {
