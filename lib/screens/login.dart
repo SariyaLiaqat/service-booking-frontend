@@ -520,30 +520,30 @@ class _LoginScreenState extends State<LoginScreen> {
             key: _formKey,
             child: Column(
               children: [
-                Container(
-                  height: 70,
-                  width: 70,
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: LinearGradient(
-                      colors: [kSecondaryColor, kPrimaryColor],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black12,
-                        blurRadius: 8,
-                        offset: Offset(2, 3),
-                      ),
-                    ],
-                  ),
-                  child: const Icon(
-                    Icons.lock_open_rounded,
-                    color: Colors.white,
-                    size: 38,
-                  ),
-                ),
+               Container(
+  height: 80,
+  width: 80,
+  decoration: BoxDecoration(
+    shape: BoxShape.circle,
+    gradient: LinearGradient(
+      colors: [kPrimaryColor, Color(0xFF2A5298)], // Rich Blue mix
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    ),
+    boxShadow: [
+      BoxShadow(
+        color: kPrimaryColor.withOpacity(0.3),
+        blurRadius: 15,
+        offset: const Offset(0, 8),
+      ),
+    ],
+  ),
+  child: const Icon(
+    Icons.lock_open_rounded,
+    color: Colors.white,
+    size: 40,
+  ),
+),
                 const SizedBox(height: 14),
 
                 ShaderMask(

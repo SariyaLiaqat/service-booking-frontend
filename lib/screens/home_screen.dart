@@ -500,6 +500,7 @@ import '../providers/NotificationProvider.dart';
 import 'dashboard.dart';
 import '../widgets/settings.dart';
 import '../widgets/Contact.dart';
+import '../widgets/about_us.dart';
 import '../widgets/status_widget.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -788,6 +789,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   userId: widget.userData["id"], // ✅ correct name
                   role: widget.role,
                 ),
+              ),
+            );
+          }else if (menu == "About Us") {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) =>
+                    AboutUsPage(),
               ),
             );
           } else if (menu == "Settings") {

@@ -1216,23 +1216,30 @@ class _SignupScreenState extends State<SignupScreen> {
             key: _formKey,
             child: Column(
               children: [
-                Container(
-                  height: 70,
-                  width: 70,
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: LinearGradient(
-                      colors: [kPrimaryColor, kSecondaryColor],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                  ),
-                  child: const Icon(
-                    Icons.person_add_alt_1_rounded,
-                    color: Colors.white,
-                    size: 38,
-                  ),
-                ),
+               Container(
+  height: 80,
+  width: 80,
+  decoration: BoxDecoration(
+    shape: BoxShape.circle,
+    gradient: LinearGradient(
+      colors: [kSecondaryColor, Color(0xFFE5B13A)], // Premium Gold mix
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    ),
+    boxShadow: [
+      BoxShadow(
+        color: kSecondaryColor.withOpacity(0.3),
+        blurRadius: 15,
+        offset: const Offset(0, 8),
+      ),
+    ],
+  ),
+  child: const Icon(
+    Icons.person_add_alt_1_rounded,
+    color: Colors.white,
+    size: 40,
+  ),
+),
                 const SizedBox(height: 14),
                 const GradientTitle(text: "Create Account"),
 

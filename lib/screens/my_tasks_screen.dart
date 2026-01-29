@@ -1,3 +1,5 @@
+
+
 // import 'dart:async';
 // import 'dart:convert';
 // import 'package:flutter/material.dart';
@@ -131,6 +133,20 @@
 //       throw Exception("Failed to update task");
 //     }
 //   }
+
+//   // hold_pay
+//   static Future<void> holdPayment(int taskId, double holdAmount) async {
+//     final uri = Uri.parse("${Backend.baseUrl}/tasks/$taskId/hold_payment");
+//     final response = await http.patch(
+//       uri,
+//       headers: {"Content-Type": "application/json"},
+//       body: json.encode({"hold_amount": holdAmount}),
+//     );
+
+//     if (response.statusCode != 200) {
+//       throw Exception("Failed to hold payment for task $taskId");
+//     }
+//   }
 // }
 
 // class MyTasksScreen extends StatefulWidget {
@@ -170,6 +186,20 @@
 //   void _payNow(Task task) async {
 //     print("💡 _payNow called for Task ID: ${task.id}");
 
+//     // ✅ Step 0: Prevent payment if task is not accepted yet
+//     if (task.status == 'pending') {
+//       ScaffoldMessenger.of(context).showSnackBar(
+//         const SnackBar(
+//           content: Text(
+//             "⚠️ You cannot pay now. Task is not yet accepted by the provider.",
+//           ),
+//           backgroundColor: Colors.orange,
+//         ),
+//       );
+//       return; // stop payment flow
+//     }
+
+//     // ✅ Step 1: Validate user and provider IDs
 //     if (task.userId == 0 || task.providerId == 0) {
 //       ScaffoldMessenger.of(context).showSnackBar(
 //         const SnackBar(
@@ -182,7 +212,7 @@
 //       return;
 //     }
 
-//     // Step 1: Ask user to enter the amount dynamically
+//     // Step 2: Ask user to enter the amount dynamically
 //     double enteredAmount = task.amount; // default value
 //     final result = await showDialog<double>(
 //       context: context,
@@ -190,9 +220,7 @@
 //         title: const Text("Enter Amount to Pay"),
 //         content: TextField(
 //           keyboardType: const TextInputType.numberWithOptions(decimal: true),
-//           decoration: InputDecoration(
-//             hintText: task.amount.toStringAsFixed(2), // show default nicely
-//           ),
+//           decoration: InputDecoration(hintText: task.amount.toStringAsFixed(2)),
 //           onChanged: (val) {
 //             enteredAmount = double.tryParse(val) ?? task.amount;
 //           },
@@ -224,7 +252,7 @@
 //     if (result == null) return; // user cancelled
 //     task.amount = result; // set task amount dynamically
 
-//     // Step 2: Show loading while creating payment
+//     // Step 3: Show loading while creating payment
 //     showDialog(
 //       context: context,
 //       barrierDismissible: false,
@@ -258,38 +286,37 @@
 //             amount: task.amount,
 //             txnId: txnId,
 //             ordId: ordId,
-//            onPaymentSuccess: () async {
-//   // 1️⃣ Refresh tasks silently
-//   Provider.of<TaskProvider>(
-//     context,
-//     listen: false,
-//   ).refreshTasks(widget.currentUserId, role: widget.role);
+//             onPaymentSuccess: () async {
+//               // 1️⃣ Refresh tasks silently
+//               Provider.of<TaskProvider>(
+//                 context,
+//                 listen: false,
+//               ).refreshTasks(widget.currentUserId, role: widget.role);
 
-//   // 2️⃣ Close payment WebView
-//   Navigator.pop(context);
+//               // 2️⃣ Close payment WebView
+//               Navigator.pop(context);
 
-//   // 3️⃣ Go to the provider profile (jis ka task pay hua)
-//   Navigator.push(
-//     context,
-//     MaterialPageRoute(
-//       builder: (_) => MyProfileScreen(
-//         userData: {
-//           'id': task.providerId,
-//           'name': task.providerName,
-//           'role': 'provider',
-//         },
-//         currentUserId: widget.currentUserId,
-//         readOnly: true, // user kisi aur ki profile dekh raha hai
-//       ),
-//     ),
-//   );
-// },
-
+//               // 3️⃣ Go to the provider profile (whose task was paid)
+//               Navigator.push(
+//                 context,
+//                 MaterialPageRoute(
+//                   builder: (_) => MyProfileScreen(
+//                     userData: {
+//                       'id': task.providerId,
+//                       'name': task.providerName,
+//                       'role': 'provider',
+//                     },
+//                     currentUserId: widget.currentUserId,
+//                     readOnly: true, // user viewing someone else's profile
+//                   ),
+//                 ),
+//               );
+//             },
 //           ),
 //         ),
 //       );
 //     } catch (e) {
-//       if (Navigator.canPop(context)) Navigator.pop(context);
+//       if (Navigator.canPop(context)) Navigator.pop(context); // close loader
 //       ScaffoldMessenger.of(context).showSnackBar(
 //         SnackBar(
 //           content: Text("❌ Payment failed: ${e.toString()}"),
@@ -323,160 +350,165 @@
 //     }
 //   }
 
+
+
 //   Future<void> _updateTask(Task task, String newStatus) async {
-//     bool confirm = true;
+//   bool confirm = true;
 
-//     if (newStatus == "completed") {
-//       confirm =
-//           await showDialog(
-//             context: context,
-//             builder: (ctx) => AlertDialog(
-//               backgroundColor: kPrimaryColor,
-//               shape: RoundedRectangleBorder(
-//                 borderRadius: BorderRadius.circular(16),
-//               ),
-//               title: Text(
-//                 'Complete Task',
-//                 style: TextStyle(
-//                   fontWeight: FontWeight.bold,
-//                   fontSize: 20,
-//                   color: kCardColor,
-//                 ),
-//               ),
-//               content: Text(
-//                 'Are you sure you have completed this task carefully?',
-//                 style: TextStyle(fontSize: 16, color: kTextPrimary),
-//               ),
-//               actions: [
-//                 TextButton(
-//                   onPressed: () => Navigator.pop(ctx, false),
-//                   style: TextButton.styleFrom(
-//                     backgroundColor: kPrimaryColor.withOpacity(0.3),
-//                     shape: RoundedRectangleBorder(
-//                       borderRadius: BorderRadius.circular(12),
-//                     ),
-//                   ),
-//                   child: Text(
-//                     'Cancel',
-//                     style: TextStyle(
-//                       color: kCardColor,
-//                       fontWeight: FontWeight.w600,
-//                     ),
-//                   ),
-//                 ),
-//                 TextButton(
-//                   onPressed: () => Navigator.pop(ctx, true),
-//                   style: TextButton.styleFrom(
-//                     backgroundColor: kPrimaryColor,
-//                     shape: RoundedRectangleBorder(
-//                       borderRadius: BorderRadius.circular(12),
-//                     ),
-//                   ),
-//                   child: const Text(
-//                     'Yes, Completed',
-//                     style: TextStyle(
-//                       color: kCardColor,
-//                       fontWeight: FontWeight.bold,
-//                     ),
-//                   ),
-//                 ),
-//               ],
+//   // 🔹 Confirmation dialog only for completion
+//   if (newStatus == "completed") {
+//     confirm =
+//         await showDialog(
+//           context: context,
+//           builder: (ctx) => AlertDialog(
+//             backgroundColor: kPrimaryColor,
+//             shape: RoundedRectangleBorder(
+//               borderRadius: BorderRadius.circular(16),
 //             ),
-//           ) ??
-//           false;
-//     }
-
-//     if (!confirm) return;
-
-//     try {
-//       await TasksApi.updateTaskStatus(task.id, newStatus);
-
-//       String message = '';
-//       Color snackColor = kPrimaryColor;
-
-//       if (newStatus == "confirmed") {
-//         message = "✅ Task accepted";
-//         snackColor = Colors.green.shade700;
-
-//         // 🔹 Send notification to user
-//         NotificationsApi.sendNotification(
-//           userId: task.userId,
-//           title: "Task Accepted ✅",
-//           body:
-//               "Your task '${task.serviceTitle}' has been accepted✅ by the provider",
-//           senderId: task.providerId,
-//         );
-//       }
-
-//       if (newStatus == "rejected") {
-//         message = "❌ Task rejected";
-//         snackColor = Colors.red.shade600;
-
-//         // 🔹 Send notification to user
-//         NotificationsApi.sendNotification(
-//           userId: task.userId,
-//           title: "Task Rejected ❌",
-//           body:
-//               "Your task '${task.serviceTitle}' has been rejected❌ by the provider",
-//           senderId: task.providerId,
-//         );
-//       }
-
-//       if (newStatus == "completed") {
-//         message = "🎉 Task completed";
-//         snackColor = kPrimaryColor;
-
-//         // 🔹 Send notification to user
-//         NotificationsApi.sendNotification(
-//           userId: task.userId,
-//           title: "Task Completed 🎉",
-//           body:
-//               "Your task '${task.serviceTitle}' has been marked as completed🎉 by the provider",
-//           senderId: task.providerId,
-//         );
-//       }
-
-//       ScaffoldMessenger.of(context).showSnackBar(
-//         SnackBar(
-//           content: Text(
-//             message,
-//             style: const TextStyle(
-//               fontWeight: FontWeight.bold,
-//               color: Colors.white,
+//             title: Text(
+//               'Complete Task',
+//               style: TextStyle(
+//                 fontWeight: FontWeight.bold,
+//                 fontSize: 20,
+//                 color: kCardColor,
+//               ),
 //             ),
+//             content: Text(
+//               'Are you sure you have completed this task carefully?',
+//               style: TextStyle(fontSize: 16, color: kTextPrimary),
+//             ),
+//             actions: [
+//               TextButton(
+//                 onPressed: () => Navigator.pop(ctx, false),
+//                 child: Text('Cancel', style: TextStyle(color: kCardColor)),
+//               ),
+//               TextButton(
+//                 onPressed: () => Navigator.pop(ctx, true),
+//                 child: const Text(
+//                   'Yes, Completed',
+//                   style: TextStyle(fontWeight: FontWeight.bold),
+//                 ),
+//               ),
+//             ],
 //           ),
-//           backgroundColor: snackColor,
-//           behavior: SnackBarBehavior.floating,
-//           shape: RoundedRectangleBorder(
-//             borderRadius: BorderRadius.circular(12),
-//           ),
-//           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-//           duration: const Duration(seconds: 2),
-//         ),
+//         ) ??
+//         false;
+//   }
+
+//   if (!confirm) return;
+
+//   try {
+//     // 🔴 IMPORTANT FIX: PAYMENT CHECK BEFORE COMPLETION
+//     if (newStatus == "completed" &&
+//         (task.payment_status == null || task.payment_status != "paid")) {
+//       // Hold partial amount
+//       double holdAmount = task.amount * 0.5;
+//       await TasksApi.holdPayment(task.id, holdAmount);
+
+//       // Notify client
+//       NotificationsApi.sendNotification(
+//         userId: task.userId,
+//         title: "Payment Pending 💰",
+//         body:
+//             "Your task '${task.serviceTitle}' is completed. Please complete the payment to release funds.",
+//         senderId: task.providerId,
 //       );
 
-//       Provider.of<TaskProvider>(
-//         context,
-//         listen: false,
-//       ).refreshTasks(widget.currentUserId, role: widget.role);
-//     } catch (e) {
+//       // Show message to provider
 //       ScaffoldMessenger.of(context).showSnackBar(
 //         SnackBar(
-//           content: Text(
-//             "❌ Failed to update task: $e",
-//             style: const TextStyle(color: Colors.white),
+//           content: const Text(
+//             "❌ Payment is not completed yet",
+//             style: TextStyle(color: Colors.white),
 //           ),
 //           backgroundColor: Colors.red.shade600,
-//           behavior: SnackBarBehavior.floating,
-//           shape: RoundedRectangleBorder(
-//             borderRadius: BorderRadius.circular(12),
-//           ),
-//           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-//           duration: const Duration(seconds: 3),
 //         ),
 //       );
+
+//       return; // ⛔ STOP — do NOT update status
 //     }
+
+//     // ✅ Status update happens ONLY when allowed
+//     await TasksApi.updateTaskStatus(task.id, newStatus);
+
+//     String message = '';
+//     Color snackColor = kPrimaryColor;
+
+//     if (newStatus == "confirmed") {
+//       message = "✅ Task accepted";
+//       snackColor = Colors.green.shade700;
+
+//       NotificationsApi.sendNotification(
+//         userId: task.userId,
+//         title: "Task Accepted ✅",
+//         body:
+//             "Your task '${task.serviceTitle}' has been accepted by the provider",
+//         senderId: task.providerId,
+//       );
+//     }
+
+//     if (newStatus == "rejected") {
+//       message = "❌ Task rejected";
+//       snackColor = Colors.red.shade600;
+
+//       NotificationsApi.sendNotification(
+//         userId: task.userId,
+//         title: "Task Rejected ❌",
+//         body:
+//             "Your task '${task.serviceTitle}' has been rejected by the provider",
+//         senderId: task.providerId,
+//       );
+//     }
+
+//     if (newStatus == "completed") {
+//       message = "🎉 Task completed";
+
+//       NotificationsApi.sendNotification(
+//         userId: task.userId,
+//         title: "Task Completed 🎉",
+//         body:
+//             "Your task '${task.serviceTitle}' has been marked as completed",
+//         senderId: task.providerId,
+//       );
+//     }
+
+//     ScaffoldMessenger.of(context).showSnackBar(
+//       SnackBar(
+//         content: Text(
+//           message,
+//           style: const TextStyle(
+//             fontWeight: FontWeight.bold,
+//             color: Colors.white,
+//           ),
+//         ),
+//         backgroundColor: snackColor,
+//         behavior: SnackBarBehavior.floating,
+//       ),
+//     );
+
+//     Provider.of<TaskProvider>(
+//       context,
+//       listen: false,
+//     ).refreshTasks(widget.currentUserId, role: widget.role);
+//   } catch (e) {
+//     ScaffoldMessenger.of(context).showSnackBar(
+//       SnackBar(
+//         content: Text(
+//           "❌ Failed to update task: $e",
+//           style: const TextStyle(color: Colors.white),
+//         ),
+//         backgroundColor: Colors.red.shade600,
+//       ),
+//     );
 //   }
+// }
+
+
+
+
+
+
+
 
 //   // --- Status Badge ---
 //   Widget _statusBadge(String status) {
@@ -810,32 +842,32 @@
 //     }
 
 //     if (tasks.isEmpty) {
-//     return Center(
-//       child: Padding(
-//         padding: const EdgeInsets.all(16.0),
-//         child: Column(
-//           mainAxisSize: MainAxisSize.min,
-//           children: [
-//             Lottie.asset(
-//               'assets/lottie/No History.json',
-//               width: 200,
-//               height: 200,
-//               repeat: true,
-//             ),
-//             const SizedBox(height: 12),
-//             Text(
-//               "No tasks found",
-//               style: TextStyle(
-//                 color: kTextSecondary,
-//                 fontSize: 16,
-//                 fontWeight: FontWeight.w500,
+//       return Center(
+//         child: Padding(
+//           padding: const EdgeInsets.all(16.0),
+//           child: Column(
+//             mainAxisSize: MainAxisSize.min,
+//             children: [
+//               Lottie.asset(
+//                 'assets/lottie/No History.json',
+//                 width: 200,
+//                 height: 200,
+//                 repeat: true,
 //               ),
-//             ),
-//           ],
+//               const SizedBox(height: 12),
+//               Text(
+//                 "No tasks found",
+//                 style: TextStyle(
+//                   color: kTextSecondary,
+//                   fontSize: 16,
+//                   fontWeight: FontWeight.w500,
+//                 ),
+//               ),
+//             ],
+//           ),
 //         ),
-//       ),
-//     );
-//   }
+//       );
+//     }
 
 //     return ListView.builder(
 //       physics: const BouncingScrollPhysics(),
@@ -857,7 +889,7 @@
 //         child: AppBar(
 //           automaticallyImplyLeading: false,
 //           elevation: 0,
-//           backgroundColor: kPrimaryColor.withOpacity(0.1) ,
+//           backgroundColor: navbarColor,
 
 //           title: Padding(
 //             padding: const EdgeInsets.only(top: 20.0, bottom: 8.0),
@@ -899,12 +931,12 @@
 //                   children: [
 //                     const Text(
 //                       "Hello,",
-//                       style: TextStyle(color: kTextSecondary, fontSize: 14),
+//                       style: TextStyle(color: kTextHint, fontSize: 14),
 //                     ),
 //                     Text(
 //                       currentUser['username'] ?? 'Username',
 //                       style: const TextStyle(
-//                         color: kTextPrimary,
+//                         color: navbarTextColor,
 //                         fontSize: 18,
 //                         fontWeight: FontWeight.bold,
 //                       ),
@@ -915,29 +947,29 @@
 //             ),
 //           ),
 //           actions: [
-//            IconButton(
-//   onPressed: () {
-//     Navigator.push(
-//       context,
-//       MaterialPageRoute(
-//         builder: (_) => NotificationsPage(
-//           userId: currentUser['id'],
-//           role: widget.role,
-//           tab: 'tasks', // 🔹 yaha 'tasks' ya 'messages' pass kar do
-//         ),
-//       ),
-//     );
-//   },
-//   icon: const Icon(
-//     Icons.notifications_none,
-//     color: kTextPrimary,
-//     size: 28,
-//   ),
-// ),
+//             IconButton(
+//               onPressed: () {
+//                 Navigator.push(
+//                   context,
+//                   MaterialPageRoute(
+//                     builder: (_) => NotificationsPage(
+//                       userId: currentUser['id'],
+//                       role: widget.role,
+//                       tab: 'tasks', // 🔹 yaha 'tasks' ya 'messages' pass kar do
+//                     ),
+//                   ),
+//                 );
+//               },
+//               icon: const Icon(
+//                 Icons.notifications_none,
+//                 color: navbarTextColor,
+//                 size: 28,
+//               ),
+//             ),
 
 //             IconButton(
 //               onPressed: () {},
-//               icon: const Icon(Icons.search, color: kTextPrimary, size: 28),
+//               icon: const Icon(Icons.search, color: navbarTextColor, size: 28),
 //             ),
 //             const SizedBox(width: 8),
 //           ],
@@ -951,7 +983,6 @@
 //             child: Column(
 //               crossAxisAlignment: CrossAxisAlignment.stretch,
 //               children: [
-
 //                 // --- Task Cards ---
 //                 const SizedBox(height: 10),
 //                 TaskCardsWidget(
@@ -1031,6 +1062,24 @@
 //     );
 //   }
 // }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 import 'dart:async';
 import 'dart:convert';
@@ -1916,97 +1965,107 @@ class _MyTasksScreenState extends State<MyTasksScreen>
       backgroundColor: kBackgroundColor,
 
       // ---------------------- AppBar ----------------------
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(50),
-        child: AppBar(
-          automaticallyImplyLeading: false,
-          elevation: 0,
-          backgroundColor: navbarColor,
+     // ---------------------- Redesigned AppBar ----------------------
+appBar: AppBar(
+  automaticallyImplyLeading: false,
+  elevation: 0,
+  backgroundColor: kBackgroundColor, // Use light background for a clean look
+  toolbarHeight: 80, // Increased for better breathing room
+  title: Row(
+    crossAxisAlignment: CrossAxisAlignment.center,
+    children: [
+      // Profile Picture with Premium Border
+      Builder(
+        builder: (_) {
+          String profileImagePath = currentUser['profile_image'] ?? '';
+          String fullImageUrl = profileImagePath.startsWith("http")
+              ? profileImagePath
+              : "${Backend.baseUrl}/$profileImagePath";
 
-          title: Padding(
-            padding: const EdgeInsets.only(top: 20.0, bottom: 8.0),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                // Profile
-                Builder(
-                  builder: (_) {
-                    String profileImagePath =
-                        currentUser['profile_image'] ?? '';
-                    String fullImageUrl = profileImagePath.startsWith("http")
-                        ? profileImagePath
-                        : "${Backend.baseUrl}/$profileImagePath";
-
-                    return CircleAvatar(
-                      radius: 20,
-                      backgroundColor: Colors.grey.shade300,
-                      backgroundImage: fullImageUrl.isNotEmpty
-                          ? NetworkImage(fullImageUrl)
-                          : null,
-                      child: fullImageUrl.isEmpty
-                          ? Icon(
-                              Icons.person,
-                              color: Colors.grey.shade600,
-                              size: 24,
-                            )
-                          : null,
-                    );
-                  },
-                ),
-
-                const SizedBox(width: 14),
-
-                // Username
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text(
-                      "Hello,",
-                      style: TextStyle(color: kTextHint, fontSize: 14),
-                    ),
-                    Text(
-                      currentUser['username'] ?? 'Username',
-                      style: const TextStyle(
-                        color: navbarTextColor,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+          return Container(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: kPrimaryColor.withOpacity(0.2), width: 2),
+            ),
+            child: CircleAvatar(
+              radius: 24, // Slightly larger
+              backgroundColor: kDividerColor,
+              backgroundImage: fullImageUrl.isNotEmpty
+                  ? NetworkImage(fullImageUrl)
+                  : null,
+              child: fullImageUrl.isEmpty
+                  ? const Icon(Icons.person, color: kTextSecondary, size: 28)
+                  : null,
+            ),
+          );
+        },
+      ),
+      const SizedBox(width: 12),
+      // Greeting Text
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            "Hello,",
+            style: TextStyle(
+              color: kTextSecondary, 
+              fontSize: 14, 
+              letterSpacing: 0.5,
+              fontWeight: FontWeight.w500
             ),
           ),
-          actions: [
-            IconButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => NotificationsPage(
-                      userId: currentUser['id'],
-                      role: widget.role,
-                      tab: 'tasks', // 🔹 yaha 'tasks' ya 'messages' pass kar do
-                    ),
-                  ),
-                );
-              },
-              icon: const Icon(
-                Icons.notifications_none,
-                color: navbarTextColor,
-                size: 28,
-              ),
+          Text(
+            currentUser['username'] ?? 'Username',
+            style: const TextStyle(
+              color: kTextPrimary, // Dark text on light BG
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
             ),
-
-            IconButton(
-              onPressed: () {},
-              icon: const Icon(Icons.search, color: navbarTextColor, size: 28),
+          ),
+        ],
+      ),
+    ],
+  ),
+  actions: [
+    // Notification Icon with Soft Background
+    Padding(
+      padding: const EdgeInsets.only(right: 16.0),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
-            const SizedBox(width: 8),
           ],
         ),
+        child: IconButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => NotificationsPage(
+                  userId: currentUser['id'],
+                  role: widget.role,
+                  tab: 'tasks',
+                ),
+              ),
+            );
+          },
+          icon: const Icon(
+            Icons.notifications_active_outlined, // More modern icon
+            color: kPrimaryColor, // Primary color for the action
+            size: 26,
+          ),
+        ),
       ),
+    ),
+  ],
+),
 
       // ---------------------- Body ----------------------
       body: Consumer<TaskProvider>(

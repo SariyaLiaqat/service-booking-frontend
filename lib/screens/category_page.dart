@@ -984,18 +984,45 @@ class _CategoryPageState extends State<CategoryPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: kBackgroundColor,
-      appBar: AppBar(
-        title: Text(
-          widget.categoryName,
-          style: const TextStyle(
-            color: navbarTextColor, // White text on primary background
-            fontWeight: FontWeight.bold,
+     appBar: AppBar(
+  backgroundColor: kBackgroundColor,
+  elevation: 0,
+  centerTitle: true,
+  // Modern Back Button
+  leading: Padding(
+    padding: const EdgeInsets.all(8.0),
+    child: Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
-        ),
-        centerTitle: true,
-        elevation: 0,
-        backgroundColor: navbarColor,
+        ],
       ),
+      child: IconButton(
+        icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: kTextPrimary),
+        onPressed: () => Navigator.pop(context),
+      ),
+    ),
+  ),
+  title: Text(
+    widget.categoryName,
+    style: const TextStyle(
+      color: kTextPrimary, // Clean dark text
+      fontSize: 20,
+      fontWeight: FontWeight.w800,
+      letterSpacing: -0.5,
+    ),
+  ),
+  // Added a dummy action to perfectly balance the centered title
+  actions: [
+    const SizedBox(width: 56), 
+  ],
+),
 
       body: Column(
         children: [
