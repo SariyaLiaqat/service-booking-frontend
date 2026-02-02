@@ -1,6 +1,218 @@
+// import 'package:flutter/material.dart';
+// import 'dart:ui';
+// import '../helpers/coolors.dart';
+// class MenuItemModel {
+//   final String title;
+//   final IconData icon;
+//   final VoidCallback onTap;
+
+//   MenuItemModel({required this.title, required this.icon, required this.onTap});
+// }
+
+// class SideMenu extends StatelessWidget {
+//   final String logoPath;
+//   final Color primaryColor;
+//   final Color secondaryColor;
+//   final Color highlightColor;
+//   final String selectedMenu;
+//   final Function(String) onMenuSelected;
+
+//   const SideMenu({
+//     Key? key,
+//     required this.logoPath,
+//     required this.primaryColor,
+//     required this.secondaryColor,
+//     required this.highlightColor,
+//     required this.selectedMenu,
+//     required this.onMenuSelected,
+//   }) : super(key: key);
+
+//   @override
+//   Widget build(BuildContext context) {
+//     final menuItems = [
+//       MenuItemModel(
+//           title: 'Dashboard',
+//           icon: Icons.info_outline,
+//           onTap: () => onMenuSelected('Dashboard')),
+//       MenuItemModel(
+//           title: 'About Us',
+//           icon: Icons.info_outline,
+//           onTap: () => onMenuSelected('About Us')),
+//       MenuItemModel(
+//           title: 'Contact Us',
+//           icon: Icons.contact_phone_outlined,
+//           onTap: () => onMenuSelected('Contact Us')),
+//       MenuItemModel(
+//           title: 'Settings',
+//           icon: Icons.settings_outlined,
+//           onTap: () => onMenuSelected('Settings')),
+//       MenuItemModel(
+//           title: 'Exit',
+//           icon: Icons.logout,
+//           onTap: () => onMenuSelected('Exit')),
+//     ];
+
+//    return Drawer(
+//   width: MediaQuery.of(context).size.width * 0.62, // 👈 slim & premium
+//   backgroundColor: Colors.transparent,
+//   child: SafeArea(
+//     child: ClipRRect(
+//       borderRadius: const BorderRadius.only(
+//         topRight: Radius.circular(28),
+//         bottomRight: Radius.circular(28),
+//       ),
+//       child: BackdropFilter(
+//         filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+//         child: Container(
+//           decoration: BoxDecoration(
+//             gradient: LinearGradient(
+//               colors: [
+//                 secondaryColor.withOpacity(0.85),
+//                 secondaryColor.withOpacity(0.65),
+//               ],
+//               begin: Alignment.topLeft,
+//               end: Alignment.bottomRight,
+//             ),
+//             border: Border.all(
+//               color: Colors.white.withOpacity(0.25),
+//             ),
+//             boxShadow: [
+//               BoxShadow(
+//                 color: Colors.black.withOpacity(0.25),
+//                 blurRadius: 30,
+//                 offset: const Offset(10, 0),
+//               ),
+//             ],
+//           ),
+//           child: Column(
+//             children: [
+//               // 🔹 Glassy Header
+//               Padding(
+//                 padding: const EdgeInsets.symmetric(vertical: 26),
+//                 child: Column(
+//                   children: [
+//                     Container(
+//                       width: 110,
+//                       height: 110,
+//                       decoration: BoxDecoration(
+//                         shape: BoxShape.circle,
+//                         border: Border.all(
+//                           color: Colors.white.withOpacity(0.5),
+//                           width: 2,
+//                         ),
+//                         boxShadow: [
+//                           BoxShadow(
+//                             color: primaryColor.withOpacity(0.35),
+//                             blurRadius: 18,
+//                           ),
+//                         ],
+//                       ),
+//                       child: ClipOval(
+//                         child: Image.asset(
+//                           logoPath,
+//                           fit: BoxFit.cover,
+//                         ),
+//                       ),
+//                     ),
+//                     const SizedBox(height: 12),
+//                     Text(
+//                       'Connect Pro',
+//                       style: TextStyle(
+//                         color: primaryColor,
+//                         fontSize: 19,
+//                         fontWeight: FontWeight.w800,
+//                         letterSpacing: 0.4,
+//                       ),
+//                     ),
+//                     const SizedBox(height: 4),
+//                     Text(
+//                       'Your service simplified',
+//                       style: TextStyle(
+//                         color: Colors.white.withOpacity(0.75),
+//                         fontSize: 13,
+//                       ),
+//                     ),
+//                   ],
+//                 ),
+//               ),
+
+//               Divider(
+//                 color: Colors.white.withOpacity(0.2),
+//                 thickness: 1,
+//               ),
+
+//               // 🔹 Menu items
+//               Expanded(
+//                 child: ListView.builder(
+//                   itemCount: menuItems.length,
+//                   padding: const EdgeInsets.symmetric(vertical: 12),
+//                   itemBuilder: (context, index) {
+//                     final item = menuItems[index];
+//                     final isSelected = item.title == selectedMenu;
+
+//                     return Padding(
+//                       padding: const EdgeInsets.symmetric(
+//                           horizontal: 14, vertical: 6),
+//                       child: AnimatedContainer(
+//                         duration: const Duration(milliseconds: 250),
+//                         decoration: BoxDecoration(
+//                           color: isSelected
+//                               ? primaryColor.withOpacity(0.25)
+//                               : Colors.white.withOpacity(0.08),
+//                           borderRadius: BorderRadius.circular(16),
+//                           border: Border.all(
+//                             color: Colors.white.withOpacity(0.2),
+//                           ),
+//                         ),
+//                         child: ListTile(
+//                           leading: Icon(
+//                             item.icon,
+//                             color: isSelected
+//                                 ? primaryColor
+//                                 : kSecondaryColor,
+//                           ),
+//                           title: Text(
+//                             item.title,
+//                             style: TextStyle(
+//                               color: isSelected
+//                                   ? primaryColor
+//                                   : kSecondaryColor,
+//                               fontWeight: FontWeight.w600,
+//                             ),
+//                           ),
+//                           onTap: item.onTap,
+//                         ),
+//                       ),
+//                     );
+//                   },
+//                 ),
+//               ),
+
+//               // 🔹 Footer
+//               Padding(
+//                 padding: const EdgeInsets.only(bottom: 14),
+//                 child: Text(
+//                   "Made with ❤️ by Sariya",
+//                   style: TextStyle(
+//                     color: kSecondaryColor,
+//                     fontSize: 12,
+//                   ),
+//                 ),
+//               ),
+//             ],
+//           ),
+//         ),
+//       ),
+//     ),
+//   ),
+// );
+
+//   }
+// }
+
 import 'package:flutter/material.dart';
-import 'dart:ui';
-import '../helpers/coolors.dart';
+import '../helpers/coolors.dart'; // Ensure your path is correct
+
 class MenuItemModel {
   final String title;
   final IconData icon;
@@ -32,180 +244,158 @@ class SideMenu extends StatelessWidget {
     final menuItems = [
       MenuItemModel(
           title: 'Dashboard',
-          icon: Icons.info_outline,
+          icon: Icons.grid_view_rounded, // More modern icon
           onTap: () => onMenuSelected('Dashboard')),
       MenuItemModel(
           title: 'About Us',
-          icon: Icons.info_outline,
+          icon: Icons.corporate_fare_rounded,
           onTap: () => onMenuSelected('About Us')),
       MenuItemModel(
           title: 'Contact Us',
-          icon: Icons.contact_phone_outlined,
+          icon: Icons.alternate_email_rounded,
           onTap: () => onMenuSelected('Contact Us')),
       MenuItemModel(
           title: 'Settings',
-          icon: Icons.settings_outlined,
+          icon: Icons.settings_rounded,
           onTap: () => onMenuSelected('Settings')),
       MenuItemModel(
           title: 'Exit',
-          icon: Icons.logout,
+          icon: Icons.logout_rounded,
           onTap: () => onMenuSelected('Exit')),
     ];
 
-   return Drawer(
-  width: MediaQuery.of(context).size.width * 0.62, // 👈 slim & premium
-  backgroundColor: Colors.transparent,
-  child: SafeArea(
-    child: ClipRRect(
-      borderRadius: const BorderRadius.only(
-        topRight: Radius.circular(28),
-        bottomRight: Radius.circular(28),
+    return Drawer(
+      width: MediaQuery.of(context).size.width * 0.75,
+      backgroundColor: kBackgroundColor, // Pure professional white
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(
+          topRight: Radius.circular(20),
+          bottomRight: Radius.circular(20),
+        ),
       ),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                secondaryColor.withOpacity(0.85),
-                secondaryColor.withOpacity(0.65),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            border: Border.all(
-              color: Colors.white.withOpacity(0.25),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.25),
-                blurRadius: 30,
-                offset: const Offset(10, 0),
-              ),
-            ],
-          ),
-          child: Column(
-            children: [
-              // 🔹 Glassy Header
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 26),
-                child: Column(
+      child: Column(
+        children: [
+          // --- BRANDING SECTION ---
+          Container(
+            padding: const EdgeInsets.only(top: 60, bottom: 30, left: 24, right: 24),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: kBackgroundColor,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Image.asset(logoPath, height: 40, width: 40),
+                ),
+                const SizedBox(width: 15),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      width: 110,
-                      height: 110,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: Colors.white.withOpacity(0.5),
-                          width: 2,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: primaryColor.withOpacity(0.35),
-                            blurRadius: 18,
-                          ),
-                        ],
-                      ),
-                      child: ClipOval(
-                        child: Image.asset(
-                          logoPath,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
                     Text(
                       'Connect Pro',
                       style: TextStyle(
-                        color: primaryColor,
-                        fontSize: 19,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.4,
+                        color: kTextPrimary,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: -0.5,
                       ),
                     ),
-                    const SizedBox(height: 4),
                     Text(
-                      'Your service simplified',
+                      'Service Simplified',
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.75),
-                        fontSize: 13,
+                        color: kTextSecondary,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w400,
                       ),
                     ),
                   ],
                 ),
-              ),
+              ],
+            ),
+          ),
 
-              Divider(
-                color: Colors.white.withOpacity(0.2),
-                thickness: 1,
-              ),
+          const Divider(height: 1, color: kDividerColor, indent: 24, endIndent: 24),
+          const SizedBox(height: 20),
 
-              // 🔹 Menu items
-              Expanded(
-                child: ListView.builder(
-                  itemCount: menuItems.length,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  itemBuilder: (context, index) {
-                    final item = menuItems[index];
-                    final isSelected = item.title == selectedMenu;
+          // --- NAVIGATION ITEMS ---
+          Expanded(
+            child: ListView.builder(
+              itemCount: menuItems.length,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              itemBuilder: (context, index) {
+                final item = menuItems[index];
+                final isSelected = item.title == selectedMenu;
 
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 6),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 250),
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? primaryColor.withOpacity(0.25)
-                              : Colors.white.withOpacity(0.08),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: Colors.white.withOpacity(0.2),
-                          ),
-                        ),
-                        child: ListTile(
-                          leading: Icon(
-                            item.icon,
-                            color: isSelected
-                                ? primaryColor
-                                : kSecondaryColor,
-                          ),
-                          title: Text(
-                            item.title,
-                            style: TextStyle(
-                              color: isSelected
-                                  ? primaryColor
-                                  : kSecondaryColor,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          onTap: item.onTap,
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    decoration: BoxDecoration(
+                      color: isSelected ? kPrimaryColor.withOpacity(0.08) : Colors.transparent,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: ListTile(
+                      dense: true,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                      leading: Icon(
+                        item.icon,
+                        size: 22,
+                        color: isSelected ? kPrimaryColor : kTextSecondary,
+                      ),
+                      title: Text(
+                        item.title,
+                        style: TextStyle(
+                          color: isSelected ? kPrimaryColor : kTextPrimary,
+                          fontSize: 15,
+                          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                         ),
                       ),
-                    );
-                  },
-                ),
-              ),
+                      // Selection Indicator
+                      trailing: isSelected 
+                        ? Container(
+                            width: 4,
+                            height: 20,
+                            decoration: BoxDecoration(
+                              color: kPrimaryColor,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          )
+                        : null,
+                      onTap: item.onTap,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
 
-              // 🔹 Footer
-              Padding(
-                padding: const EdgeInsets.only(bottom: 14),
-                child: Text(
+          // --- FOOTER SECTION ---
+          Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              children: [
+                const Divider(color: kDividerColor),
+                const SizedBox(height: 10),
+                Text(
+                  "v1.0.0",
+                  style: TextStyle(color: kTextHint, fontSize: 10, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 4),
+                Text(
                   "Made with ❤️ by Sariya",
                   style: TextStyle(
-                    color: kSecondaryColor,
-                    fontSize: 12,
+                    color: kTextSecondary,
+                    fontSize: 11,
+                    letterSpacing: 0.2,
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
+        ],
       ),
-    ),
-  ),
-);
-
+    );
   }
 }
